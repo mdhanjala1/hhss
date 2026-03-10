@@ -88,9 +88,9 @@ export default function Artists() {
               <h1 className="text-4xl sm:text-5xl font-bold text-white mb-2">
                 আমাদের <span style={{ color: W }}>শিল্পীরা</span>
               </h1>
-              <p className="style={{ color: 'var(--text3)' }}>দেশের সেরা Verified শিল্পীদের সাথে পরিচিত হন</p>
+              <p style={{ color: 'var(--text3)' }}>দেশের সেরা Verified শিল্পীদের সাথে পরিচিত হন</p>
             </div>
-            <div className="flex items-center gap-4 text-sm style={{ color: 'var(--text3)' }}>
+            <div className="flex items-center gap-4 text-sm" style={{ color: 'var(--text3)' }}>
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4" style={{ color: W }} />
                 <span>{filtered.length} জন শিল্পী</span>
