@@ -211,11 +211,12 @@ export default function ArtistDashboard() {
   return (
     <div className="min-h-screen">
       {/* Top mobile nav */}
-      <div className="lg:hidden border-b" style={{ background: "var(--card)", borderColor: "var(--border)" }} px-4 py-3 overflow-x-auto">
+      <div className="lg:hidden border-b px-4 py-3 overflow-x-auto" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
         <div className="flex gap-1 min-w-max">
           {TABS.map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all relative ${activeTab === tab.id ? "text-white" style={{ background: activeTab === tab.id ? "linear-gradient(135deg,#c2a06e,#8b6914)" : "transparent" }} : 'text-[var(--text2)] hover:bg-[var(--bg)]'}`}>
+              style={{ background: activeTab === tab.id ? "linear-gradient(135deg,#c2a06e,#8b6914)" : "transparent" }}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all relative ${activeTab === tab.id ? "text-white" : 'text-[var(--text2)] hover:bg-[var(--bg)]'}`}>
               {tab.icon} {tab.label}
               {tab.badge && <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">{tab.badge}</span>}
             </button>
@@ -225,7 +226,7 @@ export default function ArtistDashboard() {
 
       <div className="flex">
         {/* Sidebar */}
-        <aside className="hidden lg:flex w-64 border-r" style={{ background: "var(--card)", borderColor: "var(--border)" }} min-h-screen flex-col fixed top-16 bottom-0">
+        <aside className="hidden lg:flex w-64 border-r min-h-screen flex-col fixed top-16 bottom-0" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
           <div className="p-5 border-b border-[var(--border)]">
             <div className="flex items-center gap-3">
               <img src={artist?.profile_image_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${artist?.full_name}`} className="w-11 h-11 rounded-2xl object-cover border-2 border-[var(--border)]" alt="" />
@@ -241,7 +242,8 @@ export default function ArtistDashboard() {
           <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
             {TABS.map(tab => (
               <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all relative ${activeTab === tab.id ? "text-[#8b6914]" style={{ background: activeTab === tab.id ? "rgba(194,160,110,0.12)" : "transparent" }} : 'text-[var(--text2)] hover:bg-[var(--bg)] hover:text-[var(--text)]'} ${tab.warn && !isVerified ? 'text-amber-600' : ''}`}>
+                style={{ background: activeTab === tab.id ? "rgba(194,160,110,0.12)" : "transparent" }}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all relative ${activeTab === tab.id ? "text-[#8b6914]" : 'text-[var(--text2)] hover:bg-[var(--bg)] hover:text-[var(--text)]'} ${tab.warn && !isVerified ? 'text-amber-600' : ''}`}>
                 {tab.icon} {tab.label}
                 {tab.badge && <span className="ml-auto w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">{tab.badge}</span>}
                 {tab.warn && !isVerified && <span className="ml-auto w-2 h-2 bg-amber-500 rounded-full" />}
