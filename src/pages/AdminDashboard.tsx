@@ -48,9 +48,14 @@ export default function AdminDashboard() {
   }, []);
 
   const checkAdmin = async () => {
+    // Wait a moment for auth to initialize
+    await new Promise(r => setTimeout(r, 300));
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session || session.user.email !== import.meta.env.VITE_ADMIN_EMAIL) {
-      toast.error('Access denied. Admin only.');
+    const adminEmail = (import.meta.env.VITE_ADMIN_EMAIL || 'blog.alfamito@gmail.com').trim().toLowerCase();
+    if (!session) { navigate('/login'); return; }
+    const userEmail = (session.user.email || '').trim().toLowerCase();
+    if (userEmail !== adminEmail) {
+      toast.error(`Access denied. (${userEmail})`);
       navigate('/');
     }
   };
