@@ -33,6 +33,7 @@ export interface Artwork {
   description: string;
   category: string;
   price: number;
+  discount_percent?: number;
   size_inches?: string;
   medium?: string;
   colors?: string;
@@ -55,10 +56,15 @@ export interface Order {
   order_number: string;
   artwork_id: string;
   artist_id: string;
-  customer_name: string;
-  customer_phone: string;
-  customer_address: string;
-  customer_district: string;
+  buyer_name?: string;
+  buyer_phone?: string;
+  buyer_address?: string;
+  buyer_district?: string;
+  buyer_note?: string;
+  customer_name?: string;
+  customer_phone?: string;
+  customer_address?: string;
+  customer_district?: string;
   customer_note?: string;
   artwork_title: string;
   artwork_price: number;
@@ -94,5 +100,16 @@ export interface Notification {
   is_read: boolean;
   related_order_id?: string;
   related_artwork_id?: string;
+  created_at: string;
+}
+
+export interface ContactMessage {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  subject: string;
+  message: string;
+  is_read: boolean;
   created_at: string;
 }

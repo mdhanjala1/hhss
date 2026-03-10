@@ -41,3 +41,36 @@ CREATE POLICY "notifications_insert" ON notifications FOR INSERT WITH CHECK (
 
 -- Done!
 SELECT 'RLS policies updated successfully' as status;
+
+-- ════════════════════════════════════════
+-- CONTACT MESSAGES TABLE (নতুন)
+-- ════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS contact_messages (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  phone TEXT,
+  subject TEXT NOT NULL,
+  message TEXT NOT NULL,
+  is_read BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE contact_messages ENABLE ROW LEVEL SECURITY;
+
+-- Anyone can insert (send a message)
+DROP POLICY IF EXISTS "contact_insert" ON contact_messages;
+CREATE POLICY "contact_insert" ON contact_messages FOR INSERT WITH CHECK (true);
+
+-- Only authenticated users can read (admin reads them)
+DROP POLICY IF EXISTS "contact_select" ON contact_messages;
+CREATE POLICY "contact_select" ON contact_messages FOR SELECT USING (auth.uid() IS NOT NULL);
+
+-- Only authenticated users can update (mark as read)
+DROP POLICY IF EXISTS "contact_update" ON contact_messages;
+CREATE POLICY "contact_update" ON contact_messages FOR UPDATE USING (auth.uid() IS NOT NULL);
+
+-- Also add discount_percent column to artworks if not exists
+ALTER TABLE artworks ADD COLUMN IF NOT EXISTS discount_percent NUMERIC(5,2);
+
+SELECT 'contact_messages table and discount_percent column created' as status;

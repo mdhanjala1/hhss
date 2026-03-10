@@ -270,7 +270,7 @@ export default function ArtworkDetail() {
               </button>
 
               <div className="flex items-center justify-center gap-8 text-stone-400 text-xs font-medium pt-1">
-                <span className="flex items-center gap-1.5"><Truck className="w-4 h-4" /> ফ্রি ডেলিভারি</span>
+                <span className="flex items-center gap-1.5"><Truck className="w-4 h-4" /> পুরো দেশে ডেলিভারি</span>
                 <span className="flex items-center gap-1.5"><ShieldCheck className="w-4 h-4" /> কোয়ালিটি নিশ্চিত</span>
                 <span className="flex items-center gap-1.5"><Tag className="w-4 h-4" /> ক্যাশ অন ডেলিভারি</span>
               </div>

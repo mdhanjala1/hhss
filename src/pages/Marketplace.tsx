@@ -15,7 +15,7 @@ const CATEGORIES = [
   { key: 'All', label: 'সবগুলো' },
   { key: 'Arabic Calligraphy', label: 'আরবি ক্যালিগ্রাফি' },
   { key: 'Painting', label: 'পেইন্টিং' },
-  { key: 'Handicraft', label: 'হাতে তৈরি শিল্প' },
+  { key: 'Handicraft', label: 'বিশেষ শিল্পকর্ম' },
   { key: 'Sculpture', label: 'ভাস্কর্য' },
   { key: 'Digital Art', label: 'ডিজিটাল আর্ট' },
   { key: 'Photography', label: 'ফটোগ্রাফি' },
@@ -106,7 +106,7 @@ function ArtworkCard({ art }: { art: Artwork }) {
         <div className="flex items-center justify-between mt-4">
           <div>
             <p className="text-xl font-bold text-stone-900">৳{art.price.toLocaleString()}</p>
-            <p className="text-xs text-emerald-600 font-medium">ফ্রি ডেলিভারি</p>
+            <p className="text-xs text-emerald-600 font-medium">পুরো দেশে ডেলিভারি</p>
           </div>
 
           <button
@@ -180,7 +180,7 @@ export default function Marketplace() {
             <div>
               <p className="text-emerald-600 font-semibold text-sm mb-2 uppercase tracking-wider">মার্কেটপ্লেস</p>
               <h1 className="text-4xl sm:text-5xl font-bold text-stone-900 leading-tight">
-                হাতে তৈরি <span className="text-emerald-600">শিল্পকর্ম</span>
+                বিশেষ <span className="text-emerald-600">শিল্পকর্ম</span>
               </h1>
               <p className="text-stone-500 mt-3 text-lg">দেশের সেরা শিল্পীদের অকৃত্রিম সৃষ্টি</p>
             </div>

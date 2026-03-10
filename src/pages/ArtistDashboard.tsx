@@ -27,12 +27,12 @@ export default function ArtistDashboard() {
   const navigate = useNavigate();
 
   const [editingArtwork, setEditingArtwork] = useState<Artwork | null>(null);
-  const [editForm, setEditForm] = useState({ title: '', description: '', price: '', size: '', medium: '', category: '' });
+  const [editForm, setEditForm] = useState({ title: '', description: '', price: '', size: '', medium: '', category: '', discount_percent: '' });
   const [editFile, setEditFile] = useState<File | null>(null);
   const [editPreview, setEditPreview] = useState<string | null>(null);
   const [editSaving, setEditSaving] = useState(false);
 
-  const [newArt, setNewArt] = useState({ title: '', description: '', category: 'Painting', price: '', size: '', medium: '', colors: '', year_created: '' });
+  const [newArt, setNewArt] = useState({ title: '', description: '', category: 'Painting', price: '', discount_percent: '', size: '', medium: '', colors: '', year_created: '' });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -86,11 +86,12 @@ export default function ArtistDashboard() {
       };
       if (newArt.size) payload.size_inches = newArt.size;
       if (newArt.year_created) payload.year_created = newArt.year_created;
+      if (newArt.discount_percent) payload.discount_percent = parseFloat(newArt.discount_percent);
       const { error } = await supabase.from('artworks').insert(payload);
       if (error) throw error;
       toast.success('🎨 আপলোড সফল! অনুমোদনের পর প্রকাশিত হবে।');
       setActiveTab('artworks'); fetchData();
-      setNewArt({ title: '', description: '', category: 'Painting', price: '', size: '', medium: '', colors: '', year_created: '' });
+      setNewArt({ title: '', description: '', category: 'Painting', price: '', discount_percent: '', size: '', medium: '', colors: '', year_created: '' });
       setSelectedFile(null); setPreviewUrl(null);
     } catch (err: any) {
       toast.error('আপলোড ব্যর্থ: ' + (err.message || 'আবার চেষ্টা করুন'));
@@ -517,6 +518,7 @@ export default function ArtistDashboard() {
                           </select>
                         </div>
                         <div><label className="block text-xs font-bold text-stone-600 mb-1">মূল্য (৳) *</label><input type="number" required placeholder="0" className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm" value={newArt.price} onChange={e => setNewArt({ ...newArt, price: e.target.value })} /></div>
+                        <div><label className="block text-xs font-bold text-stone-600 mb-1">ছাড় (%) <span className="font-normal text-stone-400">ঐচ্ছিক</span></label><input type="number" min="0" max="90" placeholder="০-৯০%" className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm" value={newArt.discount_percent} onChange={e => setNewArt({ ...newArt, discount_percent: e.target.value })} /></div>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div><label className="block text-xs font-bold text-stone-600 mb-1">সাইজ</label><input type="text" placeholder="১২x১৮ ইঞ্চি" className="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm" value={newArt.size} onChange={e => setNewArt({ ...newArt, size: e.target.value })} /></div>

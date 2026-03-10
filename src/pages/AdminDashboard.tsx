@@ -13,7 +13,8 @@ import { Artist, Artwork, Order } from '../types';
 
 export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'stats' | 'artworks' | 'artists' | 'orders' | 'nid'>('stats');
+  const [activeTab, setActiveTab] = useState<'stats' | 'artworks' | 'artists' | 'orders' | 'nid' | 'messages'>('stats');
+  const [contactMessages, setContactMessages] = useState<any[]>([]);
   const [pendingNid, setPendingNid] = useState<Artist[]>([]);
   const [pendingArt, setPendingArt] = useState<Artwork[]>([]);
   const [allArtworks, setAllArtworks] = useState<Artwork[]>([]);
@@ -70,6 +71,10 @@ export default function AdminDashboard() {
       setArtists(allArtists || []);
       setOrders(allOrders || []);
       setPendingNid(nidArtists || []);
+
+      // Fetch contact messages
+      const { data: msgs } = await supabase.from('contact_messages').select('*').order('created_at', { ascending: false });
+      setContactMessages(msgs || []);
       setStats({
         artists: (allArtists || []).length,
         artworks: arts.length,
@@ -163,6 +168,7 @@ export default function AdminDashboard() {
     { id: 'artists', label: 'শিল্পীগণ', icon: <Users className="w-4 h-4" /> },
     { id: 'orders', label: 'অর্ডার', icon: <ShoppingBag className="w-4 h-4" /> },
     { id: 'nid', label: 'NID যাচাই', icon: <ShieldCheck className="w-4 h-4" />, badge: stats.pendingNid },
+    { id: 'messages', label: 'বার্তা', icon: <Bell className="w-4 h-4" />, badge: contactMessages.filter(m => !m.is_read).length },
   ] as const;
 
   return (
@@ -206,6 +212,7 @@ export default function AdminDashboard() {
             {activeTab === 'artists' && 'শিল্পী ব্যবস্থাপনা'}
             {activeTab === 'orders' && 'অর্ডার ব্যবস্থাপনা'}
             {activeTab === 'nid' && `NID যাচাই ${stats.pendingNid > 0 ? `(${stats.pendingNid}টি অপেক্ষমাণ)` : ''}`}
+            {activeTab === 'messages' && `বার্তাসমূহ (${contactMessages.length})`}
           </h1>
         </div>
 
@@ -415,6 +422,46 @@ export default function AdminDashboard() {
                   ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* ─── MESSAGES TAB ─── */}
+          {activeTab === 'messages' && (
+            <div className="space-y-3">
+              {contactMessages.length === 0 ? (
+                <div className="bg-white rounded-2xl border border-stone-100 py-20 text-center">
+                  <Bell className="w-12 h-12 text-stone-300 mx-auto mb-3" />
+                  <p className="text-stone-500">কোনো বার্তা নেই</p>
+                </div>
+              ) : contactMessages.map(msg => (
+                <div key={msg.id} className={`bg-white rounded-2xl border p-5 hover:shadow-md transition-all ${msg.is_read ? 'border-stone-100' : 'border-emerald-200 bg-emerald-50/30'}`}>
+                  <div className="flex items-start justify-between gap-4 flex-wrap">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        {!msg.is_read && <span className="w-2 h-2 bg-emerald-500 rounded-full shrink-0" />}
+                        <h3 className="font-bold text-stone-900">{msg.name}</h3>
+                        <span className="px-2 py-0.5 bg-stone-100 text-stone-500 rounded-full text-[10px] font-bold">{msg.subject}</span>
+                      </div>
+                      <p className="text-stone-400 text-xs mb-2">{msg.email}{msg.phone ? ` · ${msg.phone}` : ''}</p>
+                      <p className="text-stone-600 text-sm leading-relaxed">{msg.message}</p>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <p className="text-stone-400 text-xs">{msg.created_at ? new Date(msg.created_at).toLocaleDateString('bn-BD') : ''}</p>
+                      {!msg.is_read && (
+                        <button onClick={async () => {
+                          await supabase.from('contact_messages').update({ is_read: true }).eq('id', msg.id);
+                          fetchAdminData();
+                        }} className="mt-2 px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-xl hover:bg-emerald-700 transition-all">
+                          পঠিত চিহ্নিত করুন
+                        </button>
+                      )}
+                      <a href={`mailto:${msg.email}`} className="mt-1 flex items-center gap-1 px-3 py-1.5 bg-stone-100 text-stone-700 text-xs font-bold rounded-xl hover:bg-stone-200 transition-all">
+                        উত্তর দিন
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 
