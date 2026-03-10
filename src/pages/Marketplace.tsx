@@ -111,17 +111,13 @@ function ArtworkCard({ art }: { art: Artwork }) {
 
           <button
             onClick={handleAddToCart}
-            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-2xl font-bold text-sm transition-all ${
-              inCart
-                ? 'bg-[#fdf8f0] text-[#8b6914] border border-emerald-200'
-                : 'bg-[#c2a06e] text-white hover:bg-emerald-700 shadow-sm shadow-emerald-200'
-            }`}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl font-bold text-xs transition-all hover:opacity-90"
+            style={inCart
+              ? { background: 'rgba(194,160,110,0.12)', color: 'var(--accent-dk)', border: '1px solid rgba(194,160,110,0.25)' }
+              : { background: 'linear-gradient(135deg, var(--accent), var(--accent-dk))', color: 'var(--dark)' }}
           >
-            {inCart ? (
-              <><Check className="w-4 h-4" /> যোগ হয়েছে</>
-            ) : (
-              <><ShoppingBag className="w-4 h-4" /> কার্টে যোগ</>
-            )}
+            <ShoppingBag className="w-3.5 h-3.5 shrink-0" />
+            <span>{inCart ? 'যোগ ✓' : 'কার্ট'}</span>
           </button>
         </div>
       </div>

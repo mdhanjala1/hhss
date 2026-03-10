@@ -223,15 +223,6 @@ function Navbar() {
                   className="block px-4 py-3 text-stone-300 font-semibold rounded-xl hover:bg-white/8 hover:text-white transition-all">{l}</Link>
               ))}
 
-              {/* "শিল্পী যুক্ত হন" in mobile menu */}
-              {!session && (
-                <Link to="/login" onClick={() => setIsOpen(false)}
-                  className="flex items-center gap-2 px-4 py-3 rounded-xl font-bold text-sm border"
-                  style={{ background: 'rgba(194,160,110,0.1)', color: '#d4c090', borderColor: 'rgba(194,160,110,0.3)' }}>
-                  <UserPlus className="w-4 h-4" />শিল্পী হিসেবে যুক্ত হন (বিনামূল্যে)
-                </Link>
-              )}
-
               {session ? (
                 <>
                   {isAdmin && <Link to="/admin" onClick={() => setIsOpen(false)} className="block px-4 py-3 text-stone-300 font-semibold rounded-xl hover:bg-white/8">এডমিন</Link>}
@@ -239,11 +230,20 @@ function Navbar() {
                   <button onClick={logout} className="w-full text-left px-4 py-3 text-red-400 font-semibold rounded-xl hover:bg-red-500/10">লগআউট</button>
                 </>
               ) : (
-                <Link to="/login" onClick={() => setIsOpen(false)}
-                  className="flex items-center justify-center gap-2 mt-2 px-4 py-4 text-white rounded-2xl font-bold"
-                  style={{ background: 'linear-gradient(135deg,#c2a06e,#8b6914)' }}>
-                  <User className="w-5 h-5" />লগইন করুন
-                </Link>
+                <div className="space-y-2 mt-2">
+                  {/* Login button */}
+                  <Link to="/login" onClick={() => setIsOpen(false)}
+                    className="flex items-center justify-center gap-2 px-4 py-3.5 text-white rounded-2xl font-bold transition-all hover:opacity-90"
+                    style={{ background: 'linear-gradient(135deg,#c2a06e,#8b6914)' }}>
+                    <User className="w-5 h-5" /> লগইন করুন
+                  </Link>
+                  {/* Register button — highlighted */}
+                  <Link to="/login" onClick={() => { setIsOpen(false); }} state={{ register: true }}
+                    className="flex items-center justify-center gap-2 px-4 py-3.5 rounded-2xl font-bold transition-all border"
+                    style={{ background: 'rgba(194,160,110,0.12)', color: '#d4b87a', borderColor: 'rgba(194,160,110,0.35)' }}>
+                    <UserPlus className="w-5 h-5" /> 🎨 অ্যাকাউন্ট তৈরি করুন (বিনামূল্যে)
+                  </Link>
+                </div>
               )}
             </div>
           </motion.div>

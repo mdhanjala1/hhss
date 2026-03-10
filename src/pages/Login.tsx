@@ -137,7 +137,7 @@ export default function Login() {
         <h2 className="text-2xl font-bold text-[var(--text)] mb-3">অ্যাকাউন্ট তৈরি হয়েছে! 🎉</h2>
         <p className="text-[var(--text2)] mb-2 text-sm leading-relaxed">আপনার অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে।</p>
         <p className="text-[var(--text2)] mb-8 text-sm leading-relaxed">ড্যাশবোর্ড থেকে <strong>NID যাচাই</strong> করুন — এডমিন অনুমোদন করলে শিল্পকর্ম আপলোড করতে পারবেন।</p>
-        <button onClick={() => navigate('/dashboard')} className="w-full py-4 hover:opacity-90" style={{ background: "linear-gradient(135deg,#c2a06e,#8b6914)" }} className=" text-white rounded-2xl font-bold transition-all flex items-center justify-center gap-2">
+        <button onClick={() => navigate('/dashboard')} className="w-full py-4 text-white rounded-2xl font-bold transition-all flex items-center justify-center gap-2 hover:opacity-90" style={{ background: "linear-gradient(135deg,#c2a06e,#8b6914)" }}>
           ড্যাশবোর্ডে যান <ArrowRight className="w-5 h-5" />
         </button>
       </motion.div>
@@ -202,7 +202,7 @@ export default function Login() {
                 </button>
               </div>
               <button onClick={handleLogin} disabled={loading}
-                className="w-full py-4 hover:opacity-90" style={{ background: "linear-gradient(135deg,#c2a06e,#8b6914)" }} className=" disabled:opacity-60 text-white rounded-2xl font-bold transition-all flex items-center justify-center gap-2 mt-2">
+                className="w-full py-4 text-white rounded-2xl font-bold transition-all flex items-center justify-center gap-2 mt-2 hover:opacity-90 disabled:opacity-60" style={{ background: "linear-gradient(135deg,#c2a06e,#8b6914)" }}>
                 {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><ArrowRight className="w-5 h-5" />লগইন করুন</>}
               </button>
             </div>
@@ -328,12 +328,12 @@ export default function Login() {
                   </button>
                 )}
                 {step < 3 ? (
-                  <button onClick={handleNext} className="flex-1 flex items-center justify-center gap-2 py-3.5 hover:opacity-90" style={{ background: "linear-gradient(135deg,#c2a06e,#8b6914)" }} className=" text-white rounded-2xl font-bold text-sm transition-all">
+                  <button onClick={handleNext} className="flex-1 flex items-center justify-center gap-2 py-3.5 text-white rounded-2xl font-bold text-sm transition-all hover:opacity-90" style={{ background: "linear-gradient(135deg,#c2a06e,#8b6914)" }}>
                     পরবর্তী <ArrowRight className="w-4 h-4" />
                   </button>
                 ) : (
                   <button onClick={handleRegister} disabled={loading}
-                    className="flex-1 flex items-center justify-center gap-2 py-3.5 hover:opacity-90" style={{ background: "linear-gradient(135deg,#c2a06e,#8b6914)" }} className=" disabled:opacity-60 text-white rounded-2xl font-bold text-sm transition-all">
+                    className="flex-1 flex items-center justify-center gap-2 py-3.5 text-white rounded-2xl font-bold text-sm transition-all hover:opacity-90 disabled:opacity-60" style={{ background: "linear-gradient(135deg,#c2a06e,#8b6914)" }}>
                     {loading
                       ? <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> অ্যাকাউন্ট তৈরি হচ্ছে...</>
                       : <><CheckCircle className="w-5 h-5" /> অ্যাকাউন্ট তৈরি করুন</>}

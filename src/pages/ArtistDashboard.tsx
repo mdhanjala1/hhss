@@ -208,6 +208,9 @@ export default function ArtistDashboard() {
     { id: 'settings', label: 'সেটিংস', icon: <Settings className="w-4 h-4" /> },
   ];
 
+  // Profile view link (rendered separately in sidebar)
+  const profileViewUrl = `/artist/${artist?.id}`;
+
   return (
     <div className="min-h-screen">
       {/* Top mobile nav */}
@@ -250,7 +253,13 @@ export default function ArtistDashboard() {
               </button>
             ))}
           </nav>
-          <div className="p-3 border-t border-[var(--border)]">
+          <div className="p-3 border-t border-[var(--border)] space-y-2">
+            {/* Profile View Button */}
+            <Link to={profileViewUrl} target="_blank"
+              className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all"
+              style={{ background: 'rgba(194,160,110,0.1)', color: 'var(--accent)' }}>
+              <ExternalLink className="w-4 h-4" /> প্রোফাইল ভিউ
+            </Link>
             <button onClick={async () => { await supabase.auth.signOut(); navigate('/'); }}
               className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold text-[var(--text2)] hover:bg-red-50 hover:text-red-600 transition-all">
               <LogOut className="w-4 h-4" /> লগআউট
