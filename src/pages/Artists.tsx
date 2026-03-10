@@ -1,228 +1,273 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { ShieldCheck, Star, MapPin, Palette, Search, Users } from 'lucide-react';
+import { ShieldCheck, Star, MapPin, Search, Users } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { Artist } from '../types';
 
-const ALL_DISTRICTS = [
-  'ঢাকা','চট্টগ্রাম','রাজশাহী','খুলনা','সিলেট','বরিশাল','রংপুর','ময়মনসিংহ',
-  'কুমিল্লা','গাজীপুর','নারায়ণগঞ্জ','টাঙ্গাইল','ব্রাহ্মণবাড়িয়া','ফেনী','নোয়াখালী',
-  'হবিগঞ্জ','মৌলভীবাজার','সুনামগঞ্জ','নেত্রকোনা','কিশোরগঞ্জ','জামালপুর','শেরপুর',
-  'ফরিদপুর','মাদারীপুর','গোপালগঞ্জ','মুন্সিগঞ্জ','নরসিংদী','মানিকগঞ্জ','পাবনা',
-  'সিরাজগঞ্জ','নাটোর','বগুড়া','দিনাজপুর','রংপুর','কুড়িগ্রাম','যশোর','খাগড়াছড়ি',
-  'কক্সবাজার','সাতক্ষীরা','কুষ্টিয়া',
+// ─── Color tokens ───────────────────────────────────────────────────
+const W = '#c2a06e';
+const WD = '#1e1208';
+const WL = '#faf6f0';
+
+// Bangladesh divisions with their districts
+const DIVISIONS = [
+  {
+    name: 'ঢাকা',
+    districts: ['ঢাকা', 'গাজীপুর', 'নারায়ণগঞ্জ', 'টাঙ্গাইল', 'মানিকগঞ্জ', 'নরসিংদী', 'মুন্সীগঞ্জ', 'ফরিদপুর', 'গোপালগঞ্জ', 'মাদারীপুর', 'শরীয়তপুর', 'রাজবাড়ী', 'কিশোরগঞ্জ'],
+  },
+  {
+    name: 'চট্টগ্রাম',
+    districts: ['চট্টগ্রাম', 'কুমিল্লা', 'ব্রাহ্মণবাড়িয়া', 'চাঁদপুর', 'ফেনী', 'লক্ষ্মীপুর', 'নোয়াখালী', 'খাগড়াছড়ি', 'রাঙ্গামাটি', 'বান্দরবান', 'কক্সবাজার'],
+  },
+  {
+    name: 'রাজশাহী',
+    districts: ['রাজশাহী', 'নাটোর', 'নওগাঁ', 'চাঁপাইনবাবগঞ্জ', 'বগুড়া', 'জয়পুরহাট', 'সিরাজগঞ্জ', 'পাবনা'],
+  },
+  {
+    name: 'খুলনা',
+    districts: ['খুলনা', 'কুষ্টিয়া', 'মেহেরপুর', 'চুয়াডাঙ্গা', 'ঝিনাইদহ', 'মাগুরা', 'নড়াইল', 'সাতক্ষীরা', 'বাগেরহাট', 'যশোর'],
+  },
+  {
+    name: 'বরিশাল',
+    districts: ['বরিশাল', 'পিরোজপুর', 'ঝালকাঠি', 'বরগুনা', 'পটুয়াখালী', 'ভোলা'],
+  },
+  {
+    name: 'সিলেট',
+    districts: ['সিলেট', 'হবিগঞ্জ', 'মৌলভীবাজার', 'সুনামগঞ্জ'],
+  },
+  {
+    name: 'ময়মনসিংহ',
+    districts: ['ময়মনসিংহ', 'জামালপুর', 'শেরপুর', 'নেত্রকোণা'],
+  },
+  {
+    name: 'রংপুর',
+    districts: ['রংপুর', 'কুড়িগ্রাম', 'গাইবান্ধা', 'নীলফামারী', 'লালমনিরহাট', 'ঠাকুরগাঁও', 'পঞ্চগড়', 'দিনাজপুর'],
+  },
 ];
 
-// Show only districts that have artists
 export default function Artists() {
   const [artists, setArtists] = useState<Artist[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [selectedDistrict, setSelectedDistrict] = useState('');
-  const [verifiedOnly, setVerifiedOnly] = useState(false);
-  const [availableDistricts, setAvailableDistricts] = useState<string[]>([]);
+  const [selectedDiv, setSelectedDiv] = useState('সব');
 
   useEffect(() => {
     supabase.from('artists').select('*').eq('is_active', true).order('total_sales', { ascending: false })
-      .then(({ data }) => {
-        const arr = data || [];
-        setArtists(arr);
-        // Extract unique districts present in data
-        const dists = Array.from(new Set(arr.map(a => a.district).filter(Boolean))).sort() as string[];
-        setAvailableDistricts(dists);
-        setLoading(false);
-      });
+      .then(({ data }) => { setArtists(data || []); setLoading(false); });
   }, []);
 
+  // Filter: by division (check if artist's district belongs to that division) OR by search
+  const divDistricts = selectedDiv === 'সব' ? null : DIVISIONS.find(d => d.name === selectedDiv)?.districts;
+
   const filtered = artists.filter(a => {
-    // search by name OR district (case-insensitive, works for Bengali)
     const q = search.trim().toLowerCase();
     const matchSearch = !q
       || a.full_name.toLowerCase().includes(q)
       || (a.district || '').toLowerCase().includes(q)
       || (a.bio || '').toLowerCase().includes(q);
-    const matchDist = !selectedDistrict || a.district === selectedDistrict;
-    const matchVerified = !verifiedOnly || a.is_verified;
-    return matchSearch && matchDist && matchVerified;
+    const matchDiv = !divDistricts || divDistricts.includes(a.district || '');
+    return matchSearch && matchDiv;
   });
 
-  // Group by district for display when a district is selected
-  const groupedByDistrict = selectedDistrict
-    ? { [selectedDistrict]: filtered }
-    : filtered.reduce((acc, a) => {
-        const d = a.district || 'অন্যান্য';
-        if (!acc[d]) acc[d] = [];
-        acc[d].push(a);
-        return acc;
-      }, {} as Record<string, Artist[]>);
+  const divTabs = ['সব', ...DIVISIONS.map(d => d.name)];
 
   return (
-    <div className="min-h-screen pt-24 pb-16 bg-white">
+    <div className="min-h-screen" style={{ background: WL }}>
 
-      {/* Hero header */}
-      <div className="bg-stone-900 pb-16 pt-10 mb-12 relative overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none"
-          style={{ background: 'radial-gradient(ellipse at 70% 50%, rgba(16,185,129,0.12) 0%, transparent 65%)' }} />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <p className="text-emerald-400 text-xs font-bold uppercase tracking-widest mb-3">শিল্পীগণ</p>
-          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-3">
-            আমাদের <span className="text-emerald-400">শিল্পীরা</span>
-          </h1>
-          <p className="text-stone-400 text-lg mb-8">দেশের সেরা ও Verified শিল্পীদের সাথে পরিচিত হন</p>
+      {/* ── Hero Header ── */}
+      <div className="relative overflow-hidden pb-12 pt-8" style={{ background: WD }}>
+        <div className="absolute top-0 right-0 w-80 h-80 rounded-full blur-3xl pointer-events-none"
+          style={{ background: 'radial-gradient(circle, rgba(194,160,110,0.08) 0%, transparent 70%)' }} />
+        <div className="absolute bottom-0 left-1/4 w-64 h-64 rounded-full blur-3xl pointer-events-none"
+          style={{ background: 'radial-gradient(circle, rgba(194,160,110,0.05) 0%, transparent 70%)' }} />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pt-4">
+          <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: W }}>শিল্পীগণ</p>
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 mb-8">
+            <div>
+              <h1 className="text-4xl sm:text-5xl font-bold text-white mb-2">
+                আমাদের <span style={{ color: W }}>শিল্পীরা</span>
+              </h1>
+              <p className="text-stone-400">দেশের সেরা Verified শিল্পীদের সাথে পরিচিত হন</p>
+            </div>
+            <div className="flex items-center gap-4 text-sm text-stone-400">
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4" style={{ color: W }} />
+                <span>{filtered.length} জন শিল্পী</span>
+              </div>
+            </div>
+          </div>
 
-          {/* Search bar */}
-          <div className="relative max-w-xl">
-            <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
+          {/* Search */}
+          <div className="relative max-w-2xl">
+            <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: W }} />
             <input
               type="text"
-              placeholder="শিল্পীর নাম বা জেলা লিখুন যেমন: ঢাকা, রাজশাহী..."
-              className="w-full pl-14 pr-5 py-4 bg-white/10 border border-white/20 text-white placeholder-stone-500 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm backdrop-blur-sm"
+              placeholder="শিল্পীর নাম বা জেলার নাম লিখুন..."
+              className="w-full pl-14 pr-5 py-4 rounded-2xl text-white placeholder-stone-500 outline-none text-sm"
+              style={{
+                background: 'rgba(255,255,255,0.06)',
+                border: '1.5px solid rgba(194,160,110,0.25)',
+              }}
               value={search}
               onChange={e => setSearch(e.target.value)}
+              onFocus={e => { e.target.style.borderColor = 'rgba(194,160,110,0.6)'; }}
+              onBlur={e => { e.target.style.borderColor = 'rgba(194,160,110,0.25)'; }}
             />
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-        {/* District filter chips */}
-        {availableDistricts.length > 0 && (
-          <div className="mb-8">
-            <p className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-4">জেলা অনুযায়ী</p>
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => setSelectedDistrict('')}
-                className={`px-4 py-2 rounded-full text-xs font-bold transition-all border ${
-                  !selectedDistrict
-                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-lg'
-                    : 'bg-white text-stone-600 border-stone-200 hover:border-emerald-300 hover:text-emerald-600'
-                }`}>
-                সব জেলা ({artists.length})
-              </button>
-              {availableDistricts.map(d => {
-                const count = artists.filter(a => a.district === d).length;
-                return (
-                  <button key={d} onClick={() => setSelectedDistrict(d === selectedDistrict ? '' : d)}
-                    className={`px-4 py-2 rounded-full text-xs font-bold transition-all border ${
-                      selectedDistrict === d
-                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-lg'
-                        : 'bg-white text-stone-600 border-stone-200 hover:border-emerald-300 hover:text-emerald-600'
-                    }`}>
-                    {d} ({count})
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* Verified toggle */}
-        <div className="flex items-center justify-between mb-8 flex-wrap gap-3">
-          <p className="text-stone-500 text-sm">
-            <span className="font-bold text-stone-900">{filtered.length}জন</span> শিল্পী পাওয়া গেছে
-            {selectedDistrict && <span className="text-emerald-600"> — {selectedDistrict}</span>}
-          </p>
-          <button onClick={() => setVerifiedOnly(!verifiedOnly)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all border ${
-              verifiedOnly ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-stone-600 border-stone-200 hover:border-emerald-300'
-            }`}>
-            <ShieldCheck className="w-3.5 h-3.5" /> শুধু Verified
-          </button>
-        </div>
-
-        {loading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-            {[...Array(10)].map((_, i) => <div key={i} className="animate-pulse bg-stone-100 rounded-3xl h-64" />)}
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="text-center py-20">
-            <Palette className="w-16 h-16 text-stone-200 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-stone-400">কোনো শিল্পী পাওয়া যায়নি</h3>
-            <p className="text-stone-400 text-sm mt-2">অন্য জেলা বা নাম দিয়ে খুঁজুন</p>
-          </div>
-        ) : selectedDistrict || search ? (
-          /* Flat grid when filtered */
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-            {filtered.map((artist, i) => <ArtistCard key={artist.id} artist={artist} i={i} />)}
-          </div>
-        ) : (
-          /* Grouped by district when showing all */
-          <div className="space-y-12">
-            {Object.entries(groupedByDistrict).sort().map(([district, distArtists]) => (
-              <div key={district}>
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-emerald-600" />
-                    <h2 className="text-lg font-bold text-stone-900">{district}</h2>
-                  </div>
-                  <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-600 text-xs font-bold rounded-full border border-emerald-200">
-                    {distArtists.length}জন
+      {/* ── Division Filter Tabs ── */}
+      <div className="sticky top-16 z-30 py-3 border-b overflow-x-auto"
+        style={{ background: 'rgba(250,246,240,0.95)', backdropFilter: 'blur(12px)', borderColor: '#e8d9c0' }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex gap-2 no-scrollbar min-w-max">
+            {divTabs.map(div => (
+              <button key={div} onClick={() => setSelectedDiv(div)}
+                className="px-5 py-2 rounded-2xl text-sm font-bold whitespace-nowrap transition-all"
+                style={selectedDiv === div
+                  ? { background: `linear-gradient(135deg,${W},#8b6914)`, color: 'white', boxShadow: '0 4px 14px rgba(194,160,110,0.4)' }
+                  : { background: '#ffffff', color: '#8b6914', border: '1.5px solid #e8d9c0' }}>
+                {div}
+                {div !== 'সব' && (
+                  <span className="ml-2 text-[10px] opacity-60">
+                    ({artists.filter(a => DIVISIONS.find(d => d.name === div)?.districts.includes(a.district || '')).length})
                   </span>
-                  <div className="flex-1 h-px bg-stone-100" />
-                  <button onClick={() => setSelectedDistrict(district)} className="text-xs text-stone-400 hover:text-emerald-600 transition-colors font-semibold">
-                    সব দেখুন →
-                  </button>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-                  {distArtists.slice(0, 5).map((artist, i) => <ArtistCard key={artist.id} artist={artist} i={i} />)}
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Artist Grid ── */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        {loading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
+            {[...Array(10)].map((_, i) => (
+              <div key={i} className="animate-pulse bg-white rounded-3xl border overflow-hidden" style={{ borderColor: '#e8d9c0' }}>
+                <div className="h-40 rounded-t-3xl" style={{ background: '#f5ead8' }} />
+                <div className="p-4 space-y-2">
+                  <div className="h-3 rounded" style={{ background: '#f5ead8', width: '70%' }} />
+                  <div className="h-2.5 rounded" style={{ background: '#f5ead8', width: '50%' }} />
                 </div>
               </div>
             ))}
           </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function ArtistCard({ artist, i }: { artist: Artist; i: number }) {
-  return (
-    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
-      <Link to={`/artist/${artist.id}`}
-        className="block bg-white rounded-3xl overflow-hidden border-2 border-stone-100 hover:border-emerald-300 hover:-translate-y-1.5 hover:shadow-xl transition-all duration-300 group text-center">
-        {/* Profile section with gradient bg */}
-        <div className="relative pt-6 pb-4 px-4 flex flex-col items-center"
-          style={{ background: 'linear-gradient(180deg, #f0fdf4 0%, #fff 100%)' }}>
-          <div className="relative mb-3">
-            <img
-              src={artist.profile_image_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${artist.full_name}`}
-              alt={artist.full_name}
-              className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-md"
-            />
-            {artist.is_verified && (
-              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center shadow">
-                <ShieldCheck className="w-3 h-3 text-white" />
+        ) : filtered.length === 0 ? (
+          <div className="py-24 text-center">
+            <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-5"
+              style={{ background: '#f5ead8' }}>
+              <Users className="w-10 h-10" style={{ color: W }} />
+            </div>
+            <h3 className="text-xl font-bold mb-2" style={{ color: WD }}>কোনো শিল্পী পাওয়া যায়নি</h3>
+            <p className="text-sm mb-6" style={{ color: '#9a7050' }}>অন্য কীওয়ার্ড বা বিভাগ চেষ্টা করুন</p>
+            <button onClick={() => { setSearch(''); setSelectedDiv('সব'); }}
+              className="px-6 py-3 text-white rounded-xl font-bold"
+              style={{ background: `linear-gradient(135deg,${W},#8b6914)` }}>
+              রিসেট করুন
+            </button>
+          </div>
+        ) : (
+          <>
+            {/* Selected division label */}
+            {selectedDiv !== 'সব' && (
+              <div className="mb-6 flex items-center gap-3">
+                <div className="w-1 h-6 rounded-full" style={{ background: `linear-gradient(to bottom, ${W}, transparent)` }} />
+                <div>
+                  <span className="font-bold" style={{ color: WD }}>{selectedDiv} বিভাগ</span>
+                  <span className="text-sm ml-2" style={{ color: '#9a7050' }}>— {filtered.length} জন শিল্পী</span>
+                </div>
               </div>
             )}
-          </div>
-          <h3 className="font-bold text-stone-900 text-sm group-hover:text-emerald-600 transition-colors leading-tight">{artist.full_name}</h3>
-          {artist.district && (
-            <p className="text-stone-400 text-[10px] mt-1 flex items-center gap-0.5">
-              <MapPin className="w-2.5 h-2.5" />{artist.district}
-            </p>
-          )}
-        </div>
-        {/* Bio */}
-        {artist.bio && (
-          <div className="px-4 pb-3">
-            <p className="text-stone-400 text-[10px] line-clamp-2 leading-relaxed">{artist.bio}</p>
-          </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
+              {filtered.map((a, i) => (
+                <motion.div key={a.id} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
+                  <Link to={`/artist/${a.id}`}
+                    className="block rounded-3xl overflow-hidden hover:-translate-y-2 hover:shadow-2xl transition-all duration-300 group"
+                    style={{ background: '#ffffff', border: '2px solid #e8d9c0' }}>
+
+                    {/* Profile top */}
+                    <div className="relative pt-7 pb-4 px-4 flex flex-col items-center"
+                      style={{ background: 'linear-gradient(180deg, #fdf6ec 0%, #fefaf5 100%)' }}>
+                      {/* Verified badge top-right */}
+                      {a.is_verified && (
+                        <div className="absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center shadow"
+                          style={{ background: W }}>
+                          <ShieldCheck className="w-3 h-3 text-white" />
+                        </div>
+                      )}
+
+                      <div className="relative mb-3">
+                        <img
+                          src={a.profile_image_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${a.full_name}`}
+                          alt={a.full_name}
+                          className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-md"
+                        />
+                        {/* Online indicator */}
+                        <div className="absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-white"
+                          style={{ background: '#4ade80' }} />
+                      </div>
+
+                      <h3 className="font-bold text-sm text-center leading-tight group-hover:transition-colors"
+                        style={{ color: WD }}>
+                        {a.full_name}
+                      </h3>
+
+                      {a.district && (
+                        <p className="text-[11px] mt-1 flex items-center gap-0.5" style={{ color: '#9a7050' }}>
+                          <MapPin className="w-2.5 h-2.5" />{a.district}
+                        </p>
+                      )}
+
+                      {a.bio && (
+                        <p className="text-[10px] mt-2 text-center line-clamp-2 leading-relaxed" style={{ color: '#9a7050' }}>
+                          {a.bio}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Stats bar */}
+                    <div className="flex items-center justify-between px-4 py-3 border-t" style={{ borderColor: '#f0e4d0' }}>
+                      <div className="text-center">
+                        <p className="font-bold text-xs" style={{ color: WD }}>{a.total_sales || 0}</p>
+                        <p className="text-[9px]" style={{ color: '#9a7050' }}>বিক্রয়</p>
+                      </div>
+                      <div className="w-px h-5" style={{ background: '#e8d9c0' }} />
+                      <div className="text-center flex items-center gap-0.5">
+                        <Star className="w-3 h-3 fill-current" style={{ color: W }} />
+                        <p className="font-bold text-xs" style={{ color: WD }}>{(a.rating_avg || 0).toFixed(1)}</p>
+                      </div>
+                      <div className="w-px h-5" style={{ background: '#e8d9c0' }} />
+                      <div className="text-center">
+                        <p className="text-[9px] font-bold px-2 py-0.5 rounded-full"
+                          style={a.is_verified
+                            ? { background: 'rgba(194,160,110,0.15)', color: '#8b6914' }
+                            : { background: '#f5ead8', color: '#9a7050' }}>
+                          {a.is_verified ? 'যাচাইকৃত' : 'সাধারণ'}
+                        </p>
+                      </div>
+                    </div>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          </>
         )}
-        {/* Stats */}
-        <div className="flex items-center justify-center gap-3 px-4 py-3 border-t border-stone-100">
-          <div className="text-center">
-            <p className="font-bold text-stone-900 text-sm">{artist.total_sales}</p>
-            <p className="text-stone-400 text-[9px]">বিক্রয়</p>
-          </div>
-          <div className="w-px h-5 bg-stone-100" />
-          <div className="flex items-center gap-1">
-            <Star className="w-3 h-3 text-amber-400 fill-current" />
-            <p className="font-bold text-stone-900 text-sm">{(artist.rating_avg || 0).toFixed(1)}</p>
-          </div>
-        </div>
-      </Link>
-    </motion.div>
+      </div>
+
+      {/* ── CTA ── */}
+      <div className="py-16 text-center border-t" style={{ background: '#f5ead8', borderColor: '#e8d9c0' }}>
+        <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: W }}>শিল্পী হন</p>
+        <h2 className="text-2xl font-bold mb-3" style={{ color: WD }}>আপনিও কি শিল্পী?</h2>
+        <p className="text-sm mb-6" style={{ color: '#9a7050' }}>বিনামূল্যে যোগ দিন এবং হাজারো ক্রেতার কাছে আপনার শিল্পকর্ম পৌঁছে দিন</p>
+        <Link to="/login" className="inline-flex items-center gap-2 px-8 py-3.5 text-white rounded-2xl font-bold transition-all shadow-lg"
+          style={{ background: `linear-gradient(135deg,${W},#8b6914)`, boxShadow: '0 6px 20px rgba(194,160,110,0.4)' }}>
+          শিল্পী হিসেবে যোগ দিন
+        </Link>
+      </div>
+    </div>
   );
 }

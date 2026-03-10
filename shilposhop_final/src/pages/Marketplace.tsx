@@ -65,7 +65,7 @@ function ArtworkCard({ art }: { art: Artwork }) {
         {/* Badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-1.5">
           {art.is_featured && (
-            <span className="flex items-center gap-1 px-2.5 py-1 bg-[#fdf8f0]0/90 backdrop-blur text-white text-[10px] font-bold uppercase rounded-full shadow-sm">
+            <span className="flex items-center gap-1 px-2.5 py-1 bg-emerald-500/90 backdrop-blur text-white text-[10px] font-bold uppercase rounded-full shadow-sm">
               <Star className="w-3 h-3 fill-current" /> ফিচারড
             </span>
           )}
@@ -91,11 +91,11 @@ function ArtworkCard({ art }: { art: Artwork }) {
       {/* Info */}
       <div className="p-5">
         <Link to={`/artwork/${art.id}`}>
-          <h3 className="font-bold text-stone-900 text-base leading-tight hover:text-[#8b6914] transition-colors line-clamp-1 mb-1">
+          <h3 className="font-bold text-stone-900 text-base leading-tight hover:text-emerald-600 transition-colors line-clamp-1 mb-1">
             {art.title}
           </h3>
         </Link>
-        <Link to={`/artist/${art.artist_id}`} className="text-stone-400 text-xs hover:text-[#8b6914] transition-colors">
+        <Link to={`/artist/${art.artist_id}`} className="text-stone-400 text-xs hover:text-emerald-600 transition-colors">
           {art.artist?.full_name}
         </Link>
 
@@ -106,15 +106,15 @@ function ArtworkCard({ art }: { art: Artwork }) {
         <div className="flex items-center justify-between mt-4">
           <div>
             <p className="text-xl font-bold text-stone-900">৳{art.price.toLocaleString()}</p>
-            <p className="text-xs text-[#8b6914] font-medium">পুরো দেশে ডেলিভারি</p>
+            <p className="text-xs text-emerald-600 font-medium">পুরো দেশে ডেলিভারি</p>
           </div>
 
           <button
             onClick={handleAddToCart}
             className={`flex items-center gap-1.5 px-4 py-2.5 rounded-2xl font-bold text-sm transition-all ${
               inCart
-                ? 'bg-[#fdf8f0] text-[#8b6914] border border-emerald-200'
-                : 'bg-[#c2a06e] text-white hover:bg-emerald-700 shadow-sm shadow-emerald-200'
+                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm shadow-emerald-200'
             }`}
           >
             {inCart ? (
@@ -178,9 +178,9 @@ export default function Marketplace() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-10">
             <div>
-              <p className="text-[#8b6914] font-semibold text-sm mb-2 uppercase tracking-wider">মার্কেটপ্লেস</p>
+              <p className="text-emerald-600 font-semibold text-sm mb-2 uppercase tracking-wider">মার্কেটপ্লেস</p>
               <h1 className="text-4xl sm:text-5xl font-bold text-stone-900 leading-tight">
-                বিশেষ <span className="text-[#8b6914]">শিল্পকর্ম</span>
+                বিশেষ <span className="text-emerald-600">শিল্পকর্ম</span>
               </h1>
               <p className="text-stone-500 mt-3 text-lg">দেশের সেরা শিল্পীদের অকৃত্রিম সৃষ্টি</p>
             </div>
@@ -191,7 +191,7 @@ export default function Marketplace() {
                 <input
                   type="text"
                   placeholder="শিল্পকর্ম বা শিল্পী খুঁজুন..."
-                  className="w-full pl-11 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-2xl focus:ring-2 focus:ring-[#c2a06e] outline-none transition-all text-sm"
+                  className="w-full pl-11 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all text-sm"
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                 />
@@ -206,7 +206,7 @@ export default function Marketplace() {
               <div className="relative">
                 <button
                   onClick={() => setShowSort(!showSort)}
-                  className="flex items-center gap-2 px-4 py-3 bg-white border border-stone-200 rounded-2xl text-sm font-medium text-stone-700 hover:border-[#c2a06e] transition-colors whitespace-nowrap"
+                  className="flex items-center gap-2 px-4 py-3 bg-white border border-stone-200 rounded-2xl text-sm font-medium text-stone-700 hover:border-emerald-300 transition-colors whitespace-nowrap"
                 >
                   <SlidersHorizontal className="w-4 h-4" />
                   {currentSort}
@@ -224,7 +224,7 @@ export default function Marketplace() {
                         <button
                           key={opt.key}
                           onClick={() => { setSortBy(opt.key); setShowSort(false); }}
-                          className={`w-full text-left px-4 py-3 text-sm font-medium transition-colors ${sortBy === opt.key ? 'bg-[#fdf8f0] text-[#8b6914]' : 'text-stone-700 hover:bg-stone-50'}`}
+                          className={`w-full text-left px-4 py-3 text-sm font-medium transition-colors ${sortBy === opt.key ? 'bg-emerald-50 text-emerald-700' : 'text-stone-700 hover:bg-stone-50'}`}
                         >
                           {opt.label}
                         </button>
@@ -265,7 +265,7 @@ export default function Marketplace() {
             {(selectedCategory !== 'All' || searchQuery) && (
               <button
                 onClick={() => { setSelectedCategory('All'); setSearchQuery(''); }}
-                className="text-sm text-[#8b6914] font-bold hover:underline flex items-center gap-1"
+                className="text-sm text-emerald-600 font-bold hover:underline flex items-center gap-1"
               >
                 <X className="w-3 h-3" /> ফিল্টার মুছুন
               </button>
@@ -293,7 +293,7 @@ export default function Marketplace() {
             <p className="text-stone-500 mt-2">অনুসন্ধান বা ফিল্টার পরিবর্তন করে দেখুন</p>
             <button
               onClick={() => { setSearchQuery(''); setSelectedCategory('All'); }}
-              className="mt-6 px-6 py-3 bg-[#c2a06e] text-white rounded-2xl font-bold hover:bg-emerald-700 transition-all"
+              className="mt-6 px-6 py-3 bg-emerald-600 text-white rounded-2xl font-bold hover:bg-emerald-700 transition-all"
             >
               সব দেখুন
             </button>
