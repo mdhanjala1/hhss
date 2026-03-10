@@ -59,13 +59,79 @@ const SECTIONS = [
   { bg: '#f7f0e8', border: '#bfa070', accent: '#4a3010', label: 'বিশেষ শিল্পকর্ম', num: '০৫', grad: 'from-[#f7f0e8] to-[#ecd9be]' },
 ];
 
+// ─── Premium SVG Category Icons ──────────────────────────────────────────────
+const CalligraphyIcon = ({ color }: { color: string }) => (
+  <svg viewBox="0 0 36 36" className="w-9 h-9" fill="none">
+    <path d="M18 4 C12 4 7 9 7 15 C7 21 12 28 18 32 C24 28 29 21 29 15 C29 9 24 4 18 4Z" stroke={color} strokeWidth="1.5" fill="none" opacity="0.3"/>
+    <path d="M11 22 Q14 16 18 8" stroke={color} strokeWidth="2.2" strokeLinecap="round"/>
+    <path d="M18 8 Q22 14 25 20" stroke={color} strokeWidth="2.2" strokeLinecap="round"/>
+    <path d="M13 18 Q18 14 23 18" stroke={color} strokeWidth="1.5" strokeLinecap="round" opacity="0.7"/>
+    <circle cx="9" cy="24" r="2" fill={color} opacity="0.5"/>
+    <circle cx="27" cy="22" r="1.5" fill={color} opacity="0.4"/>
+  </svg>
+);
+const PaintingIcon = ({ color }: { color: string }) => (
+  <svg viewBox="0 0 36 36" className="w-9 h-9" fill="none">
+    <rect x="4" y="5" width="22" height="26" rx="3" stroke={color} strokeWidth="1.5" fill={color} fillOpacity="0.08"/>
+    <circle cx="10" cy="12" r="2.5" fill="#c2704a" opacity="0.8"/>
+    <circle cx="17" cy="11" r="2.5" fill="#e8b840" opacity="0.85"/>
+    <circle cx="10" cy="19" r="2.5" fill="#4a90c2" opacity="0.8"/>
+    <circle cx="17" cy="19" r="2.5" fill={color} opacity="0.7"/>
+    <path d="M29 8 Q32 12 30 17 Q28 22 30 27" stroke={color} strokeWidth="2" strokeLinecap="round" fill="none"/>
+    <ellipse cx="29" cy="6" rx="2" ry="3" fill={color} opacity="0.5" transform="rotate(-15 29 6)"/>
+  </svg>
+);
+const DigitalIcon = ({ color }: { color: string }) => (
+  <svg viewBox="0 0 36 36" className="w-9 h-9" fill="none">
+    <rect x="3" y="7" width="26" height="17" rx="3" stroke={color} strokeWidth="1.5" fill={color} fillOpacity="0.06"/>
+    <path d="M11 30 L15 24 M25 30 L21 24" stroke={color} strokeWidth="1.8" strokeLinecap="round"/>
+    <path d="M9 30 L27 30" stroke={color} strokeWidth="1.8" strokeLinecap="round"/>
+    <path d="M10 18 L14 12 L18 16 L21 13 L26 18" stroke={color} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round"/>
+    <circle cx="10" cy="18" r="1.5" fill={color} opacity="0.6"/>
+    <circle cx="26" cy="18" r="1.5" fill={color} opacity="0.6"/>
+  </svg>
+);
+const HandicraftIcon = ({ color }: { color: string }) => (
+  <svg viewBox="0 0 36 36" className="w-9 h-9" fill="none">
+    <path d="M18 4 L21.5 14 L32 14 L23.5 20.5 L26.5 31 L18 24.5 L9.5 31 L12.5 20.5 L4 14 L14.5 14 Z" stroke={color} strokeWidth="1.5" fill={color} fillOpacity="0.1" strokeLinejoin="round"/>
+    <path d="M18 8 L20.5 15.5 L28 15.5 L22 19.5 L24 26.5 L18 22.5 L12 26.5 L14 19.5 L8 15.5 L15.5 15.5 Z" fill={color} opacity="0.45"/>
+  </svg>
+);
+const SculptureIcon = ({ color }: { color: string }) => (
+  <svg viewBox="0 0 36 36" className="w-9 h-9" fill="none">
+    <ellipse cx="18" cy="8" rx="6" ry="5" stroke={color} strokeWidth="1.5" fill={color} fillOpacity="0.12"/>
+    <path d="M12 13 Q10 20 11 28 L25 28 Q26 20 24 13" stroke={color} strokeWidth="1.5" fill={color} fillOpacity="0.08"/>
+    <path d="M10 28 L26 28" stroke={color} strokeWidth="2" strokeLinecap="round"/>
+    <path d="M8 31 L28 31" stroke={color} strokeWidth="2.5" strokeLinecap="round"/>
+    <path d="M15 20 Q18 22 21 20" stroke={color} strokeWidth="1.2" strokeLinecap="round" opacity="0.6"/>
+  </svg>
+);
+const PhotographyIcon = ({ color }: { color: string }) => (
+  <svg viewBox="0 0 36 36" className="w-9 h-9" fill="none">
+    <rect x="3" y="10" width="30" height="21" rx="4" stroke={color} strokeWidth="1.5" fill={color} fillOpacity="0.07"/>
+    <path d="M13 10 L15 5 L21 5 L23 10" stroke={color} strokeWidth="1.5" strokeLinejoin="round" fill="none"/>
+    <circle cx="18" cy="20" r="6" stroke={color} strokeWidth="1.5" fill={color} fillOpacity="0.12"/>
+    <circle cx="18" cy="20" r="3" fill={color} opacity="0.5"/>
+    <circle cx="27" cy="14" r="2" fill={color} opacity="0.4"/>
+  </svg>
+);
+
+const CAT_SVG: Record<string, (c: string) => React.ReactNode> = {
+  'Arabic Calligraphy': (c) => <CalligraphyIcon color={c} />,
+  'Painting': (c) => <PaintingIcon color={c} />,
+  'Digital Art': (c) => <DigitalIcon color={c} />,
+  'Handicraft': (c) => <HandicraftIcon color={c} />,
+  'Sculpture': (c) => <SculptureIcon color={c} />,
+  'Photography': (c) => <PhotographyIcon color={c} />,
+};
+
 const CATEGORIES = [
-  { key: 'Arabic Calligraphy', label: 'ক্যালিগ্রাফি', icon: '✦', desc: 'ইসলামিক আর্ট', color: '#8b6914', bg: '#fdf8f0', border: '#c8a06a' },
-  { key: 'Painting', label: 'পেইন্টিং', icon: '🎨', desc: 'তেল ও জলরঙ', color: '#7a4c0c', bg: '#fef9f0', border: '#d4a06a' },
-  { key: 'Digital Art', label: 'ডিজিটাল আর্ট', icon: '💻', desc: 'ডিজিটাল মিডিয়া', color: '#5c3d12', bg: '#fdf5e8', border: '#c09060' },
-  { key: 'Handicraft', label: 'হস্তশিল্প', icon: '🧵', desc: 'হাতে তৈরি', color: '#6b4c1a', bg: '#fef6e8', border: '#c8a870' },
-  { key: 'Sculpture', label: 'ভাস্কর্য', icon: '🗿', desc: '৩ডি শিল্পকর্ম', color: '#4a3010', bg: '#fdf3e0', border: '#bfa070' },
-  { key: 'Photography', label: 'ফটোগ্রাফি', icon: '📷', desc: 'আলোকচিত্র', color: '#3d2810', bg: '#fdf1e0', border: '#b89060' },
+  { key: 'Arabic Calligraphy', label: 'ক্যালিগ্রাফি', desc: 'ইসলামিক আর্ট', color: '#8b6914', bg: '#fdf8f0', border: '#c8a06a' },
+  { key: 'Painting', label: 'পেইন্টিং', desc: 'তেল ও জলরঙ', color: '#7a4c0c', bg: '#fef9f0', border: '#d4a06a' },
+  { key: 'Digital Art', label: 'ডিজিটাল আর্ট', desc: 'ডিজিটাল মিডিয়া', color: '#5c3d12', bg: '#fdf5e8', border: '#c09060' },
+  { key: 'Handicraft', label: 'হস্তশিল্প', desc: 'হাতে তৈরি', color: '#6b4c1a', bg: '#fef6e8', border: '#c8a870' },
+  { key: 'Sculpture', label: 'ভাস্কর্য', desc: '৩ডি শিল্পকর্ম', color: '#4a3010', bg: '#fdf3e0', border: '#bfa070' },
+  { key: 'Photography', label: 'ফটোগ্রাফি', desc: 'আলোকচিত্র', color: '#3d2810', bg: '#fdf1e0', border: '#b89060' },
 ];
 
 // ─── Artwork card ─────────────────────────────────────────────────────────────
@@ -334,7 +400,9 @@ export default function Home() {
                   {/* Corner glow */}
                   <div className="absolute top-0 right-0 w-12 h-12 rounded-bl-3xl opacity-0 group-hover:opacity-100 transition-opacity"
                     style={{ background: `radial-gradient(circle at 100% 0%, ${cat.color}20, transparent 70%)` }} />
-                  <span className="text-2xl mb-2 relative z-10">{cat.icon}</span>
+                  <div className="mb-2 relative z-10 group-hover:scale-110 transition-transform duration-300">
+                    {CAT_SVG[cat.key]?.(cat.color)}
+                  </div>
                   <h3 className="relative z-10 font-bold text-xs sm:text-sm text-center leading-tight" style={{ color: cat.color }}>{cat.label}</h3>
                   <p className="relative z-10 text-[10px] mt-0.5 opacity-60 text-center" style={{ color: cat.color }}>{cat.desc}</p>
                 </Link>
@@ -481,28 +549,67 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ══ TESTIMONIALS ══ */}
+      <section className="py-20" style={{ background: '#f5ead8' }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] mb-3" style={{ color: W }}>মতামত</p>
+            <h2 className="text-2xl sm:text-4xl font-bold" style={{ color: WD }}>তারা কী বলছেন</h2>
+            <p className="text-sm mt-2" style={{ color: '#9a7050' }}>আমাদের সন্তুষ্ট ক্রেতা ও শিল্পীদের অভিজ্ঞতা</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {[
+              { name: 'ফারহান আহমেদ', city: 'ঢাকা', rating: 5, text: 'অসাধারণ একটি প্ল্যাটফর্ম! ড্রয়িং রুমের জন্য একটি ক্যালিগ্রাফি কিনেছি — মানের দিক থেকে অতুলনীয়।', avatar: 'farhan' },
+              { name: 'নাজমুন নাহার', city: 'চট্টগ্রাম', rating: 5, text: 'আমি শিল্পী হিসেবে যোগ দিয়েছি। মাত্র দুই সপ্তাহে তিনটি অর্ডার পেয়েছি। এডমিন খুব দ্রুত সাড়া দেন।', avatar: 'najma' },
+              { name: 'রাকিব হোসেন', city: 'রাজশাহী', rating: 5, text: 'শিল্পশপ শিল্পপ্রেমীদের জন্য স্বর্গ। দেশের বিভিন্ন প্রান্তের শিল্পীদের কাজ একটি জায়গায় — অসাধারণ।', avatar: 'rakib' },
+              { name: 'সুমাইয়া ইসলাম', city: 'সিলেট', rating: 5, text: 'অর্ডার দেওয়া থেকে ডেলিভারি পর্যন্ত পুরো অভিজ্ঞতা দুর্দান্ত। শিল্পকর্মের মান প্রত্যাশার চেয়ে বেশি ভালো।', avatar: 'sumaiya' },
+            ].map((t, i) => (
+              <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+                className="rounded-3xl border-2 p-6 hover:-translate-y-1 hover:shadow-xl transition-all"
+                style={{ background: WL, borderColor: '#e8d9c0' }}>
+                <div className="flex gap-1 mb-4">
+                  {[...Array(t.rating)].map((_, j) => <Star key={j} className="w-4 h-4 fill-current" style={{ color: W }} />)}
+                </div>
+                <div className="text-5xl leading-none font-serif mb-1" style={{ color: '#e8c898', fontFamily: 'Georgia,serif' }}>"</div>
+                <p className="text-sm leading-relaxed mb-5" style={{ color: '#6b4c1a' }}>{t.text}</p>
+                <div className="flex items-center gap-3 pt-4 border-t" style={{ borderColor: '#e8d9c0' }}>
+                  <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${t.avatar}`}
+                    alt={t.name} className="w-10 h-10 rounded-full" style={{ background: '#f5ead8' }} />
+                  <div>
+                    <p className="font-bold text-sm" style={{ color: WD }}>{t.name}</p>
+                    <p className="text-xs flex items-center gap-1" style={{ color: '#9a7050' }}>
+                      <MapPin className="w-3 h-3" />{t.city}
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ══ FAQ ══ */}
-      <section className="py-20" style={{ background: WL }}>
+      <section className="py-20" style={{ background: 'var(--bg)' }}>
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <p className="text-xs font-bold uppercase tracking-[0.2em] mb-3" style={{ color: W }}>FAQ</p>
-            <h2 className="text-2xl sm:text-4xl font-bold" style={{ color: WD }}>সাধারণ জিজ্ঞাসা</h2>
+            <h2 className="text-2xl sm:text-4xl font-bold" style={{ color: 'var(--text)' }}>সাধারণ জিজ্ঞাসা</h2>
           </div>
           <div className="space-y-3">
             {FAQ_DATA.map((faq, i) => (
               <div key={i} className="rounded-2xl overflow-hidden border shadow-sm hover:shadow-md transition-all"
-                style={{ background: '#ffffff', borderColor: '#e8d9c0' }}>
+                style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
                 <button onClick={() => setOpenFaq(openFaq === i ? null : i)} className="w-full flex items-center justify-between p-5 text-left gap-4">
-                  <span className="font-bold text-sm" style={{ color: WD }}>{faq.q}</span>
+                  <span className="font-bold text-sm" style={{ color: 'var(--text)' }}>{faq.q}</span>
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all ${openFaq === i ? 'rotate-180' : ''}`}
-                    style={{ background: openFaq === i ? W : '#f5ead8', color: openFaq === i ? 'white' : '#8b6914' }}>
+                    style={{ background: openFaq === i ? W : 'var(--bg)', color: openFaq === i ? 'white' : W }}>
                     <ChevronDown className="w-4 h-4" />
                   </div>
                 </button>
                 <AnimatePresence>
                   {openFaq === i && (
                     <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                      <div className="px-5 pb-5 text-sm pt-4 leading-relaxed border-t" style={{ color: '#6b4c1a', borderColor: '#f0e0c8' }}>{faq.a}</div>
+                      <div className="px-5 pb-5 text-sm pt-4 leading-relaxed border-t" style={{ color: 'var(--text2)', borderColor: 'var(--border)' }}>{faq.a}</div>
                     </motion.div>
                   )}
                 </AnimatePresence>

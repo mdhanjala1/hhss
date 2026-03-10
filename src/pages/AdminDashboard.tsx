@@ -154,9 +154,9 @@ export default function AdminDashboard() {
   );
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-stone-50">
+    <div className="min-h-screen flex items-center justify-center bg-[var(--bg)]">
       <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4" />
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#c2a06e] mx-auto mb-4" />
         <p className="text-stone-500">লোড হচ্ছে...</p>
       </div>
     </div>
@@ -172,12 +172,12 @@ export default function AdminDashboard() {
   ] as const;
 
   return (
-    <div className="min-h-screen bg-stone-50 flex">
+    <div className="min-h-screen bg-[var(--bg)] flex">
       {/* Sidebar */}
-      <aside className="w-64 bg-stone-900 text-white shrink-0 flex flex-col">
-        <div className="p-5 border-b border-stone-800">
+      <aside className="w-64 text-white shrink-0" style={{ background: "#1a0e05" }} flex flex-col">
+        <div className="p-5 border-b border-[rgba(194,160,110,0.15)]">
           <div className="flex items-center gap-3 mb-1">
-            <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl" style={{ background: "linear-gradient(135deg,#c2a06e,#8b6914)" }} flex items-center justify-center">
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
@@ -189,13 +189,13 @@ export default function AdminDashboard() {
         <nav className="p-3 flex-1 space-y-1">
           {TABS.map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id as any)}
-              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all text-sm font-semibold ${activeTab === tab.id ? 'bg-emerald-600 text-white' : 'text-stone-400 hover:bg-stone-800 hover:text-white'}`}>
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all text-sm font-semibold ${activeTab === tab.id ? 'bg-emerald-600 text-white' : 'text-stone-400 hover:bg-white/5 hover:text-white'}`}>
               <span className="flex items-center gap-3">{tab.icon}{tab.label}</span>
               {tab.badge && tab.badge > 0 ? <span className="w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">{tab.badge}</span> : null}
             </button>
           ))}
         </nav>
-        <div className="p-4 border-t border-stone-800">
+        <div className="p-4 border-t border-[rgba(194,160,110,0.15)]">
           <button onClick={fetchAdminData} className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-xl text-sm font-medium transition-all">
             <RefreshCw className="w-4 h-4" /> রিফ্রেশ করুন
           </button>
@@ -205,8 +205,8 @@ export default function AdminDashboard() {
       {/* Main */}
       <main className="flex-1 overflow-auto">
         {/* Header */}
-        <div className="bg-white border-b border-stone-100 px-8 py-5 flex items-center justify-between">
-          <h1 className="text-xl font-bold text-stone-900">
+        <div className="border-b" style={{ background: "var(--card)", borderColor: "var(--border)" }} px-8 py-5 flex items-center justify-between">
+          <h1 className="text-xl font-bold style={{ color: "var(--text)" }}>
             {activeTab === 'stats' && 'ড্যাশবোর্ড'}
             {activeTab === 'artworks' && `শিল্পকর্ম ব্যবস্থাপনা ${stats.pendingArtworks > 0 ? `(${stats.pendingArtworks}টি অপেক্ষমাণ)` : ''}`}
             {activeTab === 'artists' && 'শিল্পী ব্যবস্থাপনা'}
@@ -216,7 +216,7 @@ export default function AdminDashboard() {
           </h1>
         </div>
 
-        <div className="p-8">
+        <div className="p-8" style={{ background: "var(--bg)" }}>
 
           {/* ─── STATS TAB ─── */}
           {activeTab === 'stats' && (
@@ -226,14 +226,14 @@ export default function AdminDashboard() {
                   { label: 'মোট শিল্পী', value: stats.artists, icon: <Users className="w-6 h-6" />, color: 'text-blue-600 bg-blue-50' },
                   { label: 'মোট শিল্পকর্ম', value: stats.artworks, icon: <ImageIcon className="w-6 h-6" />, color: 'text-purple-600 bg-purple-50' },
                   { label: 'অপেক্ষমাণ শিল্পকর্ম', value: stats.pendingArtworks, icon: <Clock className="w-6 h-6" />, color: 'text-amber-600 bg-amber-50', action: () => setActiveTab('artworks') },
-                  { label: 'মোট অর্ডার', value: stats.orders, icon: <ShoppingBag className="w-6 h-6" />, color: 'text-emerald-600 bg-emerald-50' },
+                  { label: 'মোট অর্ডার', value: stats.orders, icon: <ShoppingBag className="w-6 h-6" />, color: 'text-[#c2a06e] bg-emerald-50' },
                   { label: 'NID অপেক্ষমাণ', value: stats.pendingNid, icon: <ShieldCheck className="w-6 h-6" />, color: 'text-red-600 bg-red-50', action: () => setActiveTab('nid') },
                   { label: 'মোট আয়', value: `৳${stats.totalRevenue.toLocaleString()}`, icon: <DollarSign className="w-6 h-6" />, color: 'text-emerald-700 bg-emerald-50' },
                 ].map((s, i) => (
-                  <div key={i} onClick={s.action} className={`bg-white rounded-2xl border border-stone-100 p-6 flex items-center gap-4 ${s.action ? 'cursor-pointer hover:border-emerald-200 hover:shadow-md transition-all' : ''}`}>
+                  <div key={i} onClick={s.action} className={`rounded-2xl border" style={{ background: "var(--card)", borderColor: "var(--border)" }} p-6 flex items-center gap-4 ${s.action ? 'cursor-pointer hover:border-emerald-200 hover:shadow-md transition-all' : ''}`}>
                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${s.color}`}>{s.icon}</div>
                     <div>
-                      <p className="text-2xl font-bold text-stone-900">{s.value}</p>
+                      <p className="text-2xl font-bold style={{ color: "var(--text)" }}>{s.value}</p>
                       <p className="text-stone-400 text-xs mt-0.5">{s.label}</p>
                     </div>
                   </div>
@@ -259,18 +259,18 @@ export default function AdminDashboard() {
                 <div className="relative flex-1 min-w-[200px]">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
                   <input type="text" placeholder="নাম বা শিল্পী খুঁজুন..." value={searchArt} onChange={e => setSearchArt(e.target.value)}
-                    className="w-full pl-11 pr-4 py-3 bg-white border border-stone-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm" />
+                    className="w-full pl-11 pr-4 py-3 bg-white border border-stone-200 rounded-2xl focus:ring-2 focus:ring-[#c2a06e] outline-none text-sm" />
                 </div>
                 {(['pending','approved','rejected','all'] as const).map(f => (
                   <button key={f} onClick={() => setArtFilter(f)}
-                    className={`px-4 py-3 rounded-2xl text-sm font-bold transition-all ${artFilter === f ? 'bg-stone-900 text-white' : 'bg-white border border-stone-200 text-stone-600 hover:border-stone-400'}`}>
+                    className={`px-4 py-3 rounded-2xl text-sm font-bold transition-all ${artFilter === f ? 'text-white" style={{ background: "#1a0e05" }}' : 'bg-white border border-stone-200 text-stone-600 hover:border-stone-400'}`}>
                     {f === 'pending' ? `অপেক্ষমাণ (${pendingArt.length})` : f === 'approved' ? 'অনুমোদিত' : f === 'rejected' ? 'বাতিল' : 'সবগুলো'}
                   </button>
                 ))}
               </div>
 
               {filteredArtworks.length === 0 ? (
-                <div className="bg-white rounded-2xl border border-stone-100 py-20 text-center">
+                <div className="rounded-2xl border" style={{ background: "var(--card)", borderColor: "var(--border)" }} py-20 text-center">
                   <ImageIcon className="w-12 h-12 text-stone-300 mx-auto mb-3" />
                   <p className="text-stone-500 font-medium">কোনো শিল্পকর্ম নেই</p>
                   {artFilter === 'pending' && <p className="text-stone-400 text-sm mt-1">শিল্পীরা শিল্পকর্ম আপলোড করলে এখানে দেখাবে</p>}
@@ -278,16 +278,16 @@ export default function AdminDashboard() {
               ) : (
                 <div className="grid gap-4">
                   {filteredArtworks.map(art => (
-                    <div key={art.id} className="bg-white rounded-2xl border border-stone-100 p-5 flex gap-5 items-start hover:shadow-md transition-all">
+                    <div key={art.id} className="rounded-2xl border" style={{ background: "var(--card)", borderColor: "var(--border)" }} p-5 flex gap-5 items-start hover:shadow-md transition-all">
                       <img src={art.image_url} alt={art.title} className="w-24 h-24 rounded-xl object-cover shrink-0 bg-stone-100" />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-3 flex-wrap">
                           <div>
                             <h3 className="font-bold text-stone-900 text-base">{art.title}</h3>
                             <p className="text-stone-500 text-sm mt-0.5">{art.artist?.full_name} · {art.category}</p>
-                            <p className="text-emerald-600 font-bold mt-1">৳{art.price?.toLocaleString()}</p>
+                            <p className="text-[#c2a06e] font-bold mt-1">৳{art.price?.toLocaleString()}</p>
                           </div>
-                          <span className={`shrink-0 px-3 py-1 rounded-full text-xs font-bold ${art.status === 'approved' ? 'bg-emerald-100 text-emerald-700' : art.status === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
+                          <span className={`shrink-0 px-3 py-1 rounded-full text-xs font-bold ${art.status === 'approved' ? 'text-[#8b6914] bg-[rgba(194,160,110,0.15)]' : art.status === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'}`}>
                             {art.status === 'approved' ? '✅ অনুমোদিত' : art.status === 'pending' ? '⏳ অপেক্ষমাণ' : '❌ বাতিল'}
                           </span>
                         </div>
@@ -297,7 +297,7 @@ export default function AdminDashboard() {
                       {art.status === 'pending' && (
                         <div className="flex gap-2 shrink-0">
                           <button onClick={() => handleArtworkStatus(art.id, 'approved', art.artist_id)}
-                            className="flex items-center gap-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-sm transition-all">
+                            className="flex items-center gap-1.5 px-4 py-2.5 text-white rounded-xl hover:opacity-90" style={{ background: "linear-gradient(135deg,#c2a06e,#8b6914)" }} font-bold text-sm transition-all">
                             <CheckCircle className="w-4 h-4" /> অনুমোদন
                           </button>
                           <button onClick={() => handleArtworkStatus(art.id, 'rejected', art.artist_id)}
@@ -319,18 +319,18 @@ export default function AdminDashboard() {
               <div className="relative mb-5">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
                 <input type="text" placeholder="শিল্পী খুঁজুন..." value={searchArtist} onChange={e => setSearchArtist(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 bg-white border border-stone-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm" />
+                  className="w-full pl-11 pr-4 py-3 bg-white border border-stone-200 rounded-2xl focus:ring-2 focus:ring-[#c2a06e] outline-none text-sm" />
               </div>
               <div className="grid gap-3">
                 {filteredArtists.map(artist => (
-                  <div key={artist.id} className="bg-white rounded-2xl border border-stone-100 p-5 flex items-center gap-4 hover:shadow-md transition-all">
+                  <div key={artist.id} className="rounded-2xl border" style={{ background: "var(--card)", borderColor: "var(--border)" }} p-5 flex items-center gap-4 hover:shadow-md transition-all">
                     <img src={artist.profile_image_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${artist.full_name}`}
                       alt={artist.full_name} className="w-14 h-14 rounded-xl object-cover bg-stone-100 shrink-0" />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="font-bold text-stone-900">{artist.full_name}</h3>
+                        <h3 className="font-bold style={{ color: "var(--text)" }}>{artist.full_name}</h3>
                         {artist.is_verified
-                          ? <span className="flex items-center gap-1 px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full text-[10px] font-bold"><ShieldCheck className="w-3 h-3" />Verified</span>
+                          ? <span className="flex items-center gap-1 px-2 py-0.5 text-[#8b6914] bg-[rgba(194,160,110,0.15)] rounded-full text-[10px] font-bold"><ShieldCheck className="w-3 h-3" />Verified</span>
                           : <span className="px-2 py-0.5 bg-stone-100 text-stone-500 rounded-full text-[10px] font-bold">Unverified</span>}
                       </div>
                       <p className="text-stone-400 text-sm">{artist.email} · {artist.district}</p>
@@ -352,12 +352,12 @@ export default function AdminDashboard() {
           {activeTab === 'orders' && (
             <div className="space-y-3">
               {orders.length === 0 ? (
-                <div className="bg-white rounded-2xl border border-stone-100 py-20 text-center">
+                <div className="rounded-2xl border" style={{ background: "var(--card)", borderColor: "var(--border)" }} py-20 text-center">
                   <Package className="w-12 h-12 text-stone-300 mx-auto mb-3" />
                   <p className="text-stone-500">কোনো অর্ডার নেই</p>
                 </div>
               ) : orders.map(order => (
-                <div key={order.id} className="bg-white rounded-2xl border border-stone-100 p-5 flex items-center gap-4">
+                <div key={order.id} className="rounded-2xl border" style={{ background: "var(--card)", borderColor: "var(--border)" }} p-5 flex items-center gap-4">
                   <img src={order.artwork?.image_url} alt="" className="w-14 h-14 rounded-xl object-cover bg-stone-100 shrink-0" />
                   <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-stone-900 text-sm">{order.artwork?.title}</h3>
@@ -365,9 +365,9 @@ export default function AdminDashboard() {
                     <p className="text-stone-400 text-xs">{order.buyer_address}</p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="font-bold text-emerald-600">৳{order.artwork_price?.toLocaleString()}</p>
+                    <p className="font-bold text-[#c2a06e]">৳{order.artwork_price?.toLocaleString()}</p>
                     <span className={`inline-block mt-1 px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                      order.status === 'delivered' ? 'bg-emerald-100 text-emerald-700'
+                      order.status === 'delivered' ? 'text-[#8b6914] bg-[rgba(194,160,110,0.15)]'
                       : order.status === 'cancelled' ? 'bg-red-100 text-red-700'
                       : 'bg-amber-100 text-amber-700'
                     }`}>{order.status}</span>
@@ -382,14 +382,14 @@ export default function AdminDashboard() {
           {activeTab === 'nid' && (
             <div>
               {pendingNid.length === 0 ? (
-                <div className="bg-white rounded-2xl border border-stone-100 py-20 text-center">
+                <div className="rounded-2xl border" style={{ background: "var(--card)", borderColor: "var(--border)" }} py-20 text-center">
                   <ShieldCheck className="w-12 h-12 text-stone-300 mx-auto mb-3" />
                   <p className="text-stone-500 font-medium">কোনো NID যাচাই অপেক্ষমাণ নেই</p>
                 </div>
               ) : (
                 <div className="grid gap-4">
                   {pendingNid.map(artist => (
-                    <div key={artist.id} className="bg-white rounded-2xl border border-stone-100 p-6">
+                    <div key={artist.id} className="rounded-2xl border" style={{ background: "var(--card)", borderColor: "var(--border)" }} p-6">
                       <div className="flex items-start gap-5 flex-wrap">
                         <img src={artist.profile_image_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${artist.full_name}`}
                           alt={artist.full_name} className="w-16 h-16 rounded-xl object-cover bg-stone-100 shrink-0" />
@@ -410,7 +410,7 @@ export default function AdminDashboard() {
                       </div>
                       <div className="flex gap-3 mt-5 pt-5 border-t border-stone-100">
                         <button onClick={() => handleNidVerify(artist.id, true)}
-                          className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold transition-all">
+                          className="flex items-center gap-2 px-6 py-3 text-white rounded-xl hover:opacity-90" style={{ background: "linear-gradient(135deg,#c2a06e,#8b6914)" }} font-bold transition-all">
                           <CheckCircle className="w-4 h-4" /> ভেরিফাই করুন
                         </button>
                         <button onClick={() => handleNidVerify(artist.id, false)}
@@ -429,7 +429,7 @@ export default function AdminDashboard() {
           {activeTab === 'messages' && (
             <div className="space-y-3">
               {contactMessages.length === 0 ? (
-                <div className="bg-white rounded-2xl border border-stone-100 py-20 text-center">
+                <div className="rounded-2xl border" style={{ background: "var(--card)", borderColor: "var(--border)" }} py-20 text-center">
                   <Bell className="w-12 h-12 text-stone-300 mx-auto mb-3" />
                   <p className="text-stone-500">কোনো বার্তা নেই</p>
                 </div>
@@ -439,7 +439,7 @@ export default function AdminDashboard() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 flex-wrap mb-1">
                         {!msg.is_read && <span className="w-2 h-2 bg-emerald-500 rounded-full shrink-0" />}
-                        <h3 className="font-bold text-stone-900">{msg.name}</h3>
+                        <h3 className="font-bold style={{ color: "var(--text)" }}>{msg.name}</h3>
                         <span className="px-2 py-0.5 bg-stone-100 text-stone-500 rounded-full text-[10px] font-bold">{msg.subject}</span>
                       </div>
                       <p className="text-stone-400 text-xs mb-2">{msg.email}{msg.phone ? ` · ${msg.phone}` : ''}</p>
