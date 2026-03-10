@@ -1,214 +1,311 @@
--- =====================================================
--- ShilpoShop Complete Database Schema
--- Run this in Supabase SQL Editor (one time setup)
--- =====================================================
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'motion/react';
+import {
+  Search, ArrowRight, Star, Heart, ShoppingBag,
+  SlidersHorizontal, X, ChevronDown, Eye, Check
+} from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import { supabase } from '../lib/supabase';
+import { Artwork } from '../types';
+import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
 
--- ARTISTS TABLE
-CREATE TABLE IF NOT EXISTS artists (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  full_name TEXT NOT NULL,
-  phone TEXT NOT NULL,
-  whatsapp TEXT,
-  email TEXT NOT NULL,
-  district TEXT NOT NULL,
-  bio TEXT,
-  art_types TEXT[] DEFAULT '{}',
-  is_verified BOOLEAN DEFAULT false,
-  is_active BOOLEAN DEFAULT true,
-  profile_image_url TEXT DEFAULT '',
-  nid_front_url TEXT,
-  nid_back_url TEXT,
-  nid_photo_url TEXT,
-  nid_number TEXT,
-  nid_name TEXT,
-  verification_status TEXT DEFAULT 'unverified',
-  facebook_url TEXT,
-  instagram_url TEXT,
-  total_sales INTEGER DEFAULT 0,
-  total_earnings NUMERIC DEFAULT 0,
-  rating_avg NUMERIC DEFAULT 0,
-  rating_count INTEGER DEFAULT 0,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
+const CATEGORIES = [
+  { key: 'All', label: 'সবগুলো' },
+  { key: 'Arabic Calligraphy', label: 'আরবি ক্যালিগ্রাফি' },
+  { key: 'Painting', label: 'পেইন্টিং' },
+  { key: 'Handicraft', label: 'হাতে তৈরি শিল্প' },
+  { key: 'Sculpture', label: 'ভাস্কর্য' },
+  { key: 'Digital Art', label: 'ডিজিটাল আর্ট' },
+  { key: 'Photography', label: 'ফটোগ্রাফি' },
+];
 
--- ARTWORKS TABLE
-CREATE TABLE IF NOT EXISTS artworks (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  artist_id UUID REFERENCES artists(id) ON DELETE CASCADE,
-  title TEXT NOT NULL,
-  description TEXT DEFAULT '',
-  category TEXT NOT NULL,
-  price NUMERIC NOT NULL,
-  size_inches TEXT,
-  medium TEXT,
-  colors TEXT,
-  year_created TEXT,
-  image_url TEXT NOT NULL,
-  image_public_id TEXT,
-  thumbnail_url TEXT NOT NULL,
-  status TEXT DEFAULT 'pending',
-  is_featured BOOLEAN DEFAULT false,
-  views_count INTEGER DEFAULT 0,
-  order_count INTEGER DEFAULT 0,
-  admin_note TEXT,
-  approved_at TIMESTAMPTZ,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
+const SORT_OPTIONS = [
+  { key: 'newest', label: 'সর্বশেষ' },
+  { key: 'price_asc', label: 'কম দাম' },
+  { key: 'price_desc', label: 'বেশি দাম' },
+  { key: 'popular', label: 'জনপ্রিয়' },
+];
 
--- ORDERS TABLE (with order_number auto-generated)
-CREATE TABLE IF NOT EXISTS orders (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  order_number TEXT UNIQUE DEFAULT 'ORD-' || UPPER(SUBSTR(MD5(RANDOM()::TEXT), 1, 8)),
-  artwork_id UUID REFERENCES artworks(id),
-  artist_id UUID REFERENCES artists(id),
-  customer_name TEXT NOT NULL,
-  customer_phone TEXT NOT NULL,
-  customer_address TEXT NOT NULL,
-  customer_district TEXT NOT NULL,
-  customer_note TEXT,
-  artwork_title TEXT NOT NULL,
-  artwork_price NUMERIC NOT NULL,
-  payment_method TEXT DEFAULT 'Cash on Delivery',
-  status TEXT DEFAULT 'new',
-  artist_note TEXT,
-  confirmed_at TIMESTAMPTZ,
-  delivered_at TIMESTAMPTZ,
-  cancelled_at TIMESTAMPTZ,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
+function ArtworkCard({ art }: { art: Artwork }) {
+  const { addToCart, isInCart } = useCart();
+  const { toggle, isWishlisted } = useWishlist();
+  const wishlisted = isWishlisted(art.id);
+  const inCart = isInCart(art.id);
 
--- REVIEWS TABLE
-CREATE TABLE IF NOT EXISTS reviews (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  order_id UUID REFERENCES orders(id),
-  artwork_id UUID REFERENCES artworks(id),
-  artist_id UUID REFERENCES artists(id),
-  customer_name TEXT NOT NULL,
-  rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
-  review_text TEXT NOT NULL,
-  is_visible BOOLEAN DEFAULT true,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addToCart(art);
+    toast.success(`"${art.title}" কার্টে যোগ হয়েছে! 🛒`, { duration: 2000 });
+  };
 
--- NOTIFICATIONS TABLE
-CREATE TABLE IF NOT EXISTS notifications (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  artist_id UUID REFERENCES artists(id) ON DELETE CASCADE,
-  type TEXT NOT NULL,
-  title TEXT NOT NULL,
-  message TEXT NOT NULL,
-  is_read BOOLEAN DEFAULT false,
-  related_order_id UUID REFERENCES orders(id),
-  related_artwork_id UUID REFERENCES artworks(id),
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
+  const handleWishlist = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggle(art);
+    toast.success(wishlisted ? 'উইশলিস্ট থেকে সরানো হয়েছে' : 'উইশলিস্টে যোগ হয়েছে ❤️', { duration: 1500 });
+  };
 
--- SITE_SETTINGS TABLE (for admin to control site)
-CREATE TABLE IF NOT EXISTS site_settings (
-  key TEXT PRIMARY KEY,
-  value TEXT,
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="group relative bg-white rounded-3xl overflow-hidden border border-stone-100 hover:border-stone-200 transition-all duration-300 hover:shadow-xl hover:shadow-stone-200/60 hover:-translate-y-1"
+    >
+      {/* Image — full card image area is clickable */}
+      <Link to={`/artwork/${art.id}`} className="block relative aspect-[4/5] overflow-hidden bg-stone-100">
+        <img
+          src={art.image_url}
+          alt={art.title}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+        />
+        {/* Badges */}
+        <div className="absolute top-3 left-3 flex flex-col gap-1.5">
+          {art.is_featured && (
+            <span className="flex items-center gap-1 px-2.5 py-1 bg-emerald-500/90 backdrop-blur text-white text-[10px] font-bold uppercase rounded-full shadow-sm">
+              <Star className="w-3 h-3 fill-current" /> ফিচারড
+            </span>
+          )}
+          <span className="px-2.5 py-1 bg-white/90 backdrop-blur text-stone-700 text-[10px] font-bold rounded-full shadow-sm">
+            {CATEGORIES.find(c => c.key === art.category)?.label || art.category}
+          </span>
+        </div>
+        {/* Hover overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-stone-900/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+          <span className="w-full py-2 bg-white/90 backdrop-blur text-stone-900 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 translate-y-3 group-hover:translate-y-0 transition-transform duration-300">
+            <Eye className="w-4 h-4" /> বিস্তারিত দেখুন
+          </span>
+        </div>
+      </Link>
+      {/* Wishlist button — outside the main link */}
+      <button
+        onClick={handleWishlist}
+        className={`absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center transition-all shadow-sm backdrop-blur z-10 ${wishlisted ? 'bg-red-500 text-white' : 'bg-white/90 text-stone-500 hover:bg-red-50 hover:text-red-500'}`}
+      >
+        <Heart className={`w-4 h-4 ${wishlisted ? 'fill-current' : ''}`} />
+      </button>
 
--- Default settings
-INSERT INTO site_settings (key, value) VALUES
-  ('site_name', 'ShilpoShop'),
-  ('maintenance_mode', 'false'),
-  ('free_delivery', 'true'),
-  ('commission_percent', '10')
-ON CONFLICT (key) DO NOTHING;
+      {/* Info */}
+      <div className="p-5">
+        <Link to={`/artwork/${art.id}`}>
+          <h3 className="font-bold text-stone-900 text-base leading-tight hover:text-emerald-600 transition-colors line-clamp-1 mb-1">
+            {art.title}
+          </h3>
+        </Link>
+        <Link to={`/artist/${art.artist_id}`} className="text-stone-400 text-xs hover:text-emerald-600 transition-colors">
+          {art.artist?.full_name}
+        </Link>
 
--- =====================================================
--- ROW LEVEL SECURITY POLICIES
--- =====================================================
+        {art.size_inches && (
+          <p className="text-stone-400 text-xs mt-1">{art.size_inches} ইঞ্চি</p>
+        )}
 
-ALTER TABLE artists ENABLE ROW LEVEL SECURITY;
-ALTER TABLE artworks ENABLE ROW LEVEL SECURITY;
-ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
-ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
-ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+        <div className="flex items-center justify-between mt-4">
+          <div>
+            <p className="text-xl font-bold text-stone-900">৳{art.price.toLocaleString()}</p>
+            <p className="text-xs text-emerald-600 font-medium">ফ্রি ডেলিভারি</p>
+          </div>
 
--- Artists: anyone can read, authenticated can update own
-CREATE POLICY "artists_select" ON artists FOR SELECT USING (true);
-CREATE POLICY "artists_insert" ON artists FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "artists_update" ON artists FOR UPDATE USING (auth.uid() = user_id);
+          <button
+            onClick={handleAddToCart}
+            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-2xl font-bold text-sm transition-all ${
+              inCart
+                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm shadow-emerald-200'
+            }`}
+          >
+            {inCart ? (
+              <><Check className="w-4 h-4" /> যোগ হয়েছে</>
+            ) : (
+              <><ShoppingBag className="w-4 h-4" /> কার্টে যোগ</>
+            )}
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
 
--- Artworks: anyone can read approved, artists manage own
-CREATE POLICY "artworks_select" ON artworks FOR SELECT USING (status = 'approved' OR artist_id IN (SELECT id FROM artists WHERE user_id = auth.uid()));
-CREATE POLICY "artworks_insert" ON artworks FOR INSERT WITH CHECK (artist_id IN (SELECT id FROM artists WHERE user_id = auth.uid()));
-CREATE POLICY "artworks_update" ON artworks FOR UPDATE USING (artist_id IN (SELECT id FROM artists WHERE user_id = auth.uid()));
+export default function Marketplace() {
+  const [artworks, setArtworks] = useState<Artwork[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [sortBy, setSortBy] = useState('newest');
+  const [showFilters, setShowFilters] = useState(false);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 100000]);
+  const [showSort, setShowSort] = useState(false);
 
--- Orders: customers can insert, artists can read/update own orders
-CREATE POLICY "orders_select" ON orders FOR SELECT USING (true);
-CREATE POLICY "orders_insert" ON orders FOR INSERT WITH CHECK (true);
-CREATE POLICY "orders_update" ON orders FOR UPDATE USING (artist_id IN (SELECT id FROM artists WHERE user_id = auth.uid()));
+  useEffect(() => {
+    fetchArtworks();
+  }, []);
 
--- Reviews: public read, anyone can insert
-CREATE POLICY "reviews_select" ON reviews FOR SELECT USING (is_visible = true);
-CREATE POLICY "reviews_insert" ON reviews FOR INSERT WITH CHECK (true);
+  const fetchArtworks = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('artworks')
+      .select('*, artist:artists(*)')
+      .eq('status', 'approved')
+      .order('created_at', { ascending: false });
+    if (!error) setArtworks(data || []);
+    setLoading(false);
+  };
 
--- Notifications: only the artist can see their own
-CREATE POLICY "notifications_select" ON notifications FOR SELECT USING (artist_id IN (SELECT id FROM artists WHERE user_id = auth.uid()));
-CREATE POLICY "notifications_update" ON notifications FOR UPDATE USING (artist_id IN (SELECT id FROM artists WHERE user_id = auth.uid()));
+  const filtered = artworks
+    .filter(art => {
+      const q = searchQuery.toLowerCase();
+      const matchSearch = !q || art.title.toLowerCase().includes(q) || art.artist?.full_name?.toLowerCase().includes(q);
+      const matchCat = selectedCategory === 'All' || art.category === selectedCategory;
+      const matchPrice = art.price >= priceRange[0] && art.price <= priceRange[1];
+      return matchSearch && matchCat && matchPrice;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'price_asc') return a.price - b.price;
+      if (sortBy === 'price_desc') return b.price - a.price;
+      if (sortBy === 'popular') return b.order_count - a.order_count;
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
 
--- =====================================================
--- MIGRATION: Add missing columns to existing tables
--- (Safe to run even if already exists)
--- =====================================================
-ALTER TABLE artists ADD COLUMN IF NOT EXISTS nid_photo_url TEXT;
-ALTER TABLE artists ADD COLUMN IF NOT EXISTS nid_number TEXT;
-ALTER TABLE artists ADD COLUMN IF NOT EXISTS nid_name TEXT;
-ALTER TABLE artists ADD COLUMN IF NOT EXISTS verification_status TEXT DEFAULT 'unverified';
-ALTER TABLE artists ADD COLUMN IF NOT EXISTS facebook_url TEXT;
-ALTER TABLE artists ADD COLUMN IF NOT EXISTS instagram_url TEXT;
-ALTER TABLE artworks ADD COLUMN IF NOT EXISTS colors TEXT;
-ALTER TABLE artworks ADD COLUMN IF NOT EXISTS year_created TEXT;
-ALTER TABLE artworks ADD COLUMN IF NOT EXISTS medium TEXT;
+  const currentSort = SORT_OPTIONS.find(s => s.key === sortBy)?.label;
 
--- Update existing verification statuses
-UPDATE artists SET verification_status = 'verified' WHERE is_verified = true AND verification_status IS NULL;
-UPDATE artists SET verification_status = 'unverified' WHERE is_verified = false AND verification_status IS NULL;
+  return (
+    <div className="min-h-screen bg-stone-50">
+      {/* Header */}
+      <div className="bg-white border-b border-stone-100 pt-28 pb-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-10">
+            <div>
+              <p className="text-emerald-600 font-semibold text-sm mb-2 uppercase tracking-wider">মার্কেটপ্লেস</p>
+              <h1 className="text-4xl sm:text-5xl font-bold text-stone-900 leading-tight">
+                হাতে তৈরি <span className="text-emerald-600">শিল্পকর্ম</span>
+              </h1>
+              <p className="text-stone-500 mt-3 text-lg">দেশের সেরা শিল্পীদের অকৃত্রিম সৃষ্টি</p>
+            </div>
 
--- =====================================================
--- FUNCTIONS & TRIGGERS
--- =====================================================
+            <div className="flex gap-3 w-full lg:w-auto">
+              <div className="relative flex-1 lg:w-80">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+                <input
+                  type="text"
+                  placeholder="শিল্পকর্ম বা শিল্পী খুঁজুন..."
+                  className="w-full pl-11 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all text-sm"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                />
+                {searchQuery && (
+                  <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <X className="w-4 h-4 text-stone-400" />
+                  </button>
+                )}
+              </div>
 
--- Auto-update artist stats when order delivered
-CREATE OR REPLACE FUNCTION update_artist_stats()
-RETURNS TRIGGER AS $$
-BEGIN
-  IF NEW.status = 'delivered' AND OLD.status != 'delivered' THEN
-    UPDATE artists SET
-      total_sales = total_sales + 1,
-      total_earnings = total_earnings + NEW.artwork_price
-    WHERE id = NEW.artist_id;
-    
-    -- Update artwork order count
-    UPDATE artworks SET order_count = order_count + 1 WHERE id = NEW.artwork_id;
-  END IF;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+              {/* Sort Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowSort(!showSort)}
+                  className="flex items-center gap-2 px-4 py-3 bg-white border border-stone-200 rounded-2xl text-sm font-medium text-stone-700 hover:border-emerald-300 transition-colors whitespace-nowrap"
+                >
+                  <SlidersHorizontal className="w-4 h-4" />
+                  {currentSort}
+                  <ChevronDown className="w-4 h-4" />
+                </button>
+                <AnimatePresence>
+                  {showSort && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 8 }}
+                      className="absolute right-0 top-full mt-2 bg-white rounded-2xl border border-stone-100 shadow-xl shadow-stone-200/60 overflow-hidden z-20 min-w-[140px]"
+                    >
+                      {SORT_OPTIONS.map(opt => (
+                        <button
+                          key={opt.key}
+                          onClick={() => { setSortBy(opt.key); setShowSort(false); }}
+                          className={`w-full text-left px-4 py-3 text-sm font-medium transition-colors ${sortBy === opt.key ? 'bg-emerald-50 text-emerald-700' : 'text-stone-700 hover:bg-stone-50'}`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+          </div>
 
-DROP TRIGGER IF EXISTS on_order_delivered ON orders;
-CREATE TRIGGER on_order_delivered
-  AFTER UPDATE ON orders
-  FOR EACH ROW EXECUTE FUNCTION update_artist_stats();
+          {/* Category Tabs */}
+          <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+            {CATEGORIES.map(cat => (
+              <button
+                key={cat.key}
+                onClick={() => setSelectedCategory(cat.key)}
+                className={`px-5 py-2 rounded-2xl text-sm font-bold whitespace-nowrap transition-all duration-200 ${
+                  selectedCategory === cat.key
+                    ? 'bg-stone-900 text-white'
+                    : 'bg-white border border-stone-200 text-stone-600 hover:border-stone-400 hover:text-stone-900'
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
 
--- Auto-update artist rating when review added
-CREATE OR REPLACE FUNCTION update_artist_rating()
-RETURNS TRIGGER AS $$
-BEGIN
-  UPDATE artists SET
-    rating_avg = (SELECT AVG(rating) FROM reviews WHERE artist_id = NEW.artist_id AND is_visible = true),
-    rating_count = (SELECT COUNT(*) FROM reviews WHERE artist_id = NEW.artist_id AND is_visible = true)
-  WHERE id = NEW.artist_id;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+      {/* Results */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        {!loading && (
+          <div className="flex items-center justify-between mb-8">
+            <p className="text-stone-500 text-sm font-medium">
+              {filtered.length === 0 ? 'কোনো ফলাফল নেই' : `${filtered.length}টি শিল্পকর্ম পাওয়া গেছে`}
+            </p>
+            {(selectedCategory !== 'All' || searchQuery) && (
+              <button
+                onClick={() => { setSelectedCategory('All'); setSearchQuery(''); }}
+                className="text-sm text-emerald-600 font-bold hover:underline flex items-center gap-1"
+              >
+                <X className="w-3 h-3" /> ফিল্টার মুছুন
+              </button>
+            )}
+          </div>
+        )}
 
-DROP TRIGGER IF EXISTS on_review_added ON reviews;
-CREATE TRIGGER on_review_added
-  AFTER INSERT ON reviews
-  FOR EACH ROW EXECUTE FUNCTION update_artist_rating();
+        {loading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
+            {[...Array(8)].map(i => (
+              <div key={i} className="animate-pulse">
+                <div className="aspect-[4/5] bg-stone-200 rounded-3xl mb-4"></div>
+                <div className="h-4 bg-stone-200 rounded-full w-3/4 mb-2"></div>
+                <div className="h-3 bg-stone-200 rounded-full w-1/2 mb-3"></div>
+                <div className="h-8 bg-stone-200 rounded-2xl"></div>
+              </div>
+            ))}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="py-20 text-center">
+            <div className="w-20 h-20 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Search className="w-10 h-10 text-stone-300" />
+            </div>
+            <h3 className="text-2xl font-bold text-stone-900">কোনো শিল্পকর্ম পাওয়া যায়নি</h3>
+            <p className="text-stone-500 mt-2">অনুসন্ধান বা ফিল্টার পরিবর্তন করে দেখুন</p>
+            <button
+              onClick={() => { setSearchQuery(''); setSelectedCategory('All'); }}
+              className="mt-6 px-6 py-3 bg-emerald-600 text-white rounded-2xl font-bold hover:bg-emerald-700 transition-all"
+            >
+              সব দেখুন
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
+            {filtered.map(art => (
+              <ArtworkCard key={art.id} art={art} />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

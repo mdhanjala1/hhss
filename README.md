@@ -1,32 +1,10 @@
-# ShilpoShop 🎨
+-- Run this in Supabase SQL Editor to add NID verification columns
+ALTER TABLE artists 
+  ADD COLUMN IF NOT EXISTS nid_photo_url TEXT,
+  ADD COLUMN IF NOT EXISTS nid_number TEXT,
+  ADD COLUMN IF NOT EXISTS nid_name TEXT,
+  ADD COLUMN IF NOT EXISTS verification_status TEXT DEFAULT 'unverified';
 
-Bengali art marketplace — connecting independent artists with customers.
-
-## Tech Stack
-- React 19 + TypeScript + Vite
-- Tailwind CSS v4
-- Supabase (Database + Auth)
-- Cloudinary (Image hosting)
-- Netlify (Hosting)
-
-## Deploy to Netlify
-1. Connect GitHub repo on Netlify
-2. Build command: `npm run build`
-3. Publish directory: `dist`
-4. Add environment variables from `.env.example`
-
-## Local Development
-```bash
-cp .env.example .env
-# Fill in your Supabase and Cloudinary credentials
-npm install
-npm run dev
-```
-
-## New Features in v2
-- 🛒 Shopping cart with quantity controls
-- ❤️ Wishlist functionality
-- 🔍 Sort by price/popularity
-- 📦 Multi-item checkout
-- 🎨 Professional artwork cards with Add to Cart
-- 📱 Mobile-optimized cart & checkout
+-- Update existing verified artists
+UPDATE artists SET verification_status = 'verified' WHERE is_verified = true;
+UPDATE artists SET verification_status = 'unverified' WHERE is_verified = false AND verification_status IS NULL;
