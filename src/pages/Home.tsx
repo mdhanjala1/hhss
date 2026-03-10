@@ -170,37 +170,42 @@ function ArtworkCard({ art, s }: { art: Artwork; s: typeof SECTIONS[0] }) {
         <Heart className={`w-4 h-4 ${wishlisted ? 'fill-current' : ''}`} />
       </button>
       {/* Info */}
-      <div className="p-3 relative">
-        {/* Corner ornament — layered arcs */}
-        <div className="absolute bottom-0 right-0 w-16 h-16 pointer-events-none overflow-hidden rounded-br-2xl">
-          <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute bottom-0 right-0">
-            <circle cx="64" cy="64" r="20" stroke={s.border} strokeWidth="1.5" fill="none" opacity="0.6"/>
-            <circle cx="64" cy="64" r="32" stroke={s.border} strokeWidth="1" fill="none" opacity="0.4"/>
-            <circle cx="64" cy="64" r="46" stroke={s.border} strokeWidth="0.8" fill="none" opacity="0.25"/>
-            <circle cx="64" cy="64" r="10" fill={s.border} fillOpacity="0.3"/>
-          </svg>
-        </div>
-        <Link to={`/artwork/${art.id}`}>
-          <h3 className="font-bold text-sm line-clamp-1" style={{ color: 'var(--text)' }}>{art.title}</h3>
-        </Link>
-        <p className="text-xs mt-0.5 line-clamp-1" style={{ color: 'var(--text3)' }}>{art.artist?.full_name}</p>
-        <div className="flex items-center justify-between mt-2.5 gap-1">
-          <div className="min-w-0">
-            {disc ? (
-              <div>
-                <p className="font-bold text-sm leading-tight" style={{ color: s.accent }}>৳{disc.toLocaleString()}</p>
-                <p className="text-[10px] line-through leading-tight" style={{ color: 'var(--text3)' }}>৳{art.price.toLocaleString()}</p>
-              </div>
-            ) : (
-              <p className="font-bold text-sm" style={{ color: s.accent }}>৳{art.price.toLocaleString()}</p>
-            )}
+      <div className="p-3 relative overflow-hidden">
+        {/* Dot grid ornament — bottom-right, behind content */}
+        <div className="absolute bottom-0 right-0 w-20 h-full pointer-events-none"
+          style={{
+            backgroundImage: `radial-gradient(circle, ${s.border} 1.5px, transparent 1.5px)`,
+            backgroundSize: '8px 8px',
+            backgroundPosition: 'right bottom',
+            opacity: 0.45,
+            maskImage: 'radial-gradient(ellipse 80% 100% at 100% 100%, black 40%, transparent 100%)'
+          }} />
+        {/* Content above ornament */}
+        <div className="relative z-10">
+          <Link to={`/artwork/${art.id}`}>
+            <h3 className="font-bold text-sm line-clamp-1" style={{ color: 'var(--text)' }}>{art.title}</h3>
+          </Link>
+          <p className="text-xs mt-0.5 line-clamp-1" style={{ color: 'var(--text3)' }}>{art.artist?.full_name}</p>
+          <div className="flex items-center justify-between mt-2.5 gap-1">
+            <div className="min-w-0">
+              {disc ? (
+                <div>
+                  <p className="font-bold text-sm leading-tight" style={{ color: s.accent }}>৳{disc.toLocaleString()}</p>
+                  <p className="text-[10px] line-through leading-tight" style={{ color: 'var(--text3)' }}>৳{art.price.toLocaleString()}</p>
+                </div>
+              ) : (
+                <p className="font-bold text-sm" style={{ color: s.accent }}>৳{art.price.toLocaleString()}</p>
+              )}
+            </div>
+            <button onClick={() => { addToCart(art); toast.success('কার্টে যোগ হয়েছে! 🛒'); }}
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl font-bold text-xs transition-all shrink-0 shadow-sm ${inCart ? 'border' : 'text-white'}`}
+              style={inCart
+                ? { background: 'rgba(194,160,110,0.12)', borderColor: s.accent, color: s.accent }
+                : { background: `linear-gradient(135deg,${W},${s.accent})`, boxShadow: '0 2px 8px rgba(139,105,20,0.3)' }}>
+              <ShoppingBag className="w-3.5 h-3.5 shrink-0" />
+              <span>{inCart ? '✓' : 'কার্ট'}</span>
+            </button>
           </div>
-          <button onClick={() => { addToCart(art); toast.success('কার্টে যোগ হয়েছে! 🛒'); }}
-            className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl font-bold text-xs transition-all shrink-0 ${inCart ? 'border' : 'text-white'}`}
-            style={inCart ? { background: 'rgba(194,160,110,0.1)', borderColor: s.accent, color: s.accent } : { background: `linear-gradient(135deg,${W},${s.accent})` }}>
-            <ShoppingBag className="w-3.5 h-3.5 shrink-0" />
-            <span>{inCart ? '✓' : 'কার্ট'}</span>
-          </button>
         </div>
       </div>
     </div>

@@ -87,15 +87,15 @@ function ArtworkCard({ art }: { art: Artwork }) {
 
       {/* Info */}
       <div className="p-4 relative">
-        {/* Corner ornament */}
-        <div className="absolute bottom-0 right-0 w-16 h-16 pointer-events-none overflow-hidden rounded-br-2xl">
-          <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute bottom-0 right-0">
-            <circle cx="64" cy="64" r="18" stroke="rgba(194,160,110,0.7)" strokeWidth="1.5" fill="none"/>
-            <circle cx="64" cy="64" r="30" stroke="rgba(194,160,110,0.45)" strokeWidth="1" fill="none"/>
-            <circle cx="64" cy="64" r="44" stroke="rgba(194,160,110,0.25)" strokeWidth="0.8" fill="none"/>
-            <circle cx="64" cy="64" r="8" fill="rgba(194,160,110,0.3)"/>
-          </svg>
-        </div>
+        {/* Dot grid ornament */}
+        <div className="absolute bottom-0 right-0 w-20 h-full pointer-events-none"
+          style={{
+            backgroundImage: 'radial-gradient(circle, rgba(194,160,110,0.5) 1.5px, transparent 1.5px)',
+            backgroundSize: '8px 8px',
+            backgroundPosition: 'right bottom',
+            maskImage: 'radial-gradient(ellipse 80% 90% at 100% 100%, black 40%, transparent 100%)'
+          }} />
+        <div className="relative z-10">
         <Link to={`/artwork/${art.id}`}>
           <h3 className="font-bold text-base leading-tight line-clamp-1 mb-1 hover:underline"
             style={{ color: 'var(--text)' }}>{art.title}</h3>
@@ -114,10 +114,11 @@ function ArtworkCard({ art }: { art: Artwork }) {
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl font-bold text-xs transition-all hover:opacity-90 shrink-0"
             style={inCart
               ? { background: 'rgba(194,160,110,0.12)', color: 'var(--accent-dk)', border: '1px solid rgba(194,160,110,0.3)' }
-              : { background: 'linear-gradient(135deg, var(--accent), var(--accent-dk))', color: 'var(--dark)' }}>
+              : { background: 'linear-gradient(135deg, var(--accent), var(--accent-dk))', color: 'var(--dark)', boxShadow: '0 2px 8px rgba(139,105,20,0.3)' }}>
             <ShoppingBag className="w-3.5 h-3.5 shrink-0" />
             <span>{inCart ? '✓ কার্ট' : 'কার্ট'}</span>
           </button>
+        </div>
         </div>
       </div>
     </motion.div>

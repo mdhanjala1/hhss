@@ -695,77 +695,122 @@ export default function ArtistDashboard() {
       <AnimatePresence>
         {editingArtwork && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: 'rgba(26,14,5,0.75)', backdropFilter: 'blur(8px)' }}
             onClick={e => { if (e.target === e.currentTarget) setEditingArtwork(null); }}>
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
-              className="rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+            <motion.div initial={{ scale: 0.92, opacity: 0, y: 16 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.92, opacity: 0, y: 16 }}
+              className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-3xl shadow-2xl"
               style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
-              <div className="p-6 border-b flex items-center justify-between"
-                style={{ borderColor: 'var(--border)', background: 'rgba(194,160,110,0.04)' }}>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl flex items-center justify-center"
-                    style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dk))' }}>
-                    <Edit3 className="w-4 h-4" style={{ color: 'var(--dark)' }} />
+
+              {/* Modal Header */}
+              <div className="relative overflow-hidden rounded-t-3xl px-6 py-5"
+                style={{ background: 'linear-gradient(135deg, var(--dark) 0%, rgba(44,24,0,0.95) 100%)' }}>
+                {/* Dot pattern in header */}
+                <div className="absolute inset-0 pointer-events-none opacity-[0.06]"
+                  style={{
+                    backgroundImage: 'radial-gradient(circle, rgba(194,160,110,1) 1.5px, transparent 1.5px)',
+                    backgroundSize: '10px 10px'
+                  }} />
+                <div className="relative z-10 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
+                      style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dk))' }}>
+                      <Edit3 className="w-4 h-4" style={{ color: 'var(--dark)' }} />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold" style={{ color: 'var(--bg)' }}>শিল্পকর্ম এডিট করুন</h3>
+                      <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>পরিবর্তনের পর পুনরায় অনুমোদন লাগবে</p>
+                    </div>
                   </div>
-                  <h3 className="text-lg font-bold" style={{ color: 'var(--text)' }}>শিল্পকর্ম এডিট করুন</h3>
+                  <button onClick={() => setEditingArtwork(null)}
+                    className="w-9 h-9 rounded-full flex items-center justify-center transition-all"
+                    style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)' }}>
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
-                <button onClick={() => setEditingArtwork(null)}
-                  className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:bg-red-50 hover:text-red-500"
-                  style={{ background: 'var(--bg)', color: 'var(--text3)' }}>
-                  <X className="w-5 h-5" />
-                </button>
               </div>
+
+              {/* Modal Body */}
               <div className="p-6 space-y-4">
-                {/* Image change */}
+
+                {/* Current image preview */}
                 <div>
-                  <label className="block text-xs font-bold mb-2" style={{ color: 'var(--text2)' }}>ছবি পরিবর্তন (ঐচ্ছিক)</label>
-                  <div className="relative w-full h-40 rounded-2xl overflow-hidden bg-[var(--bg)] border-2 border-dashed border-[var(--border)] cursor-pointer hover:border-emerald-400 transition-colors"
+                  <label className="block text-xs font-bold mb-2" style={{ color: 'var(--text2)' }}>ছবি পরিবর্তন <span style={{ color: 'var(--text3)' }}>(ঐচ্ছিক)</span></label>
+                  <div className="relative w-full h-44 rounded-2xl overflow-hidden cursor-pointer group"
+                    style={{ border: '2px dashed var(--border)' }}
                     onClick={() => document.getElementById('editImageInput')?.click()}>
                     <img src={editPreview || editingArtwork.image_url} alt="" className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                      <div className="text-white text-center"><Camera className="w-8 h-8 mx-auto mb-1" /><p className="text-xs font-bold">ছবি পরিবর্তন করুন</p></div>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity gap-2"
+                      style={{ background: 'rgba(26,14,5,0.65)', backdropFilter: 'blur(2px)' }}>
+                      <div className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                        style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dk))' }}>
+                        <Camera className="w-5 h-5" style={{ color: 'var(--dark)' }} />
+                      </div>
+                      <p className="text-white text-xs font-bold">ছবি পরিবর্তন করুন</p>
                     </div>
                   </div>
                   <input id="editImageInput" type="file" accept="image/*" className="hidden"
                     onChange={e => { const f = e.target.files?.[0]; if (f) { setEditFile(f); setEditPreview(URL.createObjectURL(f)); }}} />
                 </div>
 
+                {/* Title */}
                 <div>
                   <label className="block text-xs font-bold mb-1.5" style={{ color: 'var(--text2)' }}>শিরোনাম *</label>
                   <input type="text" value={editForm.title} onChange={e => setEditForm({...editForm, title: e.target.value})}
-                    className="w-full px-4 py-3 bg-[var(--bg)] border border-[var(--border)] rounded-2xl outline-none text-sm" style={{ color: 'var(--text)' }} />
+                    className="w-full px-4 py-3 rounded-2xl border outline-none text-sm transition-all"
+                    style={{ background: 'var(--bg)', borderColor: 'var(--border)', color: 'var(--text)' }} />
                 </div>
+
+                {/* Description */}
                 <div>
                   <label className="block text-xs font-bold mb-1.5" style={{ color: 'var(--text2)' }}>বিবরণ</label>
                   <textarea value={editForm.description} onChange={e => setEditForm({...editForm, description: e.target.value})} rows={3}
-                    className="w-full px-4 py-3 bg-[var(--bg)] border border-[var(--border)] rounded-2xl outline-none text-sm resize-none" style={{ color: 'var(--text)' }} />
+                    className="w-full px-4 py-3 rounded-2xl border outline-none text-sm resize-none"
+                    style={{ background: 'var(--bg)', borderColor: 'var(--border)', color: 'var(--text)' }} />
                 </div>
+
+                {/* Price + Medium */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-bold mb-1.5" style={{ color: 'var(--text2)' }}>মূল্য (৳) *</label>
                     <input type="number" value={editForm.price} onChange={e => setEditForm({...editForm, price: e.target.value})}
-                      className="w-full px-4 py-3 bg-[var(--bg)] border border-[var(--border)] rounded-2xl outline-none text-sm" style={{ color: 'var(--text)' }} />
+                      className="w-full px-4 py-3 rounded-2xl border outline-none text-sm"
+                      style={{ background: 'var(--bg)', borderColor: 'var(--border)', color: 'var(--text)' }} />
                   </div>
                   <div>
                     <label className="block text-xs font-bold mb-1.5" style={{ color: 'var(--text2)' }}>মাধ্যম</label>
                     <input type="text" value={editForm.medium} onChange={e => setEditForm({...editForm, medium: e.target.value})} placeholder="তেলরঙ, জলরঙ..."
-                      className="w-full px-4 py-3 bg-[var(--bg)] border border-[var(--border)] rounded-2xl outline-none text-sm" style={{ color: 'var(--text)' }} />
+                      className="w-full px-4 py-3 rounded-2xl border outline-none text-sm"
+                      style={{ background: 'var(--bg)', borderColor: 'var(--border)', color: 'var(--text)' }} />
                   </div>
                 </div>
-                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 text-xs text-amber-700">
-                  ⚠️ এডিট করার পর শিল্পকর্মটি পুনরায় এডমিনের পর্যালোচনায় যাবে এবং অনুমোদনের পর প্রকাশিত হবে।
+
+                {/* Warning notice */}
+                <div className="flex items-start gap-3 p-4 rounded-2xl"
+                  style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)' }}>
+                  <span className="text-base leading-none mt-0.5">⚠️</span>
+                  <p className="text-xs leading-relaxed" style={{ color: 'rgba(180,120,0,1)' }}>
+                    এডিট করার পর শিল্পকর্মটি পুনরায় এডমিনের পর্যালোচনায় যাবে এবং অনুমোদনের পর প্রকাশিত হবে।
+                  </p>
                 </div>
               </div>
-              <div className="p-6 border-t flex gap-3" style={{ borderColor: 'var(--border)' }}>
-                <button onClick={() => setEditingArtwork(null)} className="flex-1 py-3 rounded-2xl font-bold text-sm transition-all border hover:shadow-sm" style={{ background: 'var(--bg)', color: 'var(--text2)', borderColor: 'var(--border)' }}>
+
+              {/* Modal Footer */}
+              <div className="px-6 pb-6 flex gap-3">
+                <button onClick={() => setEditingArtwork(null)}
+                  className="flex-1 py-3.5 rounded-2xl font-bold text-sm transition-all border hover:shadow-sm"
+                  style={{ background: 'var(--bg)', color: 'var(--text2)', borderColor: 'var(--border)' }}>
                   বাতিল
                 </button>
                 <button onClick={saveEdit} disabled={editSaving}
-                  className="flex-1 py-3 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-60"
+                  className="flex-1 py-3.5 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-60"
                   style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dk))', color: 'var(--dark)' }}>
-                  {editSaving ? <span className="w-4 h-4 border-2 border-[var(--dark)]/30 border-t-[var(--dark)] rounded-full animate-spin" /> : <><Save className="w-4 h-4" />সংরক্ষণ করুন</>}
+                  {editSaving
+                    ? <span className="w-4 h-4 border-2 rounded-full animate-spin" style={{ borderColor: 'rgba(26,14,5,0.2)', borderTopColor: 'var(--dark)' }} />
+                    : <><Save className="w-4 h-4" /> সংরক্ষণ করুন</>}
                 </button>
               </div>
+
             </motion.div>
           </motion.div>
         )}

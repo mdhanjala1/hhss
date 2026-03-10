@@ -363,15 +363,14 @@ export default function ArtistProfile() {
                           <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: 'var(--border)' }} />
                         </div>
                         <div className="p-3 relative">
-                          {/* Corner ornament */}
-                          <div className="absolute bottom-0 right-0 w-14 h-14 pointer-events-none overflow-hidden rounded-br-2xl">
-                            <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute bottom-0 right-0">
-                              <circle cx="56" cy="56" r="16" stroke="rgba(194,160,110,0.65)" strokeWidth="1.5" fill="none"/>
-                              <circle cx="56" cy="56" r="28" stroke="rgba(194,160,110,0.4)" strokeWidth="1" fill="none"/>
-                              <circle cx="56" cy="56" r="40" stroke="rgba(194,160,110,0.2)" strokeWidth="0.8" fill="none"/>
-                              <circle cx="56" cy="56" r="7" fill="rgba(194,160,110,0.28)"/>
-                            </svg>
-                          </div>
+                          {/* Dot grid ornament */}
+                          <div className="absolute bottom-0 right-0 w-16 h-full pointer-events-none"
+                            style={{
+                              backgroundImage: 'radial-gradient(circle, rgba(194,160,110,0.45) 1.5px, transparent 1.5px)',
+                              backgroundSize: '7px 7px',
+                              backgroundPosition: 'right bottom',
+                              maskImage: 'radial-gradient(ellipse 80% 90% at 100% 100%, black 40%, transparent 100%)'
+                            }} />
                           <Link to={`/artwork/${art.id}`}>
                             <h3 className="font-bold text-sm line-clamp-1 hover:underline" style={{ color: 'var(--text)' }}>{art.title}</h3>
                           </Link>

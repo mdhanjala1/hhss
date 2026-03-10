@@ -332,17 +332,19 @@ export default function ArtworkDetail() {
                   <div className="aspect-[4/5] overflow-hidden" style={{ background: 'var(--bg)' }}>
                     <img src={art.image_url} alt={art.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   </div>
-                  {/* Price area with corner ornament */}
+                  {/* Price area with dot ornament */}
                   <div className="p-3 relative overflow-hidden">
-                    <div className="absolute bottom-0 right-0 w-14 h-14 pointer-events-none overflow-hidden rounded-br-2xl">
-                      <svg width="56" height="56" viewBox="0 0 56 56" fill="none" className="absolute bottom-0 right-0">
-                        <circle cx="56" cy="56" r="16" stroke="rgba(194,160,110,0.55)" strokeWidth="1.5" fill="none"/>
-                        <circle cx="56" cy="56" r="28" stroke="rgba(194,160,110,0.3)" strokeWidth="1" fill="none"/>
-                        <circle cx="56" cy="56" r="7" fill="rgba(194,160,110,0.25)"/>
-                      </svg>
+                    <div className="absolute bottom-0 right-0 w-16 h-full pointer-events-none"
+                      style={{
+                        backgroundImage: 'radial-gradient(circle, rgba(194,160,110,0.45) 1.5px, transparent 1.5px)',
+                        backgroundSize: '7px 7px',
+                        backgroundPosition: 'right bottom',
+                        maskImage: 'radial-gradient(ellipse 80% 90% at 100% 100%, black 40%, transparent 100%)'
+                      }} />
+                    <div className="relative z-10">
+                      <h4 className="font-bold text-sm line-clamp-1" style={{ color: 'var(--text)' }}>{art.title}</h4>
+                      <p className="font-bold text-sm mt-1" style={{ color: 'var(--accent)' }}>৳{art.price.toLocaleString()}</p>
                     </div>
-                    <h4 className="font-bold text-sm line-clamp-1" style={{ color: 'var(--text)' }}>{art.title}</h4>
-                    <p className="font-bold text-sm mt-1" style={{ color: 'var(--accent)' }}>৳{art.price.toLocaleString()}</p>
                   </div>
                 </Link>
               ))}
