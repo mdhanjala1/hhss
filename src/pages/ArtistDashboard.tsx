@@ -86,7 +86,10 @@ export default function ArtistDashboard() {
       };
       if (newArt.size) payload.size_inches = newArt.size;
       if (newArt.year_created) payload.year_created = newArt.year_created;
-      if (newArt.discount_percent) payload.discount_percent = parseFloat(newArt.discount_percent);
+      // discount_percent — only add if value provided (requires ALTER TABLE migration)
+      if (newArt.discount_percent && parseFloat(newArt.discount_percent) > 0) {
+        payload.discount_percent = parseFloat(newArt.discount_percent);
+      }
       const { error } = await supabase.from('artworks').insert(payload);
       if (error) throw error;
       toast.success('🎨 আপলোড সফল! অনুমোদনের পর প্রকাশিত হবে।');

@@ -143,10 +143,11 @@ function ArtworkCard({ art, s }: { art: Artwork; s: typeof SECTIONS[0] }) {
   const disc = art.discount_percent ? Math.round(art.price * (1 - art.discount_percent / 100)) : null;
 
   return (
-    <div className="group bg-white rounded-3xl overflow-hidden relative hover:-translate-y-2 hover:shadow-2xl transition-all duration-300"
-      style={{ border: `2px solid ${s.border}`, boxShadow: '0 2px 12px rgba(139,105,20,0.06)' }}>
-      <Link to={`/artwork/${art.id}`} className="block relative overflow-hidden bg-stone-50" style={{ aspectRatio: '3/4' }}>
-        <img src={art.image_url} alt={art.title} className="w-full h-full object-cover group-hover:scale-106 transition-transform duration-700" />
+    <div className="group rounded-2xl overflow-hidden relative hover:-translate-y-1 transition-all duration-300"
+      style={{ background: 'var(--card)', border: `1px solid ${s.border}`, boxShadow: '0 2px 12px rgba(139,105,20,0.06)' }}>
+      {/* Image */}
+      <Link to={`/artwork/${art.id}`} className="block relative overflow-hidden" style={{ aspectRatio: '3/4', background: 'var(--bg)' }}>
+        <img src={art.image_url} alt={art.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
         {art.is_featured && (
           <span className="absolute top-3 left-3 flex items-center gap-1 px-2.5 py-1 text-white text-[10px] font-bold rounded-full shadow"
             style={{ background: `linear-gradient(135deg,${W},${s.accent})` }}>
@@ -157,31 +158,42 @@ function ArtworkCard({ art, s }: { art: Artwork; s: typeof SECTIONS[0] }) {
           <span className="absolute top-3 right-12 px-2.5 py-1 bg-red-500 text-white text-[10px] font-bold rounded-full">-{art.discount_percent}%</span>
         ) : null}
         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3"
-          style={{ background: `linear-gradient(to top, rgba(30,18,8,0.7) 0%, transparent 60%)` }}>
-          <span className="text-white font-bold text-xs opacity-90">বিস্তারিত দেখুন →</span>
+          style={{ background: `linear-gradient(to top, rgba(30,18,8,0.72) 0%, transparent 60%)` }}>
+          <span className="text-white font-bold text-xs">বিস্তারিত দেখুন →</span>
         </div>
+        {/* Image-bottom separator */}
+        <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: s.border }} />
       </Link>
+      {/* Wishlist btn */}
       <button onClick={e => { e.preventDefault(); toggle(art); toast.success(wishlisted ? 'সরানো হয়েছে' : '❤️ উইশলিস্টে যোগ হয়েছে'); }}
-        className={`absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center shadow-md z-10 transition-all ${wishlisted ? 'bg-red-500 text-white' : 'bg-white text-stone-400 hover:text-red-400'}`}>
+        className={`absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center shadow-md z-10 transition-all ${wishlisted ? 'bg-red-500 text-white' : 'bg-white/90 backdrop-blur-sm text-stone-400 hover:text-red-400'}`}>
         <Heart className={`w-4 h-4 ${wishlisted ? 'fill-current' : ''}`} />
       </button>
-      <div className="p-4">
+      {/* Info */}
+      <div className="p-3 relative">
+        {/* Dot pattern corner */}
+        <div className="absolute bottom-0 right-0 w-20 h-16 pointer-events-none overflow-hidden rounded-br-2xl"
+          style={{ backgroundImage: `radial-gradient(${s.border} 1.2px, transparent 1.2px)`, backgroundSize: '5px 5px', opacity: 0.6 }} />
         <Link to={`/artwork/${art.id}`}>
-          <h3 className="font-bold text-sm line-clamp-1 hover:transition-colors" style={{ color: WD }}>{art.title}</h3>
+          <h3 className="font-bold text-sm line-clamp-1" style={{ color: 'var(--text)' }}>{art.title}</h3>
         </Link>
-        <p className="text-xs mt-0.5 line-clamp-1" style={{ color: '#9a7050' }}>{art.artist?.full_name}</p>
-        <div className="flex items-center justify-between mt-3">
-          <div>
+        <p className="text-xs mt-0.5 line-clamp-1" style={{ color: 'var(--text3)' }}>{art.artist?.full_name}</p>
+        <div className="flex items-center justify-between mt-2.5 gap-1">
+          <div className="min-w-0">
             {disc ? (
-              <div><p className="font-bold text-sm" style={{ color: s.accent }}>৳{disc.toLocaleString()}</p><p className="text-xs line-through text-stone-400">৳{art.price.toLocaleString()}</p></div>
+              <div>
+                <p className="font-bold text-sm leading-tight" style={{ color: s.accent }}>৳{disc.toLocaleString()}</p>
+                <p className="text-[10px] line-through leading-tight" style={{ color: 'var(--text3)' }}>৳{art.price.toLocaleString()}</p>
+              </div>
             ) : (
               <p className="font-bold text-sm" style={{ color: s.accent }}>৳{art.price.toLocaleString()}</p>
             )}
           </div>
           <button onClick={() => { addToCart(art); toast.success('কার্টে যোগ হয়েছে! 🛒'); }}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl font-bold text-xs transition-all ${inCart ? 'border' : 'text-white'}`}
-            style={inCart ? { background: 'rgba(194,160,110,0.1)', borderColor: W, color: s.accent } : { background: `linear-gradient(135deg,${W},${s.accent})` }}>
-            <ShoppingBag className="w-3.5 h-3.5" />{inCart ? 'যোগ হয়েছে' : 'কার্টে যোগ'}
+            className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl font-bold text-xs transition-all shrink-0 ${inCart ? 'border' : 'text-white'}`}
+            style={inCart ? { background: 'rgba(194,160,110,0.1)', borderColor: s.accent, color: s.accent } : { background: `linear-gradient(135deg,${W},${s.accent})` }}>
+            <ShoppingBag className="w-3.5 h-3.5 shrink-0" />
+            <span>{inCart ? '✓' : 'কার্ট'}</span>
           </button>
         </div>
       </div>

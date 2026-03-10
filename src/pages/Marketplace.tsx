@@ -49,75 +49,68 @@ function ArtworkCard({ art }: { art: Artwork }) {
   };
 
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="group relative bg-white rounded-3xl overflow-hidden border border-stone-100 hover:border-stone-200 transition-all duration-300 hover:shadow-xl hover:shadow-stone-200/60 hover:-translate-y-1"
-    >
-      {/* Image — full card image area is clickable */}
-      <Link to={`/artwork/${art.id}`} className="block relative aspect-[4/5] overflow-hidden bg-stone-100">
-        <img
-          src={art.image_url}
-          alt={art.title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-        />
+    <motion.div layout initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+      className="group relative rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+      style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+      {/* Image */}
+      <Link to={`/artwork/${art.id}`} className="block relative aspect-[4/5] overflow-hidden" style={{ background: 'var(--bg)' }}>
+        <img src={art.image_url} alt={art.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
         {/* Badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-1.5">
           {art.is_featured && (
-            <span className="flex items-center gap-1 px-2.5 py-1 bg-[#fdf8f0]0/90 backdrop-blur text-white text-[10px] font-bold uppercase rounded-full shadow-sm">
+            <span className="flex items-center gap-1 px-2.5 py-1 text-white text-[10px] font-bold uppercase rounded-full shadow"
+              style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dk))' }}>
               <Star className="w-3 h-3 fill-current" /> ফিচারড
             </span>
           )}
-          <span className="px-2.5 py-1 bg-white/90 backdrop-blur text-stone-700 text-[10px] font-bold rounded-full shadow-sm">
+          <span className="px-2.5 py-1 text-[10px] font-bold rounded-full shadow"
+            style={{ background: 'rgba(255,255,255,0.92)', color: 'var(--accent-dk)' }}>
             {CATEGORIES.find(c => c.key === art.category)?.label || art.category}
           </span>
         </div>
         {/* Hover overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-stone-900/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
-          <span className="w-full py-2 bg-white/90 backdrop-blur text-stone-900 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 translate-y-3 group-hover:translate-y-0 transition-transform duration-300">
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3"
+          style={{ background: 'linear-gradient(to top, rgba(26,14,5,0.75) 0%, transparent 60%)' }}>
+          <span className="w-full py-2 rounded-xl font-bold text-sm flex items-center justify-center gap-2 text-white"
+            style={{ background: 'rgba(194,160,110,0.25)', backdropFilter: 'blur(4px)' }}>
             <Eye className="w-4 h-4" /> বিস্তারিত দেখুন
           </span>
         </div>
+        {/* Image bottom separator */}
+        <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: 'var(--border)' }} />
       </Link>
-      {/* Wishlist button — outside the main link */}
-      <button
-        onClick={handleWishlist}
-        className={`absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center transition-all shadow-sm backdrop-blur z-10 ${wishlisted ? 'bg-red-500 text-white' : 'bg-white/90 text-stone-500 hover:bg-red-50 hover:text-red-500'}`}
-      >
+      {/* Wishlist */}
+      <button onClick={handleWishlist}
+        className={`absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center transition-all shadow-sm z-10 ${wishlisted ? 'bg-red-500 text-white' : 'bg-white/90 backdrop-blur-sm text-stone-500 hover:text-red-500'}`}>
         <Heart className={`w-4 h-4 ${wishlisted ? 'fill-current' : ''}`} />
       </button>
 
       {/* Info */}
-      <div className="p-5">
+      <div className="p-4 relative">
+        {/* Dot pattern corner */}
+        <div className="absolute bottom-0 right-0 w-20 h-16 pointer-events-none overflow-hidden rounded-br-2xl"
+          style={{ backgroundImage: 'radial-gradient(rgba(194,160,110,0.35) 1.2px, transparent 1.2px)', backgroundSize: '5px 5px' }} />
         <Link to={`/artwork/${art.id}`}>
-          <h3 className="font-bold text-stone-900 text-base leading-tight hover:text-[#8b6914] transition-colors line-clamp-1 mb-1">
-            {art.title}
-          </h3>
+          <h3 className="font-bold text-base leading-tight line-clamp-1 mb-1 hover:underline"
+            style={{ color: 'var(--text)' }}>{art.title}</h3>
         </Link>
-        <Link to={`/artist/${art.artist_id}`} className="text-stone-400 text-xs hover:text-[#8b6914] transition-colors">
+        <Link to={`/artist/${art.artist_id}`} className="text-xs transition-colors hover:underline" style={{ color: 'var(--text3)' }}>
           {art.artist?.full_name}
         </Link>
+        {art.size_inches && <p className="text-xs mt-0.5" style={{ color: 'var(--text3)' }}>{art.size_inches} ইঞ্চি</p>}
 
-        {art.size_inches && (
-          <p className="text-stone-400 text-xs mt-1">{art.size_inches} ইঞ্চি</p>
-        )}
-
-        <div className="flex items-center justify-between mt-4">
-          <div>
-            <p className="text-xl font-bold text-stone-900">৳{art.price.toLocaleString()}</p>
-            <p className="text-xs text-[#8b6914] font-medium">পুরো দেশে ডেলিভারি</p>
+        <div className="flex items-center justify-between mt-3 gap-2">
+          <div className="min-w-0">
+            <p className="text-lg font-bold" style={{ color: 'var(--text)' }}>৳{art.price.toLocaleString()}</p>
+            <p className="text-xs font-medium" style={{ color: 'var(--accent)' }}>সারাদেশে ডেলিভারি</p>
           </div>
-
-          <button
-            onClick={handleAddToCart}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl font-bold text-xs transition-all hover:opacity-90"
+          <button onClick={handleAddToCart}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl font-bold text-xs transition-all hover:opacity-90 shrink-0"
             style={inCart
-              ? { background: 'rgba(194,160,110,0.12)', color: 'var(--accent-dk)', border: '1px solid rgba(194,160,110,0.25)' }
-              : { background: 'linear-gradient(135deg, var(--accent), var(--accent-dk))', color: 'var(--dark)' }}
-          >
+              ? { background: 'rgba(194,160,110,0.12)', color: 'var(--accent-dk)', border: '1px solid rgba(194,160,110,0.3)' }
+              : { background: 'linear-gradient(135deg, var(--accent), var(--accent-dk))', color: 'var(--dark)' }}>
             <ShoppingBag className="w-3.5 h-3.5 shrink-0" />
-            <span>{inCart ? 'যোগ ✓' : 'কার্ট'}</span>
+            <span>{inCart ? '✓ কার্ট' : 'কার্ট'}</span>
           </button>
         </div>
       </div>
