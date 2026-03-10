@@ -87,9 +87,15 @@ function ArtworkCard({ art }: { art: Artwork }) {
 
       {/* Info */}
       <div className="p-4 relative">
-        {/* Dot pattern corner */}
-        <div className="absolute bottom-0 right-0 w-20 h-16 pointer-events-none overflow-hidden rounded-br-2xl"
-          style={{ backgroundImage: 'radial-gradient(rgba(194,160,110,0.35) 1.2px, transparent 1.2px)', backgroundSize: '5px 5px' }} />
+        {/* Corner ornament */}
+        <div className="absolute bottom-0 right-0 w-16 h-16 pointer-events-none overflow-hidden rounded-br-2xl">
+          <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute bottom-0 right-0">
+            <circle cx="64" cy="64" r="18" stroke="rgba(194,160,110,0.7)" strokeWidth="1.5" fill="none"/>
+            <circle cx="64" cy="64" r="30" stroke="rgba(194,160,110,0.45)" strokeWidth="1" fill="none"/>
+            <circle cx="64" cy="64" r="44" stroke="rgba(194,160,110,0.25)" strokeWidth="0.8" fill="none"/>
+            <circle cx="64" cy="64" r="8" fill="rgba(194,160,110,0.3)"/>
+          </svg>
+        </div>
         <Link to={`/artwork/${art.id}`}>
           <h3 className="font-bold text-base leading-tight line-clamp-1 mb-1 hover:underline"
             style={{ color: 'var(--text)' }}>{art.title}</h3>
@@ -161,7 +167,7 @@ export default function Marketplace() {
   const currentSort = SORT_OPTIONS.find(s => s.key === sortBy)?.label;
 
   return (
-    <div className="min-h-screen bg-stone-50">
+    <div className="min-h-screen bg-[var(--bg)]">
       {/* Header */}
       <div className="bg-white border-b border-stone-100 pt-28 pb-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -176,17 +182,17 @@ export default function Marketplace() {
 
             <div className="flex gap-3 w-full lg:w-auto">
               <div className="relative flex-1 lg:w-80">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text3)]" />
                 <input
                   type="text"
                   placeholder="শিল্পকর্ম বা শিল্পী খুঁজুন..."
-                  className="w-full pl-11 pr-4 py-3 bg-stone-50 border border-stone-200 rounded-2xl focus:ring-2 focus:ring-[#c2a06e] outline-none transition-all text-sm"
+                  className="w-full pl-11 pr-4 py-3 bg-[var(--bg)] border border-[var(--border)] rounded-2xl focus:ring-2 focus:ring-[#c2a06e] outline-none transition-all text-sm"
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                 />
                 {searchQuery && (
                   <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2">
-                    <X className="w-4 h-4 text-stone-400" />
+                    <X className="w-4 h-4 text-[var(--text3)]" />
                   </button>
                 )}
               </div>
@@ -195,7 +201,7 @@ export default function Marketplace() {
               <div className="relative">
                 <button
                   onClick={() => setShowSort(!showSort)}
-                  className="flex items-center gap-2 px-4 py-3 bg-white border border-stone-200 rounded-2xl text-sm font-medium text-stone-700 hover:border-[#c2a06e] transition-colors whitespace-nowrap"
+                  className="flex items-center gap-2 px-4 py-3 bg-white border border-[var(--border)] rounded-2xl text-sm font-medium text-[var(--text)] hover:border-[#c2a06e] transition-colors whitespace-nowrap"
                 >
                   <SlidersHorizontal className="w-4 h-4" />
                   {currentSort}
@@ -213,7 +219,7 @@ export default function Marketplace() {
                         <button
                           key={opt.key}
                           onClick={() => { setSortBy(opt.key); setShowSort(false); }}
-                          className={`w-full text-left px-4 py-3 text-sm font-medium transition-colors ${sortBy === opt.key ? 'bg-[#fdf8f0] text-[#8b6914]' : 'text-stone-700 hover:bg-stone-50'}`}
+                          className={`w-full text-left px-4 py-3 text-sm font-medium transition-colors ${sortBy === opt.key ? 'bg-[#fdf8f0] text-[#8b6914]' : 'text-[var(--text)] hover:bg-[var(--bg)]'}`}
                         >
                           {opt.label}
                         </button>
@@ -234,7 +240,7 @@ export default function Marketplace() {
                 className={`px-5 py-2 rounded-2xl text-sm font-bold whitespace-nowrap transition-all duration-200 ${
                   selectedCategory === cat.key
                     ? 'bg-stone-900 text-white'
-                    : 'bg-white border border-stone-200 text-stone-600 hover:border-stone-400 hover:text-stone-900'
+                    : 'bg-white border border-[var(--border)] text-stone-600 hover:border-stone-400 hover:text-stone-900'
                 }`}
               >
                 {cat.label}

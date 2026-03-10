@@ -171,9 +171,15 @@ function ArtworkCard({ art, s }: { art: Artwork; s: typeof SECTIONS[0] }) {
       </button>
       {/* Info */}
       <div className="p-3 relative">
-        {/* Dot pattern corner */}
-        <div className="absolute bottom-0 right-0 w-20 h-16 pointer-events-none overflow-hidden rounded-br-2xl"
-          style={{ backgroundImage: `radial-gradient(${s.border} 1.2px, transparent 1.2px)`, backgroundSize: '5px 5px', opacity: 0.6 }} />
+        {/* Corner ornament — layered arcs */}
+        <div className="absolute bottom-0 right-0 w-16 h-16 pointer-events-none overflow-hidden rounded-br-2xl">
+          <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute bottom-0 right-0">
+            <circle cx="64" cy="64" r="20" stroke={s.border} strokeWidth="1.5" fill="none" opacity="0.6"/>
+            <circle cx="64" cy="64" r="32" stroke={s.border} strokeWidth="1" fill="none" opacity="0.4"/>
+            <circle cx="64" cy="64" r="46" stroke={s.border} strokeWidth="0.8" fill="none" opacity="0.25"/>
+            <circle cx="64" cy="64" r="10" fill={s.border} fillOpacity="0.3"/>
+          </svg>
+        </div>
         <Link to={`/artwork/${art.id}`}>
           <h3 className="font-bold text-sm line-clamp-1" style={{ color: 'var(--text)' }}>{art.title}</h3>
         </Link>

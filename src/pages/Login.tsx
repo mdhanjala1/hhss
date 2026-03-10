@@ -131,7 +131,7 @@ export default function Login() {
     <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center px-4 pt-16">
       <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
         className="rounded-3xl p-10 max-w-md w-full text-center shadow-xl border border-[var(--border)]">
-        <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
+        <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6" style={{ background: 'rgba(194,160,110,0.12)' }}>
           <CheckCircle className="w-10 h-10 text-[#c2a06e]" />
         </div>
         <h2 className="text-2xl font-bold text-[var(--text)] mb-3">অ্যাকাউন্ট তৈরি হয়েছে! 🎉</h2>
@@ -217,12 +217,12 @@ export default function Login() {
                 {STEPS.map((s, i) => (
                   <React.Fragment key={i}>
                     <div className="flex flex-col items-center">
-                      <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all ${step > i + 1 ? 'bg-[#c2a06e] text-white' : step === i + 1 ? 'bg-[#c2a06e] text-white ring-4 ring-emerald-100' : 'bg-[var(--bg)] text-[var(--text3)]'}`}>
+                      <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all ${step > i + 1 ? 'bg-[#c2a06e] text-white' : step === i + 1 ? 'bg-[#c2a06e] text-white ring-4 ring-[rgba(194,160,110,0.2)]' : 'bg-[var(--bg)] text-[var(--text3)]'}`}>
                         {step > i + 1 ? <CheckCircle className="w-5 h-5" /> : i + 1}
                       </div>
                       <span className={`text-[10px] mt-1 font-medium whitespace-nowrap ${step === i + 1 ? 'text-[#c2a06e]' : 'text-[var(--text3)]'}`}>{s}</span>
                     </div>
-                    {i < STEPS.length - 1 && <div className={`flex-1 h-0.5 mx-2 mb-4 transition-all ${step > i + 1 ? 'bg-emerald-500' : 'bg-stone-200'}`} />}
+                    {i < STEPS.length - 1 && <div className={`flex-1 h-0.5 mx-2 mb-4 transition-all ${step > i + 1 ? 'bg-[var(--accent)]' : 'bg-[var(--border)]'}`} />}
                   </React.Fragment>
                 ))}
               </div>
@@ -314,7 +314,7 @@ export default function Login() {
                     </div>
                   </div>
 
-                  <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 text-sm text-emerald-700">
+                  <div className="rounded-2xl p-4 text-sm" style={{ background: 'rgba(194,160,110,0.08)', border: '1px solid rgba(194,160,110,0.25)', color: 'var(--accent-dk)' }}>
                     <strong>রেজিস্ট্রেশনের পর:</strong> ড্যাশবোর্ড থেকে NID কার্ড জমা দিন। এডমিন ভেরিফাই করলে আপনি শিল্পকর্ম আপলোড করতে পারবেন।
                   </div>
                 </div>

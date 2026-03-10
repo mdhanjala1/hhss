@@ -6,7 +6,7 @@ import {
   CheckCircle, Clock, AlertCircle, Image as ImageIcon, DollarSign,
   Upload, X, Phone, MapPin, Palette, ShieldCheck, AlertTriangle,
   CreditCard, Eye, Bell, TrendingUp, Star, ExternalLink, Trash2,
-  Package, BarChart3, Edit, Save, Camera
+  Package, BarChart3, Edit, Edit3, Save, Camera
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { format } from 'date-fns';
@@ -698,17 +698,27 @@ export default function ArtistDashboard() {
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             onClick={e => { if (e.target === e.currentTarget) setEditingArtwork(null); }}>
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
-              className="rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-              <div className="p-6 border-b border-[var(--border)] flex items-center justify-between">
-                <h3 className="text-lg font-bold text-[var(--text)]">শিল্পকর্ম এডিট করুন</h3>
-                <button onClick={() => setEditingArtwork(null)} className="w-9 h-9 rounded-full bg-[var(--bg)] hover:bg-stone-200 flex items-center justify-center transition-all">
+              className="rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+              style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+              <div className="p-6 border-b flex items-center justify-between"
+                style={{ borderColor: 'var(--border)', background: 'rgba(194,160,110,0.04)' }}>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center"
+                    style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dk))' }}>
+                    <Edit3 className="w-4 h-4" style={{ color: 'var(--dark)' }} />
+                  </div>
+                  <h3 className="text-lg font-bold" style={{ color: 'var(--text)' }}>শিল্পকর্ম এডিট করুন</h3>
+                </div>
+                <button onClick={() => setEditingArtwork(null)}
+                  className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:bg-red-50 hover:text-red-500"
+                  style={{ background: 'var(--bg)', color: 'var(--text3)' }}>
                   <X className="w-5 h-5" />
                 </button>
               </div>
               <div className="p-6 space-y-4">
                 {/* Image change */}
                 <div>
-                  <label className="block text-xs font-bold text-stone-600 mb-2">ছবি পরিবর্তন (ঐচ্ছিক)</label>
+                  <label className="block text-xs font-bold mb-2" style={{ color: 'var(--text2)' }}>ছবি পরিবর্তন (ঐচ্ছিক)</label>
                   <div className="relative w-full h-40 rounded-2xl overflow-hidden bg-[var(--bg)] border-2 border-dashed border-[var(--border)] cursor-pointer hover:border-emerald-400 transition-colors"
                     onClick={() => document.getElementById('editImageInput')?.click()}>
                     <img src={editPreview || editingArtwork.image_url} alt="" className="w-full h-full object-cover" />
@@ -721,38 +731,39 @@ export default function ArtistDashboard() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-stone-600 mb-1.5">শিরোনাম *</label>
+                  <label className="block text-xs font-bold mb-1.5" style={{ color: 'var(--text2)' }}>শিরোনাম *</label>
                   <input type="text" value={editForm.title} onChange={e => setEditForm({...editForm, title: e.target.value})}
-                    className="w-full px-4 py-3 bg-[var(--bg)] border border-[var(--border)] rounded-2xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none text-sm" />
+                    className="w-full px-4 py-3 bg-[var(--bg)] border border-[var(--border)] rounded-2xl outline-none text-sm" style={{ color: 'var(--text)' }} />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-stone-600 mb-1.5">বিবরণ</label>
+                  <label className="block text-xs font-bold mb-1.5" style={{ color: 'var(--text2)' }}>বিবরণ</label>
                   <textarea value={editForm.description} onChange={e => setEditForm({...editForm, description: e.target.value})} rows={3}
-                    className="w-full px-4 py-3 bg-[var(--bg)] border border-[var(--border)] rounded-2xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none text-sm resize-none" />
+                    className="w-full px-4 py-3 bg-[var(--bg)] border border-[var(--border)] rounded-2xl outline-none text-sm resize-none" style={{ color: 'var(--text)' }} />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-bold text-stone-600 mb-1.5">মূল্য (৳) *</label>
+                    <label className="block text-xs font-bold mb-1.5" style={{ color: 'var(--text2)' }}>মূল্য (৳) *</label>
                     <input type="number" value={editForm.price} onChange={e => setEditForm({...editForm, price: e.target.value})}
-                      className="w-full px-4 py-3 bg-[var(--bg)] border border-[var(--border)] rounded-2xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none text-sm" />
+                      className="w-full px-4 py-3 bg-[var(--bg)] border border-[var(--border)] rounded-2xl outline-none text-sm" style={{ color: 'var(--text)' }} />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-stone-600 mb-1.5">মাধ্যম</label>
+                    <label className="block text-xs font-bold mb-1.5" style={{ color: 'var(--text2)' }}>মাধ্যম</label>
                     <input type="text" value={editForm.medium} onChange={e => setEditForm({...editForm, medium: e.target.value})} placeholder="তেলরঙ, জলরঙ..."
-                      className="w-full px-4 py-3 bg-[var(--bg)] border border-[var(--border)] rounded-2xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none text-sm" />
+                      className="w-full px-4 py-3 bg-[var(--bg)] border border-[var(--border)] rounded-2xl outline-none text-sm" style={{ color: 'var(--text)' }} />
                   </div>
                 </div>
                 <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 text-xs text-amber-700">
                   ⚠️ এডিট করার পর শিল্পকর্মটি পুনরায় এডমিনের পর্যালোচনায় যাবে এবং অনুমোদনের পর প্রকাশিত হবে।
                 </div>
               </div>
-              <div className="p-6 border-t border-[var(--border)] flex gap-3">
-                <button onClick={() => setEditingArtwork(null)} className="flex-1 py-3 bg-[var(--bg)] hover:bg-stone-200 text-stone-700 rounded-2xl font-bold text-sm transition-all">
+              <div className="p-6 border-t flex gap-3" style={{ borderColor: 'var(--border)' }}>
+                <button onClick={() => setEditingArtwork(null)} className="flex-1 py-3 rounded-2xl font-bold text-sm transition-all border hover:shadow-sm" style={{ background: 'var(--bg)', color: 'var(--text2)', borderColor: 'var(--border)' }}>
                   বাতিল
                 </button>
                 <button onClick={saveEdit} disabled={editSaving}
-                  className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2">
-                  {editSaving ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><Save className="w-4 h-4" />সংরক্ষণ করুন</>}
+                  className="flex-1 py-3 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-60"
+                  style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dk))', color: 'var(--dark)' }}>
+                  {editSaving ? <span className="w-4 h-4 border-2 border-[var(--dark)]/30 border-t-[var(--dark)] rounded-full animate-spin" /> : <><Save className="w-4 h-4" />সংরক্ষণ করুন</>}
                 </button>
               </div>
             </motion.div>

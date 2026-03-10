@@ -332,10 +332,15 @@ export default function ArtworkDetail() {
                   <div className="aspect-[4/5] overflow-hidden" style={{ background: 'var(--bg)' }}>
                     <img src={art.image_url} alt={art.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   </div>
-                  {/* Price area with dot pattern */}
+                  {/* Price area with corner ornament */}
                   <div className="p-3 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-16 h-16 opacity-5"
-                      style={{ backgroundImage: 'radial-gradient(var(--accent) 1px, transparent 1px)', backgroundSize: '6px 6px' }} />
+                    <div className="absolute bottom-0 right-0 w-14 h-14 pointer-events-none overflow-hidden rounded-br-2xl">
+                      <svg width="56" height="56" viewBox="0 0 56 56" fill="none" className="absolute bottom-0 right-0">
+                        <circle cx="56" cy="56" r="16" stroke="rgba(194,160,110,0.55)" strokeWidth="1.5" fill="none"/>
+                        <circle cx="56" cy="56" r="28" stroke="rgba(194,160,110,0.3)" strokeWidth="1" fill="none"/>
+                        <circle cx="56" cy="56" r="7" fill="rgba(194,160,110,0.25)"/>
+                      </svg>
+                    </div>
                     <h4 className="font-bold text-sm line-clamp-1" style={{ color: 'var(--text)' }}>{art.title}</h4>
                     <p className="font-bold text-sm mt-1" style={{ color: 'var(--accent)' }}>৳{art.price.toLocaleString()}</p>
                   </div>

@@ -363,9 +363,15 @@ export default function ArtistProfile() {
                           <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: 'var(--border)' }} />
                         </div>
                         <div className="p-3 relative">
-                          {/* Dot pattern */}
-                          <div className="absolute bottom-0 right-0 w-16 h-14 pointer-events-none overflow-hidden rounded-br-2xl"
-                            style={{ backgroundImage: 'radial-gradient(rgba(194,160,110,0.35) 1.2px, transparent 1.2px)', backgroundSize: '5px 5px' }} />
+                          {/* Corner ornament */}
+                          <div className="absolute bottom-0 right-0 w-14 h-14 pointer-events-none overflow-hidden rounded-br-2xl">
+                            <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute bottom-0 right-0">
+                              <circle cx="56" cy="56" r="16" stroke="rgba(194,160,110,0.65)" strokeWidth="1.5" fill="none"/>
+                              <circle cx="56" cy="56" r="28" stroke="rgba(194,160,110,0.4)" strokeWidth="1" fill="none"/>
+                              <circle cx="56" cy="56" r="40" stroke="rgba(194,160,110,0.2)" strokeWidth="0.8" fill="none"/>
+                              <circle cx="56" cy="56" r="7" fill="rgba(194,160,110,0.28)"/>
+                            </svg>
+                          </div>
                           <Link to={`/artwork/${art.id}`}>
                             <h3 className="font-bold text-sm line-clamp-1 hover:underline" style={{ color: 'var(--text)' }}>{art.title}</h3>
                           </Link>
