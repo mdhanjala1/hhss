@@ -6,7 +6,7 @@ import {
   CheckCircle, Clock, AlertCircle, Image as ImageIcon, DollarSign,
   Upload, X, Phone, MapPin, Palette, ShieldCheck, AlertTriangle,
   CreditCard, Eye, Bell, TrendingUp, Star, ExternalLink, Trash2,
-  Package, BarChart3
+  Package, BarChart3, Edit, Save, Camera
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { format } from 'date-fns';
@@ -25,6 +25,12 @@ export default function ArtistDashboard() {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+  const [editingArtwork, setEditingArtwork] = useState<Artwork | null>(null);
+  const [editForm, setEditForm] = useState({ title: '', description: '', price: '', size: '', medium: '', category: '' });
+  const [editFile, setEditFile] = useState<File | null>(null);
+  const [editPreview, setEditPreview] = useState<string | null>(null);
+  const [editSaving, setEditSaving] = useState(false);
 
   const [newArt, setNewArt] = useState({ title: '', description: '', category: 'Painting', price: '', size: '', medium: '', colors: '', year_created: '' });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -139,6 +145,40 @@ export default function ArtistDashboard() {
     const { error } = await supabase.from('artworks').delete().eq('id', id);
     if (error) { toast.error(error.message); return; }
     toast.success('মুছে ফেলা হয়েছে'); fetchData();
+  };
+
+  const openEdit = (art: Artwork) => {
+    setEditingArtwork(art);
+    setEditForm({ title: art.title, description: art.description || '', price: String(art.price), size: art.size_inches || '', medium: art.medium || '', category: art.category });
+    setEditFile(null);
+    setEditPreview(null);
+  };
+
+  const saveEdit = async () => {
+    if (!editingArtwork) return;
+    setEditSaving(true);
+    try {
+      let imageUrl = editingArtwork.image_url;
+      if (editFile) {
+        const { url } = await uploadToCloudinary(editFile, 'shilposhop_artworks');
+        imageUrl = url;
+      }
+      const { error } = await supabase.from('artworks').update({
+        title: editForm.title,
+        description: editForm.description,
+        price: Number(editForm.price),
+        size_inches: editForm.size,
+        medium: editForm.medium,
+        category: editForm.category,
+        image_url: imageUrl,
+        status: 'pending', // re-submit for admin review
+      }).eq('id', editingArtwork.id);
+      if (error) throw error;
+      toast.success('আপডেট হয়েছে! এডমিন পর্যালোচনার পর প্রকাশিত হবে।');
+      setEditingArtwork(null);
+      fetchData();
+    } catch (e: any) { toast.error(e.message); }
+    finally { setEditSaving(false); }
   };
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600" /></div>;
@@ -318,6 +358,9 @@ export default function ArtistDashboard() {
                             <Link to={`/artwork/${art.id}`} className="w-8 h-8 bg-white/90 rounded-lg flex items-center justify-center text-stone-600 hover:text-emerald-600 transition-colors shadow-sm">
                               <Eye className="w-4 h-4" />
                             </Link>
+                            <button onClick={() => openEdit(art)} className="w-8 h-8 bg-white/90 rounded-lg flex items-center justify-center text-stone-600 hover:text-blue-600 transition-colors shadow-sm">
+                              <Edit className="w-4 h-4" />
+                            </button>
                             <button onClick={() => deleteArtwork(art.id)} className="w-8 h-8 bg-white/90 rounded-lg flex items-center justify-center text-stone-600 hover:text-red-600 transition-colors shadow-sm">
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -631,6 +674,75 @@ export default function ArtistDashboard() {
           </AnimatePresence>
         </main>
       </div>
+
+      {/* ── EDIT ARTWORK MODAL ── */}
+      <AnimatePresence>
+        {editingArtwork && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={e => { if (e.target === e.currentTarget) setEditingArtwork(null); }}>
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+              <div className="p-6 border-b border-stone-100 flex items-center justify-between">
+                <h3 className="text-lg font-bold text-stone-900">শিল্পকর্ম এডিট করুন</h3>
+                <button onClick={() => setEditingArtwork(null)} className="w-9 h-9 rounded-full bg-stone-100 hover:bg-stone-200 flex items-center justify-center transition-all">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="p-6 space-y-4">
+                {/* Image change */}
+                <div>
+                  <label className="block text-xs font-bold text-stone-600 mb-2">ছবি পরিবর্তন (ঐচ্ছিক)</label>
+                  <div className="relative w-full h-40 rounded-2xl overflow-hidden bg-stone-100 border-2 border-dashed border-stone-200 cursor-pointer hover:border-emerald-400 transition-colors"
+                    onClick={() => document.getElementById('editImageInput')?.click()}>
+                    <img src={editPreview || editingArtwork.image_url} alt="" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                      <div className="text-white text-center"><Camera className="w-8 h-8 mx-auto mb-1" /><p className="text-xs font-bold">ছবি পরিবর্তন করুন</p></div>
+                    </div>
+                  </div>
+                  <input id="editImageInput" type="file" accept="image/*" className="hidden"
+                    onChange={e => { const f = e.target.files?.[0]; if (f) { setEditFile(f); setEditPreview(URL.createObjectURL(f)); }}} />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-stone-600 mb-1.5">শিরোনাম *</label>
+                  <input type="text" value={editForm.title} onChange={e => setEditForm({...editForm, title: e.target.value})}
+                    className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-2xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none text-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-stone-600 mb-1.5">বিবরণ</label>
+                  <textarea value={editForm.description} onChange={e => setEditForm({...editForm, description: e.target.value})} rows={3}
+                    className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-2xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none text-sm resize-none" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-stone-600 mb-1.5">মূল্য (৳) *</label>
+                    <input type="number" value={editForm.price} onChange={e => setEditForm({...editForm, price: e.target.value})}
+                      className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-2xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none text-sm" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-stone-600 mb-1.5">মাধ্যম</label>
+                    <input type="text" value={editForm.medium} onChange={e => setEditForm({...editForm, medium: e.target.value})} placeholder="তেলরঙ, জলরঙ..."
+                      className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-2xl focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 outline-none text-sm" />
+                  </div>
+                </div>
+                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 text-xs text-amber-700">
+                  ⚠️ এডিট করার পর শিল্পকর্মটি পুনরায় এডমিনের পর্যালোচনায় যাবে এবং অনুমোদনের পর প্রকাশিত হবে।
+                </div>
+              </div>
+              <div className="p-6 border-t border-stone-100 flex gap-3">
+                <button onClick={() => setEditingArtwork(null)} className="flex-1 py-3 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-2xl font-bold text-sm transition-all">
+                  বাতিল
+                </button>
+                <button onClick={saveEdit} disabled={editSaving}
+                  className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2">
+                  {editSaving ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><Save className="w-4 h-4" />সংরক্ষণ করুন</>}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

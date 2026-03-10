@@ -212,3 +212,33 @@ DROP TRIGGER IF EXISTS on_review_added ON reviews;
 CREATE TRIGGER on_review_added
   AFTER INSERT ON reviews
   FOR EACH ROW EXECUTE FUNCTION update_artist_rating();
+
+-- ============================================================
+-- FIX: Admin RLS policies for verify & artwork approval
+-- Run these in Supabase SQL Editor
+-- ============================================================
+
+-- Allow admin to update artists (verify)
+DROP POLICY IF EXISTS "Admin can update artists" ON artists;
+CREATE POLICY "Admin can update artists"
+  ON artists FOR UPDATE
+  TO authenticated
+  USING (true)
+  WITH CHECK (true);
+
+-- Allow admin to update artworks (approve/reject)
+DROP POLICY IF EXISTS "Admin can update artworks" ON artworks;
+CREATE POLICY "Admin can update artworks"
+  ON artworks FOR UPDATE
+  TO authenticated
+  USING (true)
+  WITH CHECK (true);
+
+-- Allow artists to update own artworks
+DROP POLICY IF EXISTS "Artists can update own artworks" ON artworks;
+CREATE POLICY "Artists can update own artworks"
+  ON artworks FOR UPDATE
+  TO authenticated
+  USING (artist_id IN (SELECT id FROM artists WHERE user_id = auth.uid()))
+  WITH CHECK (artist_id IN (SELECT id FROM artists WHERE user_id = auth.uid()));
+
