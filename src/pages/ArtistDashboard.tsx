@@ -376,6 +376,7 @@ export default function ArtistDashboard() {
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedFile) { toast.error('একটি ছবি নির্বাচন করুন'); return; }
+    if (selectedFile.size > 1.5 * 1024 * 1024) { toast.error('ছবির সাইজ ১.৫ MB এর বেশি হতে পারবে না'); return; }
     if (!newArt.title || !newArt.price) { toast.error('শিরোনাম ও মূল্য দিন'); return; }
     if (!artist) return;
     setUploading(true);
@@ -830,14 +831,29 @@ export default function ArtistDashboard() {
                         )}
                         <input type="file" accept="image/*" onChange={e => {
                           const f = e.target.files?.[0];
-                          if (f) { setSelectedFile(f); const url = URL.createObjectURL(f); setPreviewUrl(url); setRawImageSrc(url); }
+                          if (!f) return;
+                          if (f.size > 1.5 * 1024 * 1024) {
+                            toast.error('ছবির সাইজ ১.৫ MB এর বেশি। অনুগ্রহ করে ছোট ছবি নির্বাচন করুন।');
+                            e.target.value = '';
+                            return;
+                          }
+                          setSelectedFile(f);
+                          const url = URL.createObjectURL(f);
+                          setPreviewUrl(url);
+                          setRawImageSrc(url);
                         }} className="absolute inset-0 opacity-0 cursor-pointer" />
                       </div>
                       {/* Size recommendation */}
-                      <div className="mt-2 flex items-start gap-2 px-1">
-                        <span className="text-[10px] leading-relaxed" style={{ color: 'var(--text3)' }}>
-                          📐 <strong>প্রস্তাবিত সাইজ:</strong> ৮০০×১০০০ px (অনুপাত ৪:৫) · সর্বনিম্ন ৬০০×৭৫০ px · JPG/PNG
-                        </span>
+                      <div className="mt-2 space-y-1 px-1">
+                        <div className="flex items-start gap-1.5">
+                          <span className="text-[10px] leading-relaxed" style={{ color: 'var(--text3)' }}>
+                            📐 <strong>প্রস্তাবিত সাইজ:</strong> ৮০০×১০০০ px (অনুপাত ৪:৫) · সর্বনিম্ন ৬০০×৭৫০ px · JPG/PNG
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg" style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)' }}>
+                          <span className="text-[10px] font-bold" style={{ color: '#dc2626' }}>⚠️ সর্বোচ্চ ফাইল সাইজ: ১.৫ MB</span>
+                          <span className="text-[10px]" style={{ color: 'var(--text3)' }}>(বড় ছবি কম্প্রেস করে আপলোড করুন)</span>
+                        </div>
                       </div>
                     </div>
                     <div className="space-y-3">
