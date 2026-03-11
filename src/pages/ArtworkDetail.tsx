@@ -30,6 +30,9 @@ export default function ArtworkDetail() {
   const { toggle, isWishlisted } = useWishlist();
 
   const [orderData, setOrderData] = useState({ name: '', phone: '', address: '', district: '', note: '' });
+  const [deliveryZone, setDeliveryZone] = useState<'dhaka' | 'outside' | ''>('');
+  const DELIVERY_CHARGE = { dhaka: 60, outside: 130 };
+  const deliveryCharge = deliveryZone ? DELIVERY_CHARGE[deliveryZone] : 0;
   const [submitting, setSubmitting] = useState(false);
   const [reviewData, setReviewData] = useState({ name: '', rating: 5, text: '' });
   const [submittingReview, setSubmittingReview] = useState(false);
@@ -79,6 +82,9 @@ export default function ArtworkDetail() {
           customer_note: orderData.note,
           artwork_title: artwork.title,
           artwork_price: artwork.price,
+          delivery_charge: deliveryCharge,
+          delivery_zone: deliveryZone,
+          total_amount: ((discountedPrice || artwork.price) * quantity) + deliveryCharge,
           payment_method: 'Cash on Delivery',
         });
         if (error) throw error;
@@ -508,16 +514,77 @@ export default function ArtworkDetail() {
                     className="w-full px-4 py-3.5 rounded-2xl border outline-none resize-none text-sm"
                     style={{ background: 'var(--bg)', borderColor: 'var(--border)', color: 'var(--text)' }}
                     value={orderData.note} onChange={e => setOrderData({ ...orderData, note: e.target.value })} />
-                  <div className="pt-3 border-t" style={{ borderColor: 'var(--border)' }}>
-                    <div className="flex justify-between mb-4 font-bold">
-                      <span style={{ color: 'var(--text2)' }}>মোট</span>
-                      <span className="text-lg" style={{ color: 'var(--accent)' }}>৳{((discountedPrice || artwork.price) * quantity).toLocaleString()}</span>
+                  {/* Delivery Zone */}
+                  <div className="rounded-2xl p-4" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
+                    <p className="text-xs font-bold mb-3 flex items-center gap-1.5" style={{ color: 'var(--text2)' }}>
+                      <Truck className="w-3.5 h-3.5" style={{ color: 'var(--accent)' }} />
+                      ডেলিভারি এলাকা নির্বাচন করুন *
+                    </p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button type="button"
+                        onClick={() => setDeliveryZone('dhaka')}
+                        className="py-3 px-3 rounded-xl border-2 text-left transition-all"
+                        style={{
+                          borderColor: deliveryZone === 'dhaka' ? 'var(--accent)' : 'var(--border)',
+                          background: deliveryZone === 'dhaka' ? 'rgba(194,160,110,0.1)' : 'var(--card)',
+                          color: 'var(--text)'
+                        }}>
+                        <p className="font-bold text-sm">🏙️ ঢাকার মধ্যে</p>
+                        <p className="text-xs mt-0.5 font-bold" style={{ color: 'var(--accent)' }}>৳৬০ ডেলিভারি</p>
+                        <p className="text-[10px] mt-0.5" style={{ color: 'var(--text3)' }}>১–৩ কার্যদিবস</p>
+                      </button>
+                      <button type="button"
+                        onClick={() => setDeliveryZone('outside')}
+                        className="py-3 px-3 rounded-xl border-2 text-left transition-all"
+                        style={{
+                          borderColor: deliveryZone === 'outside' ? 'var(--accent)' : 'var(--border)',
+                          background: deliveryZone === 'outside' ? 'rgba(194,160,110,0.1)' : 'var(--card)',
+                          color: 'var(--text)'
+                        }}>
+                        <p className="font-bold text-sm">📦 ঢাকার বাইরে</p>
+                        <p className="text-xs mt-0.5 font-bold" style={{ color: 'var(--accent)' }}>৳১৩০ ডেলিভারি</p>
+                        <p className="text-[10px] mt-0.5" style={{ color: 'var(--text3)' }}>৩–৭ কার্যদিবস</p>
+                      </button>
                     </div>
-                    <button type="submit" disabled={submitting}
+                    {deliveryZone && (
+                      <div className="mt-3 flex items-center gap-2 text-xs px-2 py-1.5 rounded-xl"
+                        style={{ background: 'rgba(194,160,110,0.07)', color: 'var(--text3)' }}>
+                        <Package className="w-3.5 h-3.5" style={{ color: 'var(--accent)' }} />
+                        {deliveryZone === 'dhaka'
+                          ? 'পাঠাও / শ্যাডো কুরিয়ারে ডেলিভারি'
+                          : 'সুন্দরবন / রেডএক্স কুরিয়ারে ডেলিভারি'}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="pt-3 border-t" style={{ borderColor: 'var(--border)' }}>
+                    {/* Price breakdown */}
+                    <div className="space-y-2 mb-4">
+                      <div className="flex justify-between text-sm" style={{ color: 'var(--text2)' }}>
+                        <span>শিল্পকর্মের মূল্য</span>
+                        <span>৳{((discountedPrice || artwork.price) * quantity).toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between text-sm" style={{ color: 'var(--text2)' }}>
+                        <span>ডেলিভারি চার্জ</span>
+                        <span style={{ color: deliveryZone ? 'var(--text)' : 'var(--text3)' }}>
+                          {deliveryZone ? `৳${deliveryCharge}` : '— এলাকা নির্বাচন করুন'}
+                        </span>
+                      </div>
+                      <div className="border-t pt-2 flex justify-between font-bold" style={{ borderColor: 'var(--border)' }}>
+                        <span style={{ color: 'var(--text)' }}>মোট</span>
+                        <span className="text-lg" style={{ color: 'var(--accent)' }}>
+                          {deliveryZone
+                            ? `৳${(((discountedPrice || artwork.price) * quantity) + deliveryCharge).toLocaleString()}`
+                            : `৳${((discountedPrice || artwork.price) * quantity).toLocaleString()} + ডেলিভারি`}
+                        </span>
+                      </div>
+                    </div>
+                    <button type="submit" disabled={submitting || !deliveryZone}
                       className="w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-2 disabled:opacity-60 hover:opacity-90 transition-all"
                       style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dk))', color: 'var(--dark)' }}>
                       {submitting ? 'প্রসেস হচ্ছে...' : <><CheckCircle className="w-5 h-5" /> অর্ডার নিশ্চিত করুন</>}
                     </button>
+                    {!deliveryZone && <p className="text-center text-xs mt-2" style={{ color: '#e08080' }}>* ডেলিভারি এলাকা নির্বাচন করুন</p>}
                   </div>
                 </form>
               </div>

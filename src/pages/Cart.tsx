@@ -195,13 +195,13 @@ export default function Cart() {
                   <span>পণ্য ({totalItems}টি)</span>
                   <span>৳{totalPrice.toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between text-sm" style={{ color: 'var(--accent)' }}>
-                  <span>ডেলিভারি</span>
-                  <span>বিনামূল্যে</span>
+                <div className="flex justify-between text-sm" style={{ color: 'var(--text3)' }}>
+                  <span>ডেলিভারি চার্জ</span>
+                  <span className="text-right text-xs" style={{ color: 'var(--text3)' }}>ঢাকা: ৳৬০ · বাইরে: ৳১৩০</span>
                 </div>
                 <div className="border-t pt-3 flex justify-between font-bold text-lg"
                   style={{ borderColor: 'var(--border)', color: 'var(--text)' }}>
-                  <span>মোট</span>
+                  <span>পণ্যমূল্য</span>
                   <span style={{ color: 'var(--accent)' }}>৳{totalPrice.toLocaleString()}</span>
                 </div>
               </div>

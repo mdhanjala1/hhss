@@ -16,9 +16,9 @@ const CATEGORIES = [
   { key: 'Arabic Calligraphy', label: 'আরবি ক্যালিগ্রাফি' },
   { key: 'Painting', label: 'পেইন্টিং' },
   { key: 'Handicraft', label: 'বিশেষ শিল্পকর্ম' },
-  { key: 'Sculpture', label: 'ভাস্কর্য' },
+  { key: 'Home Decor', label: 'হোম ডেকর' },
   { key: 'Digital Art', label: 'ডিজিটাল আর্ট' },
-  { key: 'Photography', label: 'ফটোগ্রাফি' },
+  { key: 'Framing Art', label: 'ফ্রেমিং আর্ট' },
 ];
 
 const SORT_OPTIONS = [

@@ -47,7 +47,7 @@ const FAQ_DATA = [
   { q: 'ডেলিভারি চার্জ কত?', a: 'আমরা সারা বাংলাদেশে ডেলিভারি দিই। ডেলিভারি চার্জ অর্ডার করার সময় জানানো হবে।' },
   { q: 'আমি কি শিল্পী হিসেবে যোগ দিতে পারি?', a: 'হ্যাঁ! যেকোনো শিল্পী বিনামূল্যে আমাদের প্ল্যাটফর্মে যোগ দিতে পারেন। NID যাচাইয়ের পর শিল্পকর্ম আপলোড করা যাবে।' },
   { q: 'পেমেন্ট পদ্ধতি কী?', a: 'ক্যাশ অন ডেলিভারি — পণ্য পেয়ে সন্তুষ্ট হলে পেমেন্ট করুন। bKash, Nagad, Rocket ও ক্যাশ গ্রহণযোগ্য।' },
-  { q: 'শিল্পকর্ম ফেরত দেওয়া যাবে?', a: 'হ্যাঁ, ক্ষতিগ্রস্ত পণ্য পেলে ৭ দিনের মধ্যে রিটার্ন করা যাবে।' },
+  { q: 'ডেলিভারি কতদিন লাগে?', a: 'সাধারণত ঢাকার মধ্যে ১-৩ দিন এবং ঢাকার বাইরে ৩-৭ দিন লাগে।' },
 ];
 
 // Artwork sections config — warm palette
@@ -93,26 +93,45 @@ const DigitalIcon = ({ color }: { color: string }) => (
 );
 const HandicraftIcon = ({ color }: { color: string }) => (
   <svg viewBox="0 0 36 36" className="w-9 h-9" fill="none">
-    <path d="M18 4 L21.5 14 L32 14 L23.5 20.5 L26.5 31 L18 24.5 L9.5 31 L12.5 20.5 L4 14 L14.5 14 Z" stroke={color} strokeWidth="1.5" fill={color} fillOpacity="0.1" strokeLinejoin="round"/>
-    <path d="M18 8 L20.5 15.5 L28 15.5 L22 19.5 L24 26.5 L18 22.5 L12 26.5 L14 19.5 L8 15.5 L15.5 15.5 Z" fill={color} opacity="0.45"/>
+    {/* Palm */}
+    <rect x="10" y="18" width="16" height="12" rx="3" stroke={color} strokeWidth="1.5" fill={color} fillOpacity="0.08"/>
+    {/* Fingers */}
+    <rect x="10" y="10" width="3.2" height="10" rx="1.6" stroke={color} strokeWidth="1.3" fill={color} fillOpacity="0.1"/>
+    <rect x="14.4" y="8" width="3.2" height="12" rx="1.6" stroke={color} strokeWidth="1.3" fill={color} fillOpacity="0.1"/>
+    <rect x="18.8" y="9" width="3.2" height="11" rx="1.6" stroke={color} strokeWidth="1.3" fill={color} fillOpacity="0.1"/>
+    <rect x="23.2" y="11" width="3.2" height="9" rx="1.6" stroke={color} strokeWidth="1.3" fill={color} fillOpacity="0.1"/>
+    {/* Thumb */}
+    <path d="M10 22 Q6 21 6 18 Q6 15 9 15 L10 18" stroke={color} strokeWidth="1.3" fill={color} fillOpacity="0.08" strokeLinejoin="round"/>
   </svg>
 );
-const SculptureIcon = ({ color }: { color: string }) => (
+const HomeDecorIcon = ({ color }: { color: string }) => (
   <svg viewBox="0 0 36 36" className="w-9 h-9" fill="none">
-    <ellipse cx="18" cy="8" rx="6" ry="5" stroke={color} strokeWidth="1.5" fill={color} fillOpacity="0.12"/>
-    <path d="M12 13 Q10 20 11 28 L25 28 Q26 20 24 13" stroke={color} strokeWidth="1.5" fill={color} fillOpacity="0.08"/>
-    <path d="M10 28 L26 28" stroke={color} strokeWidth="2" strokeLinecap="round"/>
-    <path d="M8 31 L28 31" stroke={color} strokeWidth="2.5" strokeLinecap="round"/>
-    <path d="M15 20 Q18 22 21 20" stroke={color} strokeWidth="1.2" strokeLinecap="round" opacity="0.6"/>
+    {/* House */}
+    <path d="M18 5 L32 17 L28 17 L28 30 L8 30 L8 17 L4 17 Z" stroke={color} strokeWidth="1.5" fill={color} fillOpacity="0.08" strokeLinejoin="round"/>
+    {/* Door */}
+    <rect x="15" y="22" width="6" height="8" rx="1" stroke={color} strokeWidth="1.3" fill={color} fillOpacity="0.15"/>
+    {/* Window */}
+    <rect x="10" y="19" width="5" height="4" rx="1" stroke={color} strokeWidth="1.2" fill={color} fillOpacity="0.1"/>
+    <path d="M12.5 19 L12.5 23 M10 21 L15 21" stroke={color} strokeWidth="0.8" opacity="0.6"/>
+    {/* Decorative vase */}
+    <path d="M23 18 Q21 21 22 25 L26 25 Q27 21 25 18 Z" stroke={color} strokeWidth="1.1" fill={color} fillOpacity="0.12"/>
+    <path d="M21.5 25 L26.5 25" stroke={color} strokeWidth="1.2" strokeLinecap="round"/>
   </svg>
 );
-const PhotographyIcon = ({ color }: { color: string }) => (
+const FramingArtIcon = ({ color }: { color: string }) => (
   <svg viewBox="0 0 36 36" className="w-9 h-9" fill="none">
-    <rect x="3" y="10" width="30" height="21" rx="4" stroke={color} strokeWidth="1.5" fill={color} fillOpacity="0.07"/>
-    <path d="M13 10 L15 5 L21 5 L23 10" stroke={color} strokeWidth="1.5" strokeLinejoin="round" fill="none"/>
-    <circle cx="18" cy="20" r="6" stroke={color} strokeWidth="1.5" fill={color} fillOpacity="0.12"/>
-    <circle cx="18" cy="20" r="3" fill={color} opacity="0.5"/>
-    <circle cx="27" cy="14" r="2" fill={color} opacity="0.4"/>
+    {/* Outer frame */}
+    <rect x="4" y="4" width="28" height="28" rx="3" stroke={color} strokeWidth="2" fill={color} fillOpacity="0.06"/>
+    {/* Inner frame border */}
+    <rect x="8" y="8" width="20" height="20" rx="2" stroke={color} strokeWidth="1.2" fill={color} fillOpacity="0.04" strokeDasharray="3 1.5"/>
+    {/* Artwork inside */}
+    <path d="M11 22 Q15 15 18 18 Q21 21 25 14 L25 24 L11 24 Z" fill={color} fillOpacity="0.35" stroke="none"/>
+    <circle cx="14" cy="15" r="2.5" fill={color} fillOpacity="0.5"/>
+    {/* Corner ornaments */}
+    <rect x="4" y="4" width="4" height="4" rx="1" fill={color} fillOpacity="0.3"/>
+    <rect x="28" y="4" width="4" height="4" rx="1" fill={color} fillOpacity="0.3"/>
+    <rect x="4" y="28" width="4" height="4" rx="1" fill={color} fillOpacity="0.3"/>
+    <rect x="28" y="28" width="4" height="4" rx="1" fill={color} fillOpacity="0.3"/>
   </svg>
 );
 
@@ -121,8 +140,8 @@ const CAT_SVG: Record<string, (c: string) => React.ReactNode> = {
   'Painting': (c) => <PaintingIcon color={c} />,
   'Digital Art': (c) => <DigitalIcon color={c} />,
   'Handicraft': (c) => <HandicraftIcon color={c} />,
-  'Sculpture': (c) => <SculptureIcon color={c} />,
-  'Photography': (c) => <PhotographyIcon color={c} />,
+  'Home Decor': (c) => <HomeDecorIcon color={c} />,
+  'Framing Art': (c) => <FramingArtIcon color={c} />,
 };
 
 const CATEGORIES = [
@@ -130,8 +149,8 @@ const CATEGORIES = [
   { key: 'Painting', label: 'পেইন্টিং', desc: 'তেল ও জলরঙ', color: '#7a4c0c', bg: '#fef9f0', border: '#d4a06a' },
   { key: 'Digital Art', label: 'ডিজিটাল আর্ট', desc: 'ডিজিটাল মিডিয়া', color: '#5c3d12', bg: '#fdf5e8', border: '#c09060' },
   { key: 'Handicraft', label: 'হস্তশিল্প', desc: 'হাতে তৈরি', color: '#6b4c1a', bg: '#fef6e8', border: '#c8a870' },
-  { key: 'Sculpture', label: 'ভাস্কর্য', desc: '৩ডি শিল্পকর্ম', color: '#4a3010', bg: '#fdf3e0', border: '#bfa070' },
-  { key: 'Photography', label: 'ফটোগ্রাফি', desc: 'আলোকচিত্র', color: '#3d2810', bg: '#fdf1e0', border: '#b89060' },
+  { key: 'Home Decor', label: 'হোম ডেকর', desc: 'ঘর সাজান', color: '#5a3a10', bg: '#fff8ee', border: '#d4a855' },
+  { key: 'Framing Art', label: 'ফ্রেমিং আর্ট', desc: 'ফ্রেমড শিল্পকর্ম', color: '#3d2810', bg: '#fdf1e0', border: '#b89060' },
 ];
 
 // ─── Artwork card ─────────────────────────────────────────────────────────────
@@ -395,7 +414,7 @@ export default function Home() {
               { icon: <ShieldCheck className="w-4 h-4" />, text: '১০০% অরিজিনাল', c: W },
               { icon: <Truck className="w-4 h-4" />, text: 'পুরো দেশে ডেলিভারি', c: '#90c0a0' },
               { icon: <Award className="w-4 h-4" />, text: 'Verified শিল্পী', c: '#e8c880' },
-              { icon: <Zap className="w-4 h-4" />, text: '৭ দিন রিটার্ন', c: '#e08080' },
+              { icon: <Zap className="w-4 h-4" />, text: 'নিরাপদ প্যাকেজিং', c: '#e08080' },
               { icon: <MessageCircle className="w-4 h-4" />, text: '২৪/৭ সাপোর্ট', c: '#a0b0e0' },
             ].map((f, i) => (
               <div key={i} className="flex items-center gap-2" style={{ color: f.c }}>

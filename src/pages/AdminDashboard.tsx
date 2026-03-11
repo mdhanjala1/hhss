@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   ShieldCheck, Users, ImageIcon, ShoppingBag, DollarSign,
   CheckCircle, XCircle, Clock, Search, Eye, AlertCircle,
-  TrendingUp, RefreshCw, Package, Bell, ZoomIn, RotateCcw
+  TrendingUp, RefreshCw, Package, Bell, ZoomIn, RotateCcw, Star
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { format } from 'date-fns';
@@ -77,6 +77,12 @@ export default function AdminDashboard() {
       await supabase.from('notifications').insert({ artist_id: artistId, title: status === 'approved' ? 'শিল্পকর্ম অনুমোদিত ✅' : 'শিল্পকর্ম বাতিল ❌', message: status === 'approved' ? 'আপনার শিল্পকর্মটি মার্কেটপ্লেসে প্রকাশিত হয়েছে।' : 'আপনার শিল্পকর্মটি অনুমোদন পায়নি।', is_read: false, created_at: new Date().toISOString() });
     }
     toast.success(status === 'approved' ? '✅ অনুমোদিত!' : '❌ বাতিল'); fetchAdminData();
+  };
+
+  const handleToggleFeatured = async (id: string, current: boolean) => {
+    const { error } = await supabase.from('artworks').update({ is_featured: !current }).eq('id', id);
+    if (!error) toast.success(!current ? '⭐ ফিচার্ড করা হয়েছে!' : 'ফিচার্ড বাতিল করা হয়েছে');
+    fetchAdminData();
   };
 
   const handleArtistVerify = async (id: string, verify: boolean) => {
@@ -289,7 +295,7 @@ export default function AdminDashboard() {
                               <button onClick={() => handleArtworkStatus(art.id, 'rejected', art.artist_id)}
                                 className="flex items-center gap-1.5 px-4 py-2 text-sm font-bold rounded-xl transition-all border"
                                 style={{ background: 'rgba(239,68,68,0.06)', borderColor: 'rgba(239,68,68,0.3)', color: '#dc2626' }}>
-                                <RotateCcw className="w-3.5 h-3.5" /> অনুমোদন বাতিল করুন
+                                <RotateCcw className="w-3.5 h-3.5" /> অনুমোদন বাতিল
                               </button>
                             )}
                             {art.status === 'rejected' && (
@@ -299,6 +305,15 @@ export default function AdminDashboard() {
                                 <CheckCircle className="w-4 h-4" /> পুনরায় অনুমোদন
                               </button>
                             )}
+                            {/* Featured toggle — always shown */}
+                            <button onClick={() => handleToggleFeatured(art.id, art.is_featured || false)}
+                              className="flex items-center gap-1.5 px-4 py-2 text-sm font-bold rounded-xl transition-all border"
+                              style={art.is_featured
+                                ? { background: 'rgba(234,179,8,0.15)', borderColor: 'rgba(234,179,8,0.5)', color: '#b45309' }
+                                : { background: 'var(--bg)', borderColor: 'var(--border)', color: 'var(--text3)' }}>
+                              <Star className="w-3.5 h-3.5" fill={art.is_featured ? '#b45309' : 'none'} />
+                              {art.is_featured ? 'ফিচার্ড সরান' : 'ফিচার্ড করুন'}
+                            </button>
                           </div>
                         </div>
                       </div>

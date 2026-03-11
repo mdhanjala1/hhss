@@ -692,10 +692,12 @@ export default function ArtistDashboard() {
                 )}
                 {/* Quick links */}
                 <div className="grid grid-cols-2 gap-4">
-                  <button onClick={() => setActiveTab('upload')} className="rounded-2xl p-5 text-left hover:opacity-90 text-white' style='background:linear-gradient(135deg,var(--accent),var(--accent-dk)) transition-all">
+                  <button onClick={() => setActiveTab('upload')}
+                    className="rounded-2xl p-5 text-left hover:opacity-90 transition-all text-white"
+                    style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dk))', boxShadow: '0 4px 16px rgba(139,105,20,0.35)' }}>
                     <Plus className="w-8 h-8 mb-2" />
-                    <p className="font-bold">নতুন শিল্পকর্ম যোগ করুন</p>
-                    <p className="text-[var(--accent-lt)] text-xs mt-1">আপনার পরবর্তী মাস্টারপিস আপলোড করুন</p>
+                    <p className="font-bold text-base">নতুন শিল্পকর্ম যোগ করুন</p>
+                    <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.7)' }}>আপনার পরবর্তী মাস্টারপিস আপলোড করুন</p>
                   </button>
                   <Link to={`/artist/${artist?.id}`} className="bg-stone-900 text-white rounded-2xl p-5 text-left hover:bg-stone-800 transition-all">
                     <ExternalLink className="w-8 h-8 mb-2" />
@@ -732,14 +734,24 @@ export default function ArtistDashboard() {
                               {art.status === 'approved' ? '✓ অনুমোদিত' : art.status === 'pending' ? '⏳ পর্যালোচনায়' : art.status === 'rejected' ? '✗ বাতিল' : 'বিক্রিত'}
                             </span>
                           </div>
-                          <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Link to={`/artwork/${art.id}`} className="w-8 h-8 bg-white/90 rounded-lg flex items-center justify-center text-stone-600 hover:text-[var(--accent-dk)] transition-colors shadow-sm">
+                          {/* Action buttons: always visible on mobile, hover on desktop */}
+                          <div className="absolute top-2 right-2 flex gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                            <Link to={`/artwork/${art.id}`}
+                              className="w-9 h-9 rounded-xl flex items-center justify-center shadow-md transition-all"
+                              style={{ background: 'rgba(255,255,255,0.95)', color: 'var(--text2)' }}
+                              title="দেখুন">
                               <Eye className="w-4 h-4" />
                             </Link>
-                            <button onClick={() => openEdit(art)} className="w-8 h-8 bg-white/90 rounded-lg flex items-center justify-center text-stone-600 hover:text-blue-600 transition-colors shadow-sm">
+                            <button onClick={() => openEdit(art)}
+                              className="w-9 h-9 rounded-xl flex items-center justify-center shadow-md transition-all"
+                              style={{ background: 'rgba(255,255,255,0.95)', color: '#2563eb' }}
+                              title="সম্পাদনা">
                               <Edit className="w-4 h-4" />
                             </button>
-                            <button onClick={() => deleteArtwork(art.id)} className="w-8 h-8 bg-white/90 rounded-lg flex items-center justify-center text-stone-600 hover:text-red-600 transition-colors shadow-sm">
+                            <button onClick={() => deleteArtwork(art.id)}
+                              className="w-9 h-9 rounded-xl flex items-center justify-center shadow-md transition-all"
+                              style={{ background: 'rgba(255,255,255,0.95)', color: '#dc2626' }}
+                              title="মুছে ফেলুন">
                               <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
@@ -924,8 +936,8 @@ export default function ArtistDashboard() {
                             <option value="Arabic Calligraphy">আরবি ক্যালিগ্রাফি</option>
                             <option value="Digital Art">ডিজিটাল আর্ট</option>
                             <option value="Handicraft">হস্তশিল্প</option>
-                            <option value="Sculpture">ভাস্কর্য</option>
-                            <option value="Photography">ফটোগ্রাফি</option>
+                            <option value="Home Decor">ভাস্কর্য</option>
+                            <option value="Framing Art">ফটোগ্রাফি</option>
                             <option value="Watercolor">জলরঙ</option>
                             <option value="Sketch">স্কেচ</option>
                           </select>
