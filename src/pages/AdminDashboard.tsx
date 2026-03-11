@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   ShieldCheck, Users, ImageIcon, ShoppingBag, DollarSign,
   CheckCircle, XCircle, Clock, Search, Eye, AlertCircle,
-  TrendingUp, RefreshCw, Package, Bell
+  TrendingUp, RefreshCw, Package, Bell, ZoomIn, RotateCcw
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { format } from 'date-fns';
@@ -21,6 +21,7 @@ export default function AdminDashboard() {
   const [artists, setArtists] = useState<Artist[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [stats, setStats] = useState({ artists: 0, artworks: 0, pendingArtworks: 0, pendingNid: 0, totalRevenue: 0, orders: 0 });
+  const [lightboxImg, setLightboxImg] = useState<string | null>(null);
   const [searchArt, setSearchArt] = useState('');
   const [searchArtist, setSearchArtist] = useState('');
   const [artFilter, setArtFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
@@ -234,40 +235,73 @@ export default function AdminDashboard() {
               ) : (
                 <div className="grid gap-4">
                   {filteredArtworks.map(art => (
-                    <div key={art.id} className="rounded-2xl border p-5 flex gap-5 items-start transition-all hover:shadow-md"
+                    <div key={art.id} className="rounded-2xl border overflow-hidden transition-all hover:shadow-md"
                       style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
-                      <img src={art.image_url} alt={art.title} className="w-24 h-24 rounded-xl object-cover shrink-0" style={{ background: 'var(--bg)' }} />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-3 flex-wrap">
-                          <div>
-                            <h3 className="font-bold text-base" style={{ color: 'var(--text)' }}>{art.title}</h3>
-                            <p className="text-sm mt-0.5" style={{ color: 'var(--text3)' }}>{art.artist?.full_name} · {art.category}</p>
-                            <p className="font-bold mt-1" style={{ color: 'var(--accent)' }}>৳{art.price?.toLocaleString()}</p>
+                      <div className="flex gap-0 items-stretch">
+                        {/* Clickable image */}
+                        <div className="relative shrink-0 cursor-zoom-in group w-36 sm:w-44"
+                          onClick={() => setLightboxImg(art.image_url)}>
+                          <img src={art.image_url} alt={art.title}
+                            className="w-full h-full object-cover"
+                            style={{ minHeight: '140px', background: 'var(--bg)' }} />
+                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                            style={{ background: 'rgba(26,14,5,0.5)' }}>
+                            <ZoomIn className="w-8 h-8 text-white" />
                           </div>
-                          <span className="shrink-0 px-3 py-1 rounded-full text-xs font-bold"
-                            style={art.status === 'approved' ? { background: 'rgba(194,160,110,0.12)', color: 'var(--accent-dk)' }
-                              : art.status === 'pending' ? { background: 'rgba(245,158,11,0.12)', color: '#b45309' }
-                              : { background: 'rgba(239,68,68,0.1)', color: '#dc2626' }}>
-                            {art.status === 'approved' ? '✅ অনুমোদিত' : art.status === 'pending' ? '⏳ অপেক্ষমাণ' : '❌ বাতিল'}
-                          </span>
+                          <div className="absolute bottom-2 right-2 px-1.5 py-0.5 rounded-md text-[10px] font-bold text-white"
+                            style={{ background: 'rgba(0,0,0,0.6)' }}>বড় করুন</div>
                         </div>
-                        {art.description && <p className="text-xs mt-2 line-clamp-2" style={{ color: 'var(--text3)' }}>{art.description}</p>}
-                        <p className="text-xs mt-1" style={{ color: 'var(--text3)' }}>{art.created_at ? format(new Date(art.created_at), 'dd MMM yyyy') : ''}</p>
+                        {/* Info */}
+                        <div className="flex-1 p-4 min-w-0 flex flex-col justify-between">
+                          <div>
+                            <div className="flex items-start justify-between gap-2 flex-wrap">
+                              <div>
+                                <h3 className="font-bold text-base" style={{ color: 'var(--text)' }}>{art.title}</h3>
+                                <p className="text-sm mt-0.5" style={{ color: 'var(--text3)' }}>{art.artist?.full_name} · {art.category}</p>
+                                <p className="font-bold mt-1" style={{ color: 'var(--accent)' }}>৳{art.price?.toLocaleString()}</p>
+                              </div>
+                              <span className="shrink-0 px-3 py-1 rounded-full text-xs font-bold"
+                                style={art.status === 'approved' ? { background: 'rgba(194,160,110,0.12)', color: 'var(--accent-dk)' }
+                                  : art.status === 'pending' ? { background: 'rgba(245,158,11,0.12)', color: '#b45309' }
+                                  : { background: 'rgba(239,68,68,0.1)', color: '#dc2626' }}>
+                                {art.status === 'approved' ? '✅ অনুমোদিত' : art.status === 'pending' ? '⏳ অপেক্ষমাণ' : '❌ বাতিল'}
+                              </span>
+                            </div>
+                            {art.description && <p className="text-xs mt-2 line-clamp-2" style={{ color: 'var(--text3)' }}>{art.description}</p>}
+                            <p className="text-xs mt-1" style={{ color: 'var(--text3)' }}>{art.created_at ? format(new Date(art.created_at), 'dd MMM yyyy') : ''}</p>
+                            {art.medium && <p className="text-xs mt-0.5" style={{ color: 'var(--text3)' }}>মাধ্যম: {art.medium}</p>}
+                          </div>
+                          {/* Action buttons */}
+                          <div className="flex flex-wrap gap-2 mt-3">
+                            {art.status === 'pending' && (<>
+                              <button onClick={() => handleArtworkStatus(art.id, 'approved', art.artist_id)}
+                                className="flex items-center gap-1.5 px-4 py-2 text-sm font-bold rounded-xl transition-all hover:opacity-90"
+                                style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dk))', color: 'var(--dark)' }}>
+                                <CheckCircle className="w-4 h-4" /> অনুমোদন
+                              </button>
+                              <button onClick={() => handleArtworkStatus(art.id, 'rejected', art.artist_id)}
+                                className="flex items-center gap-1.5 px-4 py-2 text-sm font-bold rounded-xl transition-all border"
+                                style={{ background: 'rgba(239,68,68,0.06)', borderColor: 'rgba(239,68,68,0.3)', color: '#dc2626' }}>
+                                <XCircle className="w-4 h-4" /> বাতিল
+                              </button>
+                            </>)}
+                            {art.status === 'approved' && (
+                              <button onClick={() => handleArtworkStatus(art.id, 'rejected', art.artist_id)}
+                                className="flex items-center gap-1.5 px-4 py-2 text-sm font-bold rounded-xl transition-all border"
+                                style={{ background: 'rgba(239,68,68,0.06)', borderColor: 'rgba(239,68,68,0.3)', color: '#dc2626' }}>
+                                <RotateCcw className="w-3.5 h-3.5" /> অনুমোদন বাতিল করুন
+                              </button>
+                            )}
+                            {art.status === 'rejected' && (
+                              <button onClick={() => handleArtworkStatus(art.id, 'approved', art.artist_id)}
+                                className="flex items-center gap-1.5 px-4 py-2 text-sm font-bold rounded-xl transition-all"
+                                style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dk))', color: 'var(--dark)' }}>
+                                <CheckCircle className="w-4 h-4" /> পুনরায় অনুমোদন
+                              </button>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                      {art.status === 'pending' && (
-                        <div className="flex gap-2 shrink-0">
-                          <button onClick={() => handleArtworkStatus(art.id, 'approved', art.artist_id)}
-                            className="flex items-center gap-1.5 px-4 py-2.5 text-sm font-bold rounded-xl transition-all hover:opacity-90"
-                            style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dk))', color: 'var(--dark)' }}>
-                            <CheckCircle className="w-4 h-4" /> অনুমোদন
-                          </button>
-                          <button onClick={() => handleArtworkStatus(art.id, 'rejected', art.artist_id)}
-                            className="flex items-center gap-1.5 px-4 py-2.5 text-sm font-bold rounded-xl transition-all border"
-                            style={{ background: 'rgba(239,68,68,0.06)', borderColor: 'rgba(239,68,68,0.3)', color: '#dc2626' }}>
-                            <XCircle className="w-4 h-4" /> বাতিল
-                          </button>
-                        </div>
-                      )}
                     </div>
                   ))}
                 </div>
@@ -370,10 +404,17 @@ export default function AdminDashboard() {
                           {artist.nid_name && <p className="text-sm" style={{ color: 'var(--text2)' }}>NID নাম: {artist.nid_name}</p>}
                         </div>
                         {artist.nid_photo_url && (
-                          <a href={artist.nid_photo_url} target="_blank" rel="noopener noreferrer" className="shrink-0">
-                            <img src={artist.nid_photo_url} alt="NID" className="w-32 h-20 rounded-xl object-cover border hover:opacity-80 transition-opacity" style={{ borderColor: 'var(--border)' }} />
-                            <p className="text-xs text-center mt-1" style={{ color: 'var(--text3)' }}>NID ফটো</p>
-                          </a>
+                          <div className="shrink-0 cursor-zoom-in group relative"
+                            onClick={() => setLightboxImg(artist.nid_photo_url!)}>
+                            <img src={artist.nid_photo_url} alt="NID"
+                              className="w-40 h-24 rounded-xl object-cover border transition-all group-hover:opacity-80"
+                              style={{ borderColor: 'var(--border)' }} />
+                            <div className="absolute inset-0 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                              style={{ background: 'rgba(26,14,5,0.45)' }}>
+                              <ZoomIn className="w-6 h-6 text-white" />
+                            </div>
+                            <p className="text-xs text-center mt-1 font-medium" style={{ color: 'var(--accent)' }}>🔍 NID ফটো — বড় করুন</p>
+                          </div>
                         )}
                       </div>
                       <div className="flex gap-3 mt-5 pt-5 border-t" style={{ borderColor: 'var(--border)' }}>
@@ -442,6 +483,33 @@ export default function AdminDashboard() {
 
         </div>
       </main>
+      {/* ── LIGHTBOX ── */}
+      <AnimatePresence>
+        {lightboxImg && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[500] flex items-center justify-center p-4"
+            style={{ background: 'rgba(0,0,0,0.92)' }}
+            onClick={() => setLightboxImg(null)}>
+            <motion.div
+              initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.85, opacity: 0 }}
+              className="relative max-w-4xl w-full max-h-[90vh] flex items-center justify-center"
+              onClick={e => e.stopPropagation()}>
+              <img src={lightboxImg} alt="বড় ছবি"
+                className="max-w-full max-h-[85vh] rounded-2xl object-contain shadow-2xl" />
+              <button
+                onClick={() => setLightboxImg(null)}
+                className="absolute top-3 right-3 w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg transition-all"
+                style={{ background: 'rgba(255,255,255,0.15)', color: '#fff' }}>
+                ✕
+              </button>
+              <p className="absolute bottom-3 left-1/2 -translate-x-1/2 text-white/50 text-xs">
+                ক্লিক করে বন্ধ করুন
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

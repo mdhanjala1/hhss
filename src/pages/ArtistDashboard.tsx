@@ -30,30 +30,8 @@ function CropModal({ src, onCrop, onClose }: {
 }) {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const imgRef = React.useRef<HTMLImageElement>(null);
-  const containerRef = React.useRef<HTMLDivElement>(null);
+  // Crop uses sliders only — universally works on all devices (mobile + desktop)
   const [crop, setCrop] = React.useState({ x: 10, y: 10, w: 80, h: 80 });
-  const [dragging, setDragging] = React.useState(false);
-  const [dragStart, setDragStart] = React.useState({ mx: 0, my: 0, cx: 0, cy: 0 });
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setDragging(true);
-    setDragStart({ mx: e.clientX, my: e.clientY, cx: crop.x, cy: crop.y });
-  };
-  const handleMouseMove = React.useCallback((e: MouseEvent) => {
-    if (!dragging || !containerRef.current) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    const dx = ((e.clientX - dragStart.mx) / rect.width) * 100;
-    const dy = ((e.clientY - dragStart.my) / rect.height) * 100;
-    setCrop(c => ({ ...c, x: Math.max(0, Math.min(100 - c.w, dragStart.cx + dx)), y: Math.max(0, Math.min(100 - c.h, dragStart.cy + dy)) }));
-  }, [dragging, dragStart]);
-  const handleMouseUp = React.useCallback(() => setDragging(false), []);
-
-  React.useEffect(() => {
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-    return () => { window.removeEventListener('mousemove', handleMouseMove); window.removeEventListener('mouseup', handleMouseUp); };
-  }, [handleMouseMove, handleMouseUp]);
 
   const doCrop = () => {
     const img = imgRef.current;
@@ -75,47 +53,128 @@ function CropModal({ src, onCrop, onClose }: {
   };
 
   return (
-    <div className="fixed inset-0 z-[300] flex items-center justify-center px-4"
-      style={{ background: 'rgba(26,14,5,0.85)', backdropFilter: 'blur(8px)' }}>
-      <div className="w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl"
-        style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
-        <div className="px-6 py-4 border-b flex items-center justify-between" style={{ borderColor: 'var(--border)' }}>
+    <div className="fixed inset-0 z-[300] flex items-center justify-center px-3"
+      style={{ background: 'rgba(26,14,5,0.9)', backdropFilter: 'blur(8px)' }}>
+      <div className="w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl flex flex-col"
+        style={{ background: 'var(--card)', border: '1px solid var(--border)', maxHeight: '95vh' }}>
+
+        {/* Header */}
+        <div className="px-5 py-4 border-b flex items-center justify-between shrink-0" style={{ borderColor: 'var(--border)' }}>
           <div className="flex items-center gap-2">
             <Crop className="w-4 h-4" style={{ color: 'var(--accent)' }} />
             <h3 className="font-bold" style={{ color: 'var(--text)' }}>ছবি ক্রপ করুন</h3>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'var(--bg)', color: 'var(--text3)' }}><X className="w-4 h-4" /></button>
+          <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'var(--bg)', color: 'var(--text3)' }}>
+            <X className="w-4 h-4" />
+          </button>
         </div>
-        <div className="p-4">
-          <p className="text-xs mb-3 text-center" style={{ color: 'var(--text3)' }}>বাক্সটি টেনে যে অংশ রাখতে চান নির্বাচন করুন · আউটপুট: ৮০০×১০০০ px (৪:৫)</p>
-          <div ref={containerRef} className="relative w-full select-none overflow-hidden rounded-2xl" style={{ aspectRatio: '4/3', background: '#111' }}>
-            <img ref={imgRef} src={src} alt="" className="w-full h-full object-contain" crossOrigin="anonymous" />
-            <div className="absolute inset-0 pointer-events-none" style={{ background: 'rgba(0,0,0,0.45)' }} />
-            <div onMouseDown={handleMouseDown} className="absolute cursor-move"
-              style={{ left: `${crop.x}%`, top: `${crop.y}%`, width: `${crop.w}%`, height: `${crop.h}%`, border: '2px solid var(--accent)', boxShadow: '0 0 0 9999px rgba(0,0,0,0.45)' }}>
-              {['top-0 left-0','top-0 right-0','bottom-0 left-0','bottom-0 right-0'].map(p => (
-                <div key={p} className={`absolute w-3 h-3 -m-1.5 ${p}`} style={{ background: 'var(--accent)', borderRadius: '2px' }} />
-              ))}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <Move className="w-5 h-5 opacity-60" style={{ color: 'var(--accent)' }} />
+
+        {/* Preview */}
+        <div className="overflow-y-auto flex-1">
+          <div className="p-4">
+            {/* Live preview with visual crop box */}
+            <div className="relative w-full overflow-hidden rounded-2xl mb-4"
+              style={{ aspectRatio: '4/3', background: '#111' }}>
+              <img ref={imgRef} src={src} alt="" className="w-full h-full object-contain" crossOrigin="anonymous" />
+              {/* Overlay with crop window */}
+              <div className="absolute inset-0 pointer-events-none">
+                {/* Dark overlay around crop area */}
+                <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.55)' }} />
+                {/* Transparent crop window */}
+                <div className="absolute" style={{
+                  left: `${crop.x}%`, top: `${crop.y}%`,
+                  width: `${crop.w}%`, height: `${crop.h}%`,
+                  background: 'transparent',
+                  boxShadow: '0 0 0 9999px rgba(0,0,0,0.55)',
+                  border: '2px solid var(--accent)',
+                  outline: '1px solid rgba(255,255,255,0.3)'
+                }}>
+                  {/* Grid lines */}
+                  <div className="absolute inset-0 grid grid-cols-3 grid-rows-3" style={{ pointerEvents: 'none' }}>
+                    {[...Array(9)].map((_,i) => <div key={i} style={{ border: '0.5px solid rgba(255,255,255,0.2)' }} />)}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Slider controls */}
+            <div className="space-y-4 px-1">
+              <p className="text-xs font-bold text-center mb-3" style={{ color: 'var(--text3)' }}>
+                স্লাইডার দিয়ে ক্রপ এরিয়া নিয়ন্ত্রণ করুন
+              </p>
+
+              <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <label className="text-xs font-bold" style={{ color: 'var(--text2)' }}>বাম থেকে</label>
+                    <span className="text-xs font-bold" style={{ color: 'var(--accent)' }}>{crop.x}%</span>
+                  </div>
+                  <input type="range" min="0" max={100 - crop.w} value={crop.x}
+                    onChange={e => setCrop(c => ({ ...c, x: +e.target.value }))}
+                    className="w-full h-2 rounded-full appearance-none cursor-pointer"
+                    style={{ accentColor: 'var(--accent)' }} />
+                </div>
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <label className="text-xs font-bold" style={{ color: 'var(--text2)' }}>উপর থেকে</label>
+                    <span className="text-xs font-bold" style={{ color: 'var(--accent)' }}>{crop.y}%</span>
+                  </div>
+                  <input type="range" min="0" max={100 - crop.h} value={crop.y}
+                    onChange={e => setCrop(c => ({ ...c, y: +e.target.value }))}
+                    className="w-full h-2 rounded-full appearance-none cursor-pointer"
+                    style={{ accentColor: 'var(--accent)' }} />
+                </div>
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <label className="text-xs font-bold" style={{ color: 'var(--text2)' }}>প্রস্থ</label>
+                    <span className="text-xs font-bold" style={{ color: 'var(--accent)' }}>{crop.w}%</span>
+                  </div>
+                  <input type="range" min="20" max="100" value={crop.w}
+                    onChange={e => setCrop(c => ({ ...c, w: +e.target.value, x: Math.min(c.x, 100 - +e.target.value) }))}
+                    className="w-full h-2 rounded-full appearance-none cursor-pointer"
+                    style={{ accentColor: 'var(--accent)' }} />
+                </div>
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <label className="text-xs font-bold" style={{ color: 'var(--text2)' }}>উচ্চতা</label>
+                    <span className="text-xs font-bold" style={{ color: 'var(--accent)' }}>{crop.h}%</span>
+                  </div>
+                  <input type="range" min="20" max="100" value={crop.h}
+                    onChange={e => setCrop(c => ({ ...c, h: +e.target.value, y: Math.min(c.y, 100 - +e.target.value) }))}
+                    className="w-full h-2 rounded-full appearance-none cursor-pointer"
+                    style={{ accentColor: 'var(--accent)' }} />
+                </div>
+              </div>
+
+              {/* Quick presets */}
+              <div>
+                <p className="text-xs font-bold mb-2" style={{ color: 'var(--text3)' }}>দ্রুত নির্বাচন:</p>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { label: 'সম্পূর্ণ', v: { x:0, y:0, w:100, h:100 } },
+                    { label: 'মাঝখান', v: { x:10, y:10, w:80, h:80 } },
+                    { label: 'উপরের অংশ', v: { x:5, y:0, w:90, h:60 } },
+                    { label: 'নিচের অংশ', v: { x:5, y:40, w:90, h:60 } },
+                  ].map(p => (
+                    <button key={p.label} onClick={() => setCrop(p.v)}
+                      className="px-3 py-1.5 rounded-xl text-xs font-bold border transition-all"
+                      style={{ background: 'var(--bg)', borderColor: 'var(--border)', color: 'var(--text2)' }}>
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
-          <canvas ref={canvasRef} className="hidden" />
-          <div className="mt-3 grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-bold block mb-1" style={{ color: 'var(--text3)' }}>প্রস্থ {crop.w}%</label>
-              <input type="range" min="20" max="100" value={crop.w} onChange={e => setCrop(c => ({ ...c, w: +e.target.value, x: Math.min(c.x, 100 - +e.target.value) }))} className="w-full" />
-            </div>
-            <div>
-              <label className="text-xs font-bold block mb-1" style={{ color: 'var(--text3)' }}>উচ্চতা {crop.h}%</label>
-              <input type="range" min="20" max="100" value={crop.h} onChange={e => setCrop(c => ({ ...c, h: +e.target.value, y: Math.min(c.y, 100 - +e.target.value) }))} className="w-full" />
-            </div>
-          </div>
         </div>
-        <div className="px-6 pb-5 flex gap-3">
-          <button onClick={onClose} className="flex-1 py-3 rounded-xl font-bold text-sm border" style={{ background: 'var(--bg)', color: 'var(--text2)', borderColor: 'var(--border)' }}>বাতিল</button>
-          <button onClick={doCrop} className="flex-1 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:opacity-90"
+
+        <canvas ref={canvasRef} className="hidden" />
+
+        {/* Footer */}
+        <div className="px-5 pb-5 pt-3 flex gap-3 border-t shrink-0" style={{ borderColor: 'var(--border)' }}>
+          <button onClick={onClose} className="flex-1 py-3 rounded-xl font-bold text-sm border transition-all"
+            style={{ background: 'var(--bg)', color: 'var(--text2)', borderColor: 'var(--border)' }}>বাতিল</button>
+          <button onClick={doCrop} className="flex-1 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-all"
             style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dk))', color: 'var(--dark)' }}>
             <Crop className="w-4 h-4" /> ক্রপ প্রয়োগ করুন
           </button>
@@ -595,7 +654,7 @@ export default function ArtistDashboard() {
                 <h1 className="text-xl font-bold text-[var(--text)]">স্বাগতম, {artist?.full_name?.split(' ')[0]} 👋</h1>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   {[
-                    { label: 'মোট আয়', value: `৳${stats.earnings.toLocaleString()}`, icon: <DollarSign className="w-5 h-5" />, color: 'bg-emerald-50 text-[#c2a06e]' },
+                    { label: 'মোট আয়', value: `৳${stats.earnings.toLocaleString()}`, icon: <DollarSign className="w-5 h-5" />, color: 'bg-[var(--bg)] text-[#c2a06e]' },
                     { label: 'সক্রিয় শিল্পকর্ম', value: stats.active, icon: <ImageIcon className="w-5 h-5" />, color: 'bg-blue-50 text-blue-600' },
                     { label: 'নতুন অর্ডার', value: stats.pending, icon: <ShoppingBag className="w-5 h-5" />, color: 'bg-purple-50 text-purple-600' },
                     { label: 'সফল ডেলিভারি', value: stats.delivered, icon: <CheckCircle className="w-5 h-5" />, color: 'bg-amber-50 text-amber-600' },
@@ -633,10 +692,10 @@ export default function ArtistDashboard() {
                 )}
                 {/* Quick links */}
                 <div className="grid grid-cols-2 gap-4">
-                  <button onClick={() => setActiveTab('upload')} className="bg-emerald-600 text-white rounded-2xl p-5 text-left hover:bg-emerald-700 transition-all">
+                  <button onClick={() => setActiveTab('upload')} className="rounded-2xl p-5 text-left hover:opacity-90 text-white' style='background:linear-gradient(135deg,var(--accent),var(--accent-dk)) transition-all">
                     <Plus className="w-8 h-8 mb-2" />
                     <p className="font-bold">নতুন শিল্পকর্ম যোগ করুন</p>
-                    <p className="text-emerald-200 text-xs mt-1">আপনার পরবর্তী মাস্টারপিস আপলোড করুন</p>
+                    <p className="text-[var(--accent-lt)] text-xs mt-1">আপনার পরবর্তী মাস্টারপিস আপলোড করুন</p>
                   </button>
                   <Link to={`/artist/${artist?.id}`} className="bg-stone-900 text-white rounded-2xl p-5 text-left hover:bg-stone-800 transition-all">
                     <ExternalLink className="w-8 h-8 mb-2" />
@@ -652,7 +711,7 @@ export default function ArtistDashboard() {
               <motion.div key="aw" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-4">
                 <div className="flex justify-between items-center mb-5">
                   <h1 className="text-xl font-bold text-[var(--text)]">আমার শিল্পকর্ম ({artworks.length})</h1>
-                  <button onClick={() => setActiveTab('upload')} className="px-4 py-2 bg-emerald-600 text-white rounded-xl font-bold text-sm hover:bg-emerald-700 transition-all flex items-center gap-2">
+                  <button onClick={() => setActiveTab('upload')} className="px-4 py-2 bg-[var(--accent)] text-white rounded-xl font-bold text-sm hover:opacity-90 transition-all flex items-center gap-2">
                     <Plus className="w-4 h-4" /> নতুন যোগ করুন
                   </button>
                 </div>
@@ -660,7 +719,7 @@ export default function ArtistDashboard() {
                   <div className="bg-white p-16 rounded-2xl border border-[var(--border)] text-center">
                     <Palette className="w-14 h-14 text-stone-200 mx-auto mb-3" />
                     <p className="text-[var(--text3)] mb-4">এখনো কোনো শিল্পকর্ম নেই</p>
-                    <button onClick={() => setActiveTab('upload')} className="px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold text-sm">প্রথম শিল্পকর্ম আপলোড করুন</button>
+                    <button onClick={() => setActiveTab('upload')} className="px-6 py-3 bg-[var(--accent)] text-white rounded-xl font-bold text-sm">প্রথম শিল্পকর্ম আপলোড করুন</button>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -669,12 +728,12 @@ export default function ArtistDashboard() {
                         <div className="aspect-[4/3] relative overflow-hidden bg-[var(--bg)]">
                           <img src={art.thumbnail_url || art.image_url} alt={art.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                           <div className="absolute top-3 left-3">
-                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${art.status === 'approved' ? 'bg-emerald-500 text-white' : art.status === 'pending' ? 'bg-amber-400 text-white' : art.status === 'rejected' ? 'bg-red-500 text-white' : 'bg-[var(--bg)]0 text-white'}`}>
+                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${art.status === 'approved' ? 'bg-[var(--accent)] text-white' : art.status === 'pending' ? 'bg-amber-400 text-white' : art.status === 'rejected' ? 'bg-red-500 text-white' : 'bg-[var(--bg)]0 text-white'}`}>
                               {art.status === 'approved' ? '✓ অনুমোদিত' : art.status === 'pending' ? '⏳ পর্যালোচনায়' : art.status === 'rejected' ? '✗ বাতিল' : 'বিক্রিত'}
                             </span>
                           </div>
                           <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Link to={`/artwork/${art.id}`} className="w-8 h-8 bg-white/90 rounded-lg flex items-center justify-center text-stone-600 hover:text-emerald-600 transition-colors shadow-sm">
+                            <Link to={`/artwork/${art.id}`} className="w-8 h-8 bg-white/90 rounded-lg flex items-center justify-center text-stone-600 hover:text-[var(--accent-dk)] transition-colors shadow-sm">
                               <Eye className="w-4 h-4" />
                             </Link>
                             <button onClick={() => openEdit(art)} className="w-8 h-8 bg-white/90 rounded-lg flex items-center justify-center text-stone-600 hover:text-blue-600 transition-colors shadow-sm">
@@ -745,7 +804,7 @@ export default function ArtistDashboard() {
                 <h1 className="text-xl font-bold text-[var(--text)]">আয়ের বিবরণ</h1>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {[
-                    { label: 'মোট আয়', value: `৳${stats.earnings.toLocaleString()}`, sub: `${stats.delivered} টি ডেলিভারি থেকে`, color: 'text-[#c2a06e]', bg: 'bg-emerald-50' },
+                    { label: 'মোট আয়', value: `৳${stats.earnings.toLocaleString()}`, sub: `${stats.delivered} টি ডেলিভারি থেকে`, color: 'text-[#c2a06e]', bg: 'bg-[var(--bg)]' },
                     { label: 'গড় অর্ডার মূল্য', value: stats.delivered > 0 ? `৳${Math.round(stats.earnings / stats.delivered).toLocaleString()}` : '৳০', sub: 'প্রতি ডেলিভারিতে', color: 'text-blue-600', bg: 'bg-blue-50' },
                     { label: 'মোট অর্ডার', value: stats.totalOrders, sub: `${stats.pending} টি চলমান`, color: 'text-purple-600', bg: 'bg-purple-50' },
                   ].map((s, i) => (
@@ -765,7 +824,7 @@ export default function ArtistDashboard() {
                     {[
                       { label: 'নতুন অর্ডার', count: orders.filter(o => o.status === 'new').length, color: 'bg-blue-500' },
                       { label: 'নিশ্চিত', count: orders.filter(o => o.status === 'confirmed').length, color: 'bg-amber-500' },
-                      { label: 'ডেলিভারড', count: orders.filter(o => o.status === 'delivered').length, color: 'bg-emerald-500' },
+                      { label: 'ডেলিভারড', count: orders.filter(o => o.status === 'delivered').length, color: 'bg-[var(--accent)]' },
                       { label: 'বাতিল', count: orders.filter(o => o.status === 'cancelled').length, color: 'bg-red-400' },
                     ].map((item, i) => (
                       <div key={i} className="flex items-center gap-3">
@@ -787,14 +846,14 @@ export default function ArtistDashboard() {
                     <div className="p-10 text-center text-[var(--text3)] text-sm">এখনো কোনো ডেলিভারি সম্পন্ন হয়নি</div>
                   ) : orders.filter(o => o.status === 'delivered').map(o => (
                     <div key={o.id} className="px-5 py-4 flex items-center gap-4 border-b border-stone-50 last:border-0">
-                      <div className="w-9 h-9 bg-emerald-50 rounded-xl flex items-center justify-center shrink-0">
-                        <CheckCircle className="w-5 h-5 text-emerald-500" />
+                      <div className="w-9 h-9 bg-[var(--bg)] rounded-xl flex items-center justify-center shrink-0">
+                        <CheckCircle className="w-5 h-5 text-[var(--accent)]" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-bold text-[var(--text)] text-sm truncate">{o.artwork_title}</p>
                         <p className="text-[var(--text3)] text-xs">{o.customer_name} · {o.created_at ? format(new Date(o.created_at), 'dd MMM yyyy') : ''}</p>
                       </div>
-                      <p className="font-bold text-emerald-600 shrink-0">+৳{o.artwork_price}</p>
+                      <p className="font-bold text-[var(--accent-dk)] shrink-0">+৳{o.artwork_price}</p>
                     </div>
                   ))}
                 </div>
@@ -915,7 +974,7 @@ export default function ArtistDashboard() {
               <motion.div key="notif" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-4">
                 <div className="flex justify-between items-center mb-5">
                   <h1 className="text-xl font-bold text-[var(--text)]">বিজ্ঞপ্তি</h1>
-                  {unreadCount > 0 && <button onClick={markAllRead} className="text-sm text-[#c2a06e] font-bold hover:text-emerald-700">সব পড়া হয়েছে চিহ্নিত করুন</button>}
+                  {unreadCount > 0 && <button onClick={markAllRead} className="text-sm text-[#c2a06e] font-bold hover:text-[var(--accent-dk)]">সব পড়া হয়েছে চিহ্নিত করুন</button>}
                 </div>
                 {notifications.length === 0 ? (
                   <div className="bg-white p-16 rounded-2xl border border-[var(--border)] text-center">
@@ -924,9 +983,9 @@ export default function ArtistDashboard() {
                   </div>
                 ) : notifications.map(n => (
                   <div key={n.id} onClick={() => !n.is_read && markNotificationRead(n.id)}
-                    className={`rounded-2xl border shadow-sm p-5 cursor-pointer transition-all hover:shadow-md ${n.is_read ? 'border-[var(--border)] opacity-70' : 'border-emerald-200 bg-emerald-50/30'}`}>
+                    className={`rounded-2xl border shadow-sm p-5 cursor-pointer transition-all hover:shadow-md ${n.is_read ? 'border-[var(--border)] opacity-70' : 'border-[var(--border)] bg-[var(--bg)]/30'}`}>
                     <div className="flex items-start gap-3">
-                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${n.is_read ? 'bg-[var(--bg)]' : 'bg-emerald-100'}`}>
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${n.is_read ? 'bg-[var(--bg)]' : 'bg-[var(--accent-lt)]'}`}>
                         <Bell className={`w-4 h-4 ${n.is_read ? 'text-[var(--text3)]' : 'text-[#c2a06e]'}`} />
                       </div>
                       <div className="flex-1">
@@ -934,7 +993,7 @@ export default function ArtistDashboard() {
                         <p className="text-[var(--text2)] text-xs mt-0.5">{n.message}</p>
                         <p className="text-stone-300 text-xs mt-1">{format(new Date(n.created_at), 'dd MMM yyyy, hh:mm a')}</p>
                       </div>
-                      {!n.is_read && <div className="w-2 h-2 bg-emerald-500 rounded-full mt-2 shrink-0" />}
+                      {!n.is_read && <div className="w-2 h-2 bg-[var(--accent)] rounded-full mt-2 shrink-0" />}
                     </div>
                   </div>
                 ))}
@@ -947,10 +1006,10 @@ export default function ArtistDashboard() {
                 <h1 className="text-xl font-bold text-[var(--text)] mb-2">NID যাচাইকরণ</h1>
                 <p className="text-[var(--text3)] text-sm mb-5">জাতীয় পরিচয়পত্র দিয়ে অ্যাকাউন্ট যাচাই করুন</p>
                 {isVerified ? (
-                  <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-8 text-center">
-                    <div className="w-14 h-14 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-3"><ShieldCheck className="w-7 h-7 text-white" /></div>
-                    <h3 className="text-lg font-bold text-emerald-800">যাচাইকৃত ✅</h3>
-                    <p className="text-emerald-600 text-sm mt-1">আপনার প্রোফাইলে যাচাইকৃত ব্যাজ আছে।</p>
+                  <div className="bg-[var(--bg)] border border-[var(--border)] rounded-2xl p-8 text-center">
+                    <div className="w-14 h-14 bg-[var(--accent)] rounded-full flex items-center justify-center mx-auto mb-3"><ShieldCheck className="w-7 h-7 text-white" /></div>
+                    <h3 className="text-lg font-bold text-[var(--accent-dk)]">যাচাইকৃত ✅</h3>
+                    <p className="text-[var(--accent-dk)] text-sm mt-1">আপনার প্রোফাইলে যাচাইকৃত ব্যাজ আছে।</p>
                   </div>
                 ) : pendingNid ? (
                   <div className="bg-blue-50 border border-blue-200 rounded-2xl p-8 text-center">
@@ -967,7 +1026,7 @@ export default function ArtistDashboard() {
                     <div className="p-5 space-y-4">
                       <div>
                         <p className="text-sm font-bold text-stone-700 mb-2">NID কার্ডের সামনের ছবি *</p>
-                        <div className={`aspect-video border-2 border-dashed rounded-2xl flex flex-col items-center justify-center gap-2 relative overflow-hidden cursor-pointer transition-all ${nidPreview ? 'border-emerald-400' : 'border-[var(--border)] hover:border-emerald-400 bg-[var(--bg)]'}`}>
+                        <div className={`aspect-video border-2 border-dashed rounded-2xl flex flex-col items-center justify-center gap-2 relative overflow-hidden cursor-pointer transition-all ${nidPreview ? 'border-[var(--accent)]' : 'border-[var(--border)] hover:border-[var(--accent)] bg-[var(--bg)]'}`}>
                           {nidPreview ? (
                             <><img src={nidPreview} alt="" className="w-full h-full object-cover" />
                               <button type="button" onClick={() => { setNidFile(null); setNidPreview(null); }} className="absolute top-2 right-2 bg-white/90 p-1.5 rounded-full shadow-md text-red-500 z-10"><X className="w-3.5 h-3.5" /></button></>
@@ -988,7 +1047,7 @@ export default function ArtistDashboard() {
                       </div>
                     </div>
                     <div className="p-4 bg-[var(--bg)] border-t border-[var(--border)] flex justify-end">
-                      <button onClick={handleNidSubmit} disabled={submittingNid || !nidFile || !nidData.nid_number} className="px-7 py-2.5 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all disabled:opacity-50 flex items-center gap-2 text-sm">
+                      <button onClick={handleNidSubmit} disabled={submittingNid || !nidFile || !nidData.nid_number} className="px-7 py-2.5 bg-[var(--accent)] text-white rounded-xl font-bold hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-2 text-sm">
                         {submittingNid ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />জমা হচ্ছে...</> : <><ShieldCheck className="w-4 h-4" />যাচাইয়ের আবেদন করুন</>}
                       </button>
                     </div>
@@ -1005,7 +1064,7 @@ export default function ArtistDashboard() {
                   <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <p className="text-sm font-bold text-stone-700 mb-2">প্রোফাইল ছবি</p>
-                      <div className="w-36 h-36 rounded-3xl mx-auto relative overflow-hidden border-2 border-dashed border-[var(--border)] cursor-pointer hover:border-emerald-400 transition-all">
+                      <div className="w-36 h-36 rounded-3xl mx-auto relative overflow-hidden border-2 border-dashed border-[var(--border)] cursor-pointer hover:border-[var(--accent)] transition-all">
                         <img src={profilePreview || artist?.profile_image_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${artist?.full_name}`} alt="" className="w-full h-full object-cover" />
                         <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center"><Upload className="w-7 h-7 text-white" /></div>
                         <input type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) { setProfileFile(f); setProfilePreview(URL.createObjectURL(f)); } }} className="absolute inset-0 opacity-0 cursor-pointer" />
