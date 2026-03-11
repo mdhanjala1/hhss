@@ -10,6 +10,9 @@ const DISTRICTS = ['ঢাকা','চট্টগ্রাম','রাজশা
 export default function Login() {
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
+  const [isForgot, setIsForgot] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotSent, setForgotSent] = useState(false);
   const [step, setStep] = useState(1);
   const [showSuccess, setShowSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -71,6 +74,21 @@ export default function Login() {
   };
 
   // ONLY called from final "অ্যাকাউন্ট তৈরি করুন" button on step 3
+  const handleForgotPassword = async () => {
+    if (!forgotEmail.trim()) { toast.error('ইমেইল দিন'); return; }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail.trim(), {
+        redirectTo: window.location.origin + '/login',
+      });
+      if (error) throw error;
+      setForgotSent(true);
+      toast.success('পাসওয়ার্ড রিসেট লিংক পাঠানো হয়েছে!');
+    } catch (e: any) {
+      toast.error(e.message || 'সমস্যা হয়েছে, আবার চেষ্টা করুন');
+    } finally { setLoading(false); }
+  };
+
   const handleRegister = async () => {
     setLoading(true);
     try {
@@ -205,6 +223,13 @@ export default function Login() {
                 className="w-full py-4 text-white rounded-2xl font-bold transition-all flex items-center justify-center gap-2 mt-2 hover:opacity-90 disabled:opacity-60" style={{ background: "linear-gradient(135deg,#c2a06e,#8b6914)" }}>
                 {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><ArrowRight className="w-5 h-5" />লগইন করুন</>}
               </button>
+              <div className="text-center mt-4">
+                <button onClick={() => setIsForgot(true)}
+                  className="text-sm font-medium hover:underline transition-all"
+                  style={{ color: 'var(--accent)' }}>
+                  পাসওয়ার্ড ভুলে গেছেন?
+                </button>
+              </div>
             </div>
           ) : (
             /* REGISTER */
@@ -344,6 +369,82 @@ export default function Login() {
           )}
         </div>
       </div>
+
+      {/* ── Forgot Password Modal ── */}
+      {isForgot && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center px-4"
+          style={{ background: 'rgba(26,14,5,0.75)', backdropFilter: 'blur(8px)' }}>
+          <motion.div initial={{ scale: 0.9, opacity: 0, y: 16 }} animate={{ scale: 1, opacity: 1, y: 0 }}
+            className="w-full max-w-md rounded-3xl overflow-hidden shadow-2xl"
+            style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+
+            {/* Dark header */}
+            <div className="px-7 py-6 relative overflow-hidden"
+              style={{ background: 'linear-gradient(135deg, var(--dark), rgba(44,24,0,0.95))' }}>
+              <div className="absolute inset-0 opacity-[0.05]"
+                style={{ backgroundImage: 'radial-gradient(rgba(194,160,110,1) 1.5px, transparent 1.5px)', backgroundSize: '10px 10px' }} />
+              <div className="relative z-10 flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-bold" style={{ color: 'var(--bg)' }}>পাসওয়ার্ড রিসেট</h3>
+                  <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>ইমেইলে রিসেট লিংক পাঠানো হবে</p>
+                </div>
+                <button onClick={() => { setIsForgot(false); setForgotSent(false); setForgotEmail(''); }}
+                  className="w-9 h-9 rounded-full flex items-center justify-center transition-all"
+                  style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)' }}>
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="p-7">
+              {forgotSent ? (
+                <div className="text-center py-4">
+                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                    style={{ background: 'rgba(194,160,110,0.12)' }}>
+                    <CheckCircle className="w-8 h-8" style={{ color: 'var(--accent)' }} />
+                  </div>
+                  <h4 className="text-lg font-bold mb-2" style={{ color: 'var(--text)' }}>ইমেইল পাঠানো হয়েছে!</h4>
+                  <p className="text-sm leading-relaxed mb-6" style={{ color: 'var(--text3)' }}>
+                    <strong style={{ color: 'var(--accent)' }}>{forgotEmail}</strong> এ একটি রিসেট লিংক পাঠানো হয়েছে। ইনবক্স বা Spam ফোল্ডার চেক করুন।
+                  </p>
+                  <button onClick={() => { setIsForgot(false); setForgotSent(false); setForgotEmail(''); }}
+                    className="w-full py-3.5 rounded-2xl font-bold text-sm transition-all hover:opacity-90"
+                    style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dk))', color: 'var(--dark)' }}>
+                    লগইন পেজে ফিরুন
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-5">
+                  <p className="text-sm" style={{ color: 'var(--text2)' }}>
+                    অ্যাকাউন্টের ইমেইল দিন। আমরা একটি পাসওয়ার্ড রিসেট লিংক পাঠাবো।
+                  </p>
+                  <div>
+                    <label className="block text-sm font-bold mb-2" style={{ color: 'var(--text)' }}>ইমেইল ঠিকানা</label>
+                    <input type="email" placeholder="আপনার ইমেইল" value={forgotEmail}
+                      onChange={e => setForgotEmail(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && handleForgotPassword()}
+                      className="w-full px-4 py-3.5 rounded-2xl border outline-none text-sm"
+                      style={{ background: 'var(--bg)', borderColor: 'var(--border)', color: 'var(--text)' }} />
+                  </div>
+                  <button onClick={handleForgotPassword} disabled={loading}
+                    className="w-full py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all hover:opacity-90 disabled:opacity-60"
+                    style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dk))', color: 'var(--dark)' }}>
+                    {loading
+                      ? <div className="w-5 h-5 border-2 rounded-full animate-spin" style={{ borderColor: 'rgba(26,14,5,0.2)', borderTopColor: 'var(--dark)' }} />
+                      : <><ArrowRight className="w-5 h-5" /> রিসেট লিংক পাঠান</>}
+                  </button>
+                  <button onClick={() => setIsForgot(false)}
+                    className="w-full py-3 rounded-2xl font-bold text-sm border transition-all hover:shadow-sm"
+                    style={{ background: 'var(--bg)', color: 'var(--text2)', borderColor: 'var(--border)' }}>
+                    বাতিল
+                  </button>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

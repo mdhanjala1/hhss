@@ -6,7 +6,7 @@ import {
   CheckCircle, Clock, AlertCircle, Image as ImageIcon, DollarSign,
   Upload, X, Phone, MapPin, Palette, ShieldCheck, AlertTriangle,
   CreditCard, Eye, Bell, TrendingUp, Star, ExternalLink, Trash2,
-  Package, BarChart3, Edit, Edit3, Save, Camera
+  Package, BarChart3, Edit, Edit3, Save, Camera, Lock, EyeOff, Eye as EyeIcon, UserX, AlertOctagon, Crop, Move
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { format } from 'date-fns';
@@ -16,6 +16,306 @@ import { Artist, Artwork, Order, Notification } from '../types';
 const DISTRICTS = ['ঢাকা','চট্টগ্রাম','রাজশাহী','খুলনা','বরিশাল','সিলেট','ময়মনসিংহ','রংপুর','কুমিল্লা','গাজীপুর','নারায়ণগঞ্জ','টাঙ্গাইল','মানিকগঞ্জ','নরসিংদী','মুন্সীগঞ্জ','ফরিদপুর','গোপালগঞ্জ','মাদারীপুর','শরীয়তপুর','রাজবাড়ী','কিশোরগঞ্জ','নেত্রকোণা','জামালপুর','শেরপুর','ব্রাহ্মণবাড়িয়া','চাঁদপুর','ফেনী','লক্ষ্মীপুর','নোয়াখালী','খাগড়াছড়ি','রাঙ্গামাটি','বান্দরবান','কক্সবাজার','নাটোর','নওগাঁ','চাঁপাইনবাবগঞ্জ','বগুড়া','জয়পুরহাট','সিরাজগঞ্জ','পাবনা','কুষ্টিয়া','মেহেরপুর','চুয়াডাঙ্গা','ঝিনাইদহ','মাগুরা','নড়াইল','সাতক্ষীরা','বাগেরহাট','যশোর','পিরোজপুর','ঝালকাঠি','বরগুনা','পটুয়াখালী','ভোলা','হবিগঞ্জ','মৌলভীবাজার','সুনামগঞ্জ','কুড়িগ্রাম','গাইবান্ধা','নীলফামারী','লালমনিরহাট','ঠাকুরগাঁও','পঞ্চগড়','দিনাজপুর'];
 
 type TabType = 'overview' | 'artworks' | 'orders' | 'upload' | 'verify' | 'settings' | 'notifications' | 'earnings';
+
+// ═══════════════════════════════════════════════════════════════
+// PASSWORD CHANGE COMPONENT
+// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+// CROP MODAL COMPONENT
+// ═══════════════════════════════════════════════════════════════
+function CropModal({ src, onCrop, onClose }: {
+  src: string;
+  onCrop: (croppedUrl: string, croppedFile: File) => void;
+  onClose: () => void;
+}) {
+  const canvasRef = React.useRef<HTMLCanvasElement>(null);
+  const imgRef = React.useRef<HTMLImageElement>(null);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const [crop, setCrop] = React.useState({ x: 10, y: 10, w: 80, h: 80 });
+  const [dragging, setDragging] = React.useState(false);
+  const [dragStart, setDragStart] = React.useState({ mx: 0, my: 0, cx: 0, cy: 0 });
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setDragging(true);
+    setDragStart({ mx: e.clientX, my: e.clientY, cx: crop.x, cy: crop.y });
+  };
+  const handleMouseMove = React.useCallback((e: MouseEvent) => {
+    if (!dragging || !containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const dx = ((e.clientX - dragStart.mx) / rect.width) * 100;
+    const dy = ((e.clientY - dragStart.my) / rect.height) * 100;
+    setCrop(c => ({ ...c, x: Math.max(0, Math.min(100 - c.w, dragStart.cx + dx)), y: Math.max(0, Math.min(100 - c.h, dragStart.cy + dy)) }));
+  }, [dragging, dragStart]);
+  const handleMouseUp = React.useCallback(() => setDragging(false), []);
+
+  React.useEffect(() => {
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => { window.removeEventListener('mousemove', handleMouseMove); window.removeEventListener('mouseup', handleMouseUp); };
+  }, [handleMouseMove, handleMouseUp]);
+
+  const doCrop = () => {
+    const img = imgRef.current;
+    const canvas = canvasRef.current;
+    if (!img || !canvas) return;
+    const sx = (crop.x / 100) * img.naturalWidth;
+    const sy = (crop.y / 100) * img.naturalHeight;
+    const sw = (crop.w / 100) * img.naturalWidth;
+    const sh = (crop.h / 100) * img.naturalHeight;
+    canvas.width = 800; canvas.height = 1000;
+    const ctx = canvas.getContext('2d')!;
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, 800, 1000);
+    canvas.toBlob(blob => {
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const file = new File([blob], 'cropped.jpg', { type: 'image/jpeg' });
+      onCrop(url, file);
+    }, 'image/jpeg', 0.92);
+  };
+
+  return (
+    <div className="fixed inset-0 z-[300] flex items-center justify-center px-4"
+      style={{ background: 'rgba(26,14,5,0.85)', backdropFilter: 'blur(8px)' }}>
+      <div className="w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl"
+        style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+        <div className="px-6 py-4 border-b flex items-center justify-between" style={{ borderColor: 'var(--border)' }}>
+          <div className="flex items-center gap-2">
+            <Crop className="w-4 h-4" style={{ color: 'var(--accent)' }} />
+            <h3 className="font-bold" style={{ color: 'var(--text)' }}>ছবি ক্রপ করুন</h3>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'var(--bg)', color: 'var(--text3)' }}><X className="w-4 h-4" /></button>
+        </div>
+        <div className="p-4">
+          <p className="text-xs mb-3 text-center" style={{ color: 'var(--text3)' }}>বাক্সটি টেনে যে অংশ রাখতে চান নির্বাচন করুন · আউটপুট: ৮০০×১০০০ px (৪:৫)</p>
+          <div ref={containerRef} className="relative w-full select-none overflow-hidden rounded-2xl" style={{ aspectRatio: '4/3', background: '#111' }}>
+            <img ref={imgRef} src={src} alt="" className="w-full h-full object-contain" crossOrigin="anonymous" />
+            <div className="absolute inset-0 pointer-events-none" style={{ background: 'rgba(0,0,0,0.45)' }} />
+            <div onMouseDown={handleMouseDown} className="absolute cursor-move"
+              style={{ left: `${crop.x}%`, top: `${crop.y}%`, width: `${crop.w}%`, height: `${crop.h}%`, border: '2px solid var(--accent)', boxShadow: '0 0 0 9999px rgba(0,0,0,0.45)' }}>
+              {['top-0 left-0','top-0 right-0','bottom-0 left-0','bottom-0 right-0'].map(p => (
+                <div key={p} className={`absolute w-3 h-3 -m-1.5 ${p}`} style={{ background: 'var(--accent)', borderRadius: '2px' }} />
+              ))}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Move className="w-5 h-5 opacity-60" style={{ color: 'var(--accent)' }} />
+              </div>
+            </div>
+          </div>
+          <canvas ref={canvasRef} className="hidden" />
+          <div className="mt-3 grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-bold block mb-1" style={{ color: 'var(--text3)' }}>প্রস্থ {crop.w}%</label>
+              <input type="range" min="20" max="100" value={crop.w} onChange={e => setCrop(c => ({ ...c, w: +e.target.value, x: Math.min(c.x, 100 - +e.target.value) }))} className="w-full" />
+            </div>
+            <div>
+              <label className="text-xs font-bold block mb-1" style={{ color: 'var(--text3)' }}>উচ্চতা {crop.h}%</label>
+              <input type="range" min="20" max="100" value={crop.h} onChange={e => setCrop(c => ({ ...c, h: +e.target.value, y: Math.min(c.y, 100 - +e.target.value) }))} className="w-full" />
+            </div>
+          </div>
+        </div>
+        <div className="px-6 pb-5 flex gap-3">
+          <button onClick={onClose} className="flex-1 py-3 rounded-xl font-bold text-sm border" style={{ background: 'var(--bg)', color: 'var(--text2)', borderColor: 'var(--border)' }}>বাতিল</button>
+          <button onClick={doCrop} className="flex-1 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:opacity-90"
+            style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dk))', color: 'var(--dark)' }}>
+            <Crop className="w-4 h-4" /> ক্রপ প্রয়োগ করুন
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PasswordChangeForm() {
+  const [form, setForm] = React.useState({ current: '', newPass: '', confirm: '' });
+  const [show, setShow] = React.useState({ current: false, newPass: false, confirm: false });
+  const [loading, setLoading] = React.useState(false);
+  const [done, setDone] = React.useState(false);
+
+  const toggle = (k: keyof typeof show) => setShow(s => ({ ...s, [k]: !s[k] }));
+
+  const handleChange = async () => {
+    const { current, newPass, confirm } = form;
+    if (!current || !newPass || !confirm) { toast.error('সব ঘর পূরণ করুন'); return; }
+    if (newPass.length < 6) { toast.error('নতুন পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে'); return; }
+    if (newPass !== confirm) { toast.error('নতুন পাসওয়ার্ড দুটো মিলছে না'); return; }
+    if (current === newPass) { toast.error('নতুন পাসওয়ার্ড পুরনোটার মতো হতে পারবে না'); return; }
+    setLoading(true);
+    try {
+      // Verify current password first
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.email) throw new Error('ইউজার পাওয়া যায়নি');
+      const { error: verifyErr } = await supabase.auth.signInWithPassword({
+        email: user.email, password: current
+      });
+      if (verifyErr) throw new Error('বর্তমান পাসওয়ার্ড ভুল হয়েছে');
+      // Update password
+      const { error } = await supabase.auth.updateUser({ password: newPass });
+      if (error) throw error;
+      setDone(true);
+      setForm({ current: '', newPass: '', confirm: '' });
+      toast.success('✅ পাসওয়ার্ড সফলভাবে পরিবর্তন হয়েছে!');
+      setTimeout(() => setDone(false), 4000);
+    } catch (e: any) {
+      toast.error(e.message || 'সমস্যা হয়েছে, আবার চেষ্টা করুন');
+    } finally { setLoading(false); }
+  };
+
+  const fields = [
+    { key: 'current' as const, label: 'বর্তমান পাসওয়ার্ড', ph: '••••••••' },
+    { key: 'newPass' as const, label: 'নতুন পাসওয়ার্ড', ph: 'কমপক্ষে ৬ অক্ষর' },
+    { key: 'confirm' as const, label: 'নতুন পাসওয়ার্ড নিশ্চিত করুন', ph: 'আবার টাইপ করুন' },
+  ];
+
+  if (done) return (
+    <div className="flex items-center gap-3 p-4 rounded-2xl"
+      style={{ background: 'rgba(194,160,110,0.08)', border: '1px solid rgba(194,160,110,0.25)' }}>
+      <CheckCircle className="w-6 h-6 shrink-0" style={{ color: 'var(--accent)' }} />
+      <p className="font-bold text-sm" style={{ color: 'var(--accent-dk)' }}>পাসওয়ার্ড সফলভাবে পরিবর্তন হয়েছে!</p>
+    </div>
+  );
+
+  return (
+    <div className="space-y-4">
+      {fields.map(({ key, label, ph }) => (
+        <div key={key}>
+          <label className="block text-sm font-bold mb-1.5" style={{ color: 'var(--text2)' }}>{label}</label>
+          <div className="relative">
+            <input
+              type={show[key] ? 'text' : 'password'}
+              placeholder={ph}
+              value={form[key]}
+              onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
+              onKeyDown={e => e.key === 'Enter' && handleChange()}
+              className="w-full px-4 py-3 pr-12 rounded-xl border outline-none text-sm transition-all"
+              style={{ background: 'var(--bg)', borderColor: 'var(--border)', color: 'var(--text)' }}
+            />
+            <button type="button" onClick={() => toggle(key)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-lg transition-colors"
+              style={{ color: 'var(--text3)' }}>
+              {show[key] ? <EyeOff className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
+            </button>
+          </div>
+        </div>
+      ))}
+      <button onClick={handleChange} disabled={loading}
+        className="w-full py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all hover:opacity-90 disabled:opacity-60 mt-2"
+        style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dk))', color: 'var(--dark)' }}>
+        {loading
+          ? <div className="w-4 h-4 border-2 rounded-full animate-spin" style={{ borderColor: 'rgba(26,14,5,0.2)', borderTopColor: 'var(--dark)' }} />
+          : <><Lock className="w-4 h-4" /> পাসওয়ার্ড পরিবর্তন করুন</>}
+      </button>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DELETE ACCOUNT COMPONENT
+// ═══════════════════════════════════════════════════════════════
+function DeleteAccountSection({ artistId }: { artistId?: string }) {
+  const navigate = useNavigate();
+  const [step, setStep] = React.useState<'idle' | 'confirm' | 'verify'>('idle');
+  const [password, setPassword] = React.useState('');
+  const [confirmText, setConfirmText] = React.useState('');
+  const [loading, setLoading] = React.useState(false);
+  const [showPass, setShowPass] = React.useState(false);
+
+  const CONFIRM_WORD = 'মুছে ফেলুন';
+
+  const handleDelete = async () => {
+    if (confirmText !== CONFIRM_WORD) { toast.error(`"${CONFIRM_WORD}" লিখুন`); return; }
+    if (!password) { toast.error('পাসওয়ার্ড দিন'); return; }
+    setLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.email) throw new Error('ইউজার পাওয়া যায়নি');
+      // Verify password
+      const { error: verifyErr } = await supabase.auth.signInWithPassword({
+        email: user.email, password
+      });
+      if (verifyErr) throw new Error('ভুল পাসওয়ার্ড দিয়েছেন');
+      // Delete artworks + artist row (cascade in DB handles orders)
+      if (artistId) {
+        await supabase.from('artworks').delete().eq('artist_id', artistId);
+        await supabase.from('artists').delete().eq('id', artistId);
+      }
+      // Sign out + delete auth user via API
+      await supabase.auth.signOut();
+      toast.success('অ্যাকাউন্ট মুছে ফেলা হয়েছে।');
+      navigate('/');
+    } catch (e: any) {
+      toast.error(e.message || 'সমস্যা হয়েছে, আবার চেষ্টা করুন');
+    } finally { setLoading(false); }
+  };
+
+  if (step === 'idle') return (
+    <div className="space-y-4">
+      <div className="p-4 rounded-xl" style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)' }}>
+        <p className="text-sm font-bold mb-2" style={{ color: '#dc2626' }}>⚠️ সতর্কতা — এই কাজ স্থায়ী!</p>
+        <ul className="text-xs space-y-1.5" style={{ color: 'var(--text2)' }}>
+          <li>• আপনার সব শিল্পকর্ম এবং ছবি মুছে যাবে</li>
+          <li>• আপনার সব অর্ডারের তথ্য মুছে যাবে</li>
+          <li>• আপনার প্রোফাইল এবং রিভিউ মুছে যাবে</li>
+          <li>• এই অ্যাকাউন্টে আর লগইন করা যাবে না</li>
+        </ul>
+      </div>
+      <button onClick={() => setStep('confirm')}
+        className="px-6 py-3 rounded-xl font-bold text-sm transition-all hover:opacity-90 border"
+        style={{ color: '#ef4444', borderColor: 'rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.06)' }}>
+        অ্যাকাউন্ট মুছে ফেলার প্রক্রিয়া শুরু করুন
+      </button>
+    </div>
+  );
+
+  return (
+    <div className="space-y-4">
+      <div className="p-4 rounded-xl" style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)' }}>
+        <p className="text-sm font-bold" style={{ color: '#dc2626' }}>নিশ্চিত করতে নিচে লিখুন:</p>
+        <p className="text-lg font-bold mt-1 font-mono" style={{ color: '#ef4444' }}>{CONFIRM_WORD}</p>
+      </div>
+      <div>
+        <input
+          type="text"
+          placeholder={`"${CONFIRM_WORD}" লিখুন`}
+          value={confirmText}
+          onChange={e => setConfirmText(e.target.value)}
+          className="w-full px-4 py-3 rounded-xl border outline-none text-sm"
+          style={{ background: 'var(--bg)', borderColor: confirmText === CONFIRM_WORD ? '#ef4444' : 'var(--border)', color: 'var(--text)' }}
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-bold mb-1.5" style={{ color: 'var(--text2)' }}>আপনার পাসওয়ার্ড নিশ্চিত করুন</label>
+        <div className="relative">
+          <input
+            type={showPass ? 'text' : 'password'}
+            placeholder="পাসওয়ার্ড"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            className="w-full px-4 py-3 pr-12 rounded-xl border outline-none text-sm"
+            style={{ background: 'var(--bg)', borderColor: 'var(--border)', color: 'var(--text)' }}
+          />
+          <button type="button" onClick={() => setShowPass(!showPass)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-1" style={{ color: 'var(--text3)' }}>
+            {showPass ? <EyeOff className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
+          </button>
+        </div>
+      </div>
+      <div className="flex gap-3">
+        <button onClick={() => { setStep('idle'); setConfirmText(''); setPassword(''); }}
+          className="flex-1 py-3 rounded-xl font-bold text-sm border transition-all"
+          style={{ background: 'var(--bg)', color: 'var(--text2)', borderColor: 'var(--border)' }}>
+          বাতিল
+        </button>
+        <button onClick={handleDelete} disabled={loading || confirmText !== CONFIRM_WORD || !password}
+          className="flex-1 py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2 transition-all hover:opacity-90 disabled:opacity-40"
+          style={{ background: '#dc2626' }}>
+          {loading
+            ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            : <><Trash2 className="w-4 h-4" /> স্থায়ীভাবে মুছে ফেলুন</>}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function ArtistDashboard() {
   const [artist, setArtist] = useState<Artist | null>(null);
@@ -36,6 +336,9 @@ export default function ArtistDashboard() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [rawImageSrc, setRawImageSrc] = useState<string | null>(null);
+  const [cropArea, setCropArea] = useState({ x: 0, y: 0, width: 100, height: 100 });
 
   const [profileData, setProfileData] = useState({ full_name: '', bio: '', district: '', facebook_url: '', instagram_url: '', phone: '', whatsapp: '' });
   const [profileFile, setProfileFile] = useState<File | null>(null);
@@ -504,16 +807,37 @@ export default function ArtistDashboard() {
                 <div className="rounded-2xl border border-[var(--border)] shadow-sm overflow-hidden">
                   <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <p className="text-sm font-bold text-stone-700 mb-2">ছবি নির্বাচন করুন *</p>
-                      <div className={`aspect-[4/5] border-2 border-dashed rounded-2xl flex flex-col items-center justify-center gap-3 relative overflow-hidden cursor-pointer transition-all ${previewUrl ? 'border-emerald-400' : 'border-[var(--border)] hover:border-emerald-400 bg-[var(--bg)]'}`}>
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-sm font-bold" style={{ color: 'var(--text)' }}>ছবি নির্বাচন করুন *</p>
+                        {previewUrl && (
+                          <button type="button" onClick={() => setCropModalOpen(true)}
+                            className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition-all"
+                            style={{ background: 'rgba(194,160,110,0.1)', color: 'var(--accent-dk)', border: '1px solid rgba(194,160,110,0.3)' }}>
+                            <Crop className="w-3 h-3" /> ক্রপ করুন
+                          </button>
+                        )}
+                      </div>
+                      <div className={`aspect-[4/5] border-2 border-dashed rounded-2xl flex flex-col items-center justify-center gap-3 relative overflow-hidden cursor-pointer transition-all ${previewUrl ? 'border-[var(--accent)]' : 'border-[var(--border)] hover:border-[var(--accent)] bg-[var(--bg)]'}`}>
                         {previewUrl ? (
                           <><img src={previewUrl} alt="" className="w-full h-full object-cover" />
-                            <button type="button" onClick={() => { setSelectedFile(null); setPreviewUrl(null); }} className="absolute top-3 right-3 bg-white/90 p-1.5 rounded-full shadow-md text-red-500 z-10"><X className="w-4 h-4" /></button></>
+                            <button type="button" onClick={e => { e.stopPropagation(); setSelectedFile(null); setPreviewUrl(null); setRawImageSrc(null); }} className="absolute top-3 right-3 bg-white/90 p-1.5 rounded-full shadow-md text-red-500 z-10"><X className="w-4 h-4" /></button></>
                         ) : (
-                          <><Upload className="w-10 h-10 text-stone-300" />
-                            <div className="text-center px-4"><p className="font-bold text-stone-600 text-sm">ছবি নির্বাচন করুন</p><p className="text-xs text-[var(--text3)] mt-1">PNG, JPG (সর্বোচ্চ ৫MB)</p></div></>
+                          <><Upload className="w-10 h-10" style={{ color: 'var(--border)' }} />
+                            <div className="text-center px-4">
+                              <p className="font-bold text-sm" style={{ color: 'var(--text2)' }}>ছবি নির্বাচন করুন</p>
+                              <p className="text-xs mt-1" style={{ color: 'var(--text3)' }}>PNG, JPG (সর্বোচ্চ ৫MB)</p>
+                            </div></>
                         )}
-                        <input type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) { setSelectedFile(f); setPreviewUrl(URL.createObjectURL(f)); } }} className="absolute inset-0 opacity-0 cursor-pointer" />
+                        <input type="file" accept="image/*" onChange={e => {
+                          const f = e.target.files?.[0];
+                          if (f) { setSelectedFile(f); const url = URL.createObjectURL(f); setPreviewUrl(url); setRawImageSrc(url); }
+                        }} className="absolute inset-0 opacity-0 cursor-pointer" />
+                      </div>
+                      {/* Size recommendation */}
+                      <div className="mt-2 flex items-start gap-2 px-1">
+                        <span className="text-[10px] leading-relaxed" style={{ color: 'var(--text3)' }}>
+                          📐 <strong>প্রস্তাবিত সাইজ:</strong> ৮০০×১০০০ px (অনুপাত ৪:৫) · সর্বনিম্ন ৬০০×৭৫০ px · JPG/PNG
+                        </span>
                       </div>
                     </div>
                     <div className="space-y-3">
@@ -545,14 +869,29 @@ export default function ArtistDashboard() {
                       <div><label className="block text-xs font-bold text-stone-600 mb-1">বিবরণ</label><textarea rows={3} placeholder="শিল্পকর্মের গল্প বলুন..." className="w-full px-3 py-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[#c2a06e] outline-none text-sm resize-none" value={newArt.description} onChange={e => setNewArt({ ...newArt, description: e.target.value })} /></div>
                     </div>
                   </div>
-                  <div className="p-4 bg-[var(--bg)] border-t border-[var(--border)] flex justify-end gap-3">
-                    <button type="button" onClick={() => setActiveTab('artworks')} className="px-5 py-2.5 text-[var(--text2)] font-bold hover:text-stone-700 text-sm">বাতিল</button>
-                    <button onClick={handleUpload} disabled={uploading || !selectedFile} className="px-7 py-2.5 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all disabled:opacity-50 flex items-center gap-2 text-sm shadow-sm">
-                      {uploading ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />আপলোড হচ্ছে...</> : <><CheckCircle className="w-4 h-4" />জমা দিন</>}
+                  <div className="p-4 border-t flex justify-end gap-3" style={{ background: 'var(--bg)', borderColor: 'var(--border)' }}>
+                    <button type="button" onClick={() => setActiveTab('artworks')} className="px-5 py-2.5 font-bold text-sm" style={{ color: 'var(--text2)' }}>বাতিল</button>
+                    <button onClick={handleUpload} disabled={uploading || !selectedFile}
+                      className="px-7 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 transition-all hover:opacity-90 disabled:opacity-50 shadow-sm"
+                      style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dk))', color: 'var(--dark)' }}>
+                      {uploading ? <><div className="w-4 h-4 border-2 rounded-full animate-spin" style={{ borderColor: 'rgba(26,14,5,0.2)', borderTopColor: 'var(--dark)' }} />আপলোড হচ্ছে...</> : <><CheckCircle className="w-4 h-4" />জমা দিন</>}
                     </button>
                   </div>
                 </div>
               </motion.div>
+            )}
+
+            {/* Crop Modal */}
+            {cropModalOpen && rawImageSrc && (
+              <CropModal
+                src={rawImageSrc}
+                onCrop={(croppedUrl, croppedFile) => {
+                  setPreviewUrl(croppedUrl);
+                  setSelectedFile(croppedFile);
+                  setCropModalOpen(false);
+                }}
+                onClose={() => setCropModalOpen(false)}
+              />
             )}
 
             {/* NOTIFICATIONS */}
@@ -679,12 +1018,51 @@ export default function ArtistDashboard() {
                       <div><label className="block text-xs font-bold text-stone-600 mb-1">Instagram</label><input type="url" placeholder="https://instagram.com/..." className="w-full px-3 py-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[#c2a06e] outline-none text-sm" value={profileData.instagram_url} onChange={e => setProfileData({ ...profileData, instagram_url: e.target.value })} /></div>
                     </div>
                   </div>
-                  <div className="p-4 bg-[var(--bg)] border-t border-[var(--border)] flex justify-end">
-                    <button onClick={handleProfileUpdate} disabled={savingProfile} className="px-7 py-2.5 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all disabled:opacity-50 flex items-center gap-2 text-sm">
+                  <div className="p-4 border-t flex justify-end" style={{ background: 'var(--bg)', borderColor: 'var(--border)' }}>
+                    <button onClick={handleProfileUpdate} disabled={savingProfile}
+                      className="px-7 py-2.5 rounded-xl font-bold transition-all disabled:opacity-50 flex items-center gap-2 text-sm hover:opacity-90"
+                      style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dk))', color: 'var(--dark)' }}>
                       {savingProfile ? 'সংরক্ষণ হচ্ছে...' : <><CheckCircle className="w-4 h-4" />সংরক্ষণ করুন</>}
                     </button>
                   </div>
                 </div>
+
+                {/* ── Password Change ── */}
+                <div className="mt-6 rounded-2xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
+                  <div className="px-6 py-4 border-b flex items-center gap-3"
+                    style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                      style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dk))' }}>
+                      <Lock className="w-4 h-4" style={{ color: 'var(--dark)' }} />
+                    </div>
+                    <div>
+                      <h3 className="font-bold" style={{ color: 'var(--text)' }}>পাসওয়ার্ড পরিবর্তন</h3>
+                      <p className="text-xs mt-0.5" style={{ color: 'var(--text3)' }}>নিরাপত্তার জন্য নিয়মিত পাসওয়ার্ড পরিবর্তন করুন</p>
+                    </div>
+                  </div>
+                  <div className="p-6" style={{ background: 'var(--card)' }}>
+                    <PasswordChangeForm />
+                  </div>
+                </div>
+
+                {/* ── Delete Account ── */}
+                <div className="mt-6 rounded-2xl border overflow-hidden" style={{ borderColor: 'rgba(239,68,68,0.25)' }}>
+                  <div className="px-6 py-4 border-b flex items-center gap-3"
+                    style={{ background: 'rgba(239,68,68,0.04)', borderColor: 'rgba(239,68,68,0.2)' }}>
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                      style={{ background: 'rgba(239,68,68,0.12)' }}>
+                      <UserX className="w-4 h-4" style={{ color: '#ef4444' }} />
+                    </div>
+                    <div>
+                      <h3 className="font-bold" style={{ color: '#ef4444' }}>অ্যাকাউন্ট মুছে ফেলুন</h3>
+                      <p className="text-xs mt-0.5" style={{ color: 'var(--text3)' }}>এটি স্থায়ী — পূর্বাবস্থায় ফেরানো যাবে না</p>
+                    </div>
+                  </div>
+                  <div className="p-6" style={{ background: 'var(--card)' }}>
+                    <DeleteAccountSection artistId={artist?.id} />
+                  </div>
+                </div>
+
               </motion.div>
             )}
           </AnimatePresence>
