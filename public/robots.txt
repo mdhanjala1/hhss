@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+# Block admin and private pages
+Disallow: /admin
+Disallow: /artist-dashboard
+Disallow: /cart
+Disallow: /wishlist
+Disallow: /login
+
+Sitemap: https://shilposhop.com/sitemap.xml

@@ -1,1 +1,5 @@
+# Redirect pages.dev to main domain
+https://hhss-mdn.pages.dev/* https://shilposhop.com/:splat 301!
+
+# SPA fallback
 /* /index.html 200

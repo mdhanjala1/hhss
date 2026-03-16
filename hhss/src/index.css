@@ -1,0 +1,97 @@
+@import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+/* ══════════════════════════════════════════════
+   🎨 SHILPOSHOP COLOR SYSTEM
+   Primary:  Warm Gold  — #c2a06e / #8b6914
+   Dark:     Deep Brown — #1a0e05
+   Surfaces: Warm Cream — #fdf6ec / #fff8f0
+   ══════════════════════════════════════════════ */
+
+/* ── Light mode ── */
+:root {
+  --bg:         #fdf6ec;
+  --bg2:        #fff8f0;
+  --card:       #ffffff;
+  --border:     #e8d5b0;
+  --accent:     #c2a06e;
+  --accent-dk:  #8b6914;
+  --accent-lt:  #f0e0c0;
+  --dark:       #1a0e05;
+  --text:       #2c1800;
+  --text2:      #6b4c20;
+  --text3:      #9e7a48;
+  --navbar:     rgba(26,14,5,0.94);
+  --shadow:     rgba(139,105,20,0.10);
+  --success:    #16a34a;
+  --danger:     #dc2626;
+  --warning:    #d97706;
+  --info:       #2563eb;
+}
+
+/* ── Dark mode ── */
+[data-dark="1"] {
+  --bg:         #140c04;
+  --bg2:        #1e1108;
+  --card:       #261608;
+  --border:     rgba(194,160,110,0.16);
+  --accent:     #d4a855;
+  --accent-dk:  #f0c070;
+  --accent-lt:  rgba(194,160,110,0.12);
+  --dark:       #fdf6ec;
+  --text:       #f2e4cc;
+  --text2:      #c8a870;
+  --text3:      #806848;
+  --navbar:     rgba(10,6,2,0.97);
+  --shadow:     rgba(0,0,0,0.5);
+  --success:    #22c55e;
+  --danger:     #f87171;
+  --warning:    #fbbf24;
+  --info:       #60a5fa;
+}
+
+body {
+  font-family: 'Hind Siliguri', sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* ── Scrollbar ── */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 3px; }
+
+::selection { background: rgba(194,160,110,0.22); }
+
+/* ── Smooth transitions ── */
+* { transition: background-color 0.2s, border-color 0.2s, color 0.2s; }
+img, svg { transition: none !important; }
+
+/* ── Utility: Gold gradient button ── */
+.btn-gold {
+  background: linear-gradient(135deg, var(--accent), var(--accent-dk));
+  color: var(--dark);
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+}
+.btn-gold:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn-gold:active { transform: translateY(0); }
+
+/* ── Card hover glow ── */
+.card-hover {
+  transition: box-shadow 0.25s, border-color 0.25s, transform 0.2s;
+}
+.card-hover:hover {
+  box-shadow: 0 8px 32px var(--shadow);
+  border-color: var(--accent) !important;
+  transform: translateY(-2px);
+}
