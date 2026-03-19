@@ -37,16 +37,16 @@ html { scroll-behavior: smooth; }
   --bg:         #140c04;
   --bg2:        #1e1108;
   --card:       #261608;
-  --border:     rgba(194,160,110,0.16);
+  --border:     rgba(194,160,110,0.20);
   --accent:     #d4a855;
   --accent-dk:  #f0c070;
-  --accent-lt:  rgba(194,160,110,0.12);
+  --accent-lt:  rgba(194,160,110,0.15);
   --dark:       #fdf6ec;
-  --text:       #f2e4cc;
+  --text:       #f0dfc0;
   --text2:      #c8a870;
-  --text3:      #806848;
+  --text3:      #907858;
   --navbar:     rgba(10,6,2,0.97);
-  --shadow:     rgba(0,0,0,0.5);
+  --shadow:     rgba(0,0,0,0.6);
   --success:    #22c55e;
   --danger:     #f87171;
   --warning:    #fbbf24;
@@ -95,3 +95,230 @@ img, svg { transition: none !important; }
   border-color: var(--accent) !important;
   transform: translateY(-2px);
 }
+
+/* ══════════════════════════════════════════════
+   🌙 DARK MODE — COMPREHENSIVE OVERRIDES
+   সমস্ত HTML element ডার্ক মোডে সঠিকভাবে দেখাবে
+   ══════════════════════════════════════════════ */
+
+/* ── Input, Textarea, Select ── */
+[data-dark="1"] input,
+[data-dark="1"] textarea,
+[data-dark="1"] select {
+  background-color: var(--bg2) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+
+[data-dark="1"] input::placeholder,
+[data-dark="1"] textarea::placeholder {
+  color: var(--text3) !important;
+  opacity: 1;
+}
+
+[data-dark="1"] input:focus,
+[data-dark="1"] textarea:focus,
+[data-dark="1"] select:focus {
+  outline: none;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgba(212,168,85,0.15) !important;
+}
+
+/* Select dropdown options */
+[data-dark="1"] select option {
+  background-color: #261608;
+  color: #f0dfc0;
+}
+
+/* ── Labels ── */
+[data-dark="1"] label {
+  color: var(--text) !important;
+}
+
+/* ── Headings & Paragraphs ── */
+[data-dark="1"] h1,
+[data-dark="1"] h2,
+[data-dark="1"] h3,
+[data-dark="1"] h4,
+[data-dark="1"] h5,
+[data-dark="1"] h6 {
+  color: var(--text);
+}
+
+[data-dark="1"] p {
+  color: var(--text2);
+}
+
+/* ── Anchor links (non-button) ── */
+[data-dark="1"] a:not([class*="bg-"]):not([style*="background"]) {
+  color: var(--text2);
+}
+
+/* ── Borders ── */
+[data-dark="1"] .border,
+[data-dark="1"] [class*="border-"] {
+  border-color: var(--border);
+}
+
+/* ── Tailwind text-* color classes that might go invisible in dark ── */
+[data-dark="1"] .text-gray-900,
+[data-dark="1"] .text-gray-800,
+[data-dark="1"] .text-gray-700,
+[data-dark="1"] .text-black,
+[data-dark="1"] .text-stone-900,
+[data-dark="1"] .text-stone-800 {
+  color: var(--text) !important;
+}
+
+[data-dark="1"] .text-gray-600,
+[data-dark="1"] .text-gray-500,
+[data-dark="1"] .text-stone-600,
+[data-dark="1"] .text-stone-500 {
+  color: var(--text2) !important;
+}
+
+[data-dark="1"] .text-gray-400,
+[data-dark="1"] .text-gray-300,
+[data-dark="1"] .text-stone-400,
+[data-dark="1"] .text-stone-300 {
+  color: var(--text3) !important;
+}
+
+/* ── Tailwind bg-white / bg-gray that stay white in dark ── */
+[data-dark="1"] .bg-white {
+  background-color: var(--card) !important;
+  color: var(--text) !important;
+}
+
+[data-dark="1"] .bg-gray-50,
+[data-dark="1"] .bg-gray-100 {
+  background-color: var(--bg2) !important;
+}
+
+[data-dark="1"] .bg-gray-200,
+[data-dark="1"] .bg-gray-300 {
+  background-color: var(--card) !important;
+}
+
+/* ── Badges / status pills ── */
+[data-dark="1"] .badge,
+[data-dark="1"] [class*="rounded-full"][class*="text-xs"] {
+  color: inherit;
+}
+
+/* ── Warning/info boxes with light backgrounds ── */
+[data-dark="1"] [style*="background: rgba(245,158,11,0.05)"],
+[data-dark="1"] [style*="background:rgba(245,158,11,0.05)"] {
+  background: rgba(245,158,11,0.08) !important;
+}
+
+/* ── Tables ── */
+[data-dark="1"] table {
+  color: var(--text);
+}
+[data-dark="1"] th {
+  color: var(--text2);
+  background-color: var(--bg2);
+  border-color: var(--border);
+}
+[data-dark="1"] td {
+  color: var(--text);
+  border-color: var(--border);
+}
+[data-dark="1"] tr:hover td {
+  background-color: rgba(194,160,110,0.04);
+}
+
+/* ── Dividers ── */
+[data-dark="1"] hr {
+  border-color: var(--border);
+  opacity: 1;
+}
+
+/* ── Modals / dialogs overlay ── */
+[data-dark="1"] dialog,
+[data-dark="1"] [role="dialog"] {
+  background-color: var(--card);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+/* ── Toast notifications ── */
+[data-dark="1"] .react-hot-toast > div {
+  background: #261608 !important;
+  color: #f0dfc0 !important;
+}
+
+/* ── Range / checkbox / radio ── */
+[data-dark="1"] input[type="range"] {
+  accent-color: var(--accent);
+}
+[data-dark="1"] input[type="checkbox"],
+[data-dark="1"] input[type="radio"] {
+  accent-color: var(--accent);
+  background-color: var(--bg2) !important;
+  border-color: var(--border) !important;
+}
+
+/* ── Scrollbar dark ── */
+[data-dark="1"]::-webkit-scrollbar-track { background: var(--bg); }
+[data-dark="1"]::-webkit-scrollbar-thumb { background: rgba(212,168,85,0.4); }
+
+/* ── Line-clamp text ── */
+[data-dark="1"] .line-clamp-1,
+[data-dark="1"] .line-clamp-2,
+[data-dark="1"] .line-clamp-3 {
+  color: inherit;
+}
+
+/* ── Stat alert warning box in dark mode ── */
+[data-dark="1"] [style*="color: #92400e"] {
+  color: #fcd34d !important;
+}
+
+/* ── Artist dashboard, artwork cards ── */
+[data-dark="1"] .text-amber-700,
+[data-dark="1"] .text-yellow-700 {
+  color: #fcd34d !important;
+}
+
+/* ── Number/stat texts that use dark literals ── */
+[data-dark="1"] [style*="color: #2c1800"],
+[data-dark="1"] [style*="color:#2c1800"] {
+  color: var(--text) !important;
+}
+[data-dark="1"] [style*="color: #6b4c20"],
+[data-dark="1"] [style*="color:#6b4c20"] {
+  color: var(--text2) !important;
+}
+[data-dark="1"] [style*="color: #9e7a48"],
+[data-dark="1"] [style*="color:#9e7a48"] {
+  color: var(--text3) !important;
+}
+
+/* ── Dark sidebar text ── */
+[data-dark="1"] [style*="color: var(--bg)"] {
+  color: var(--bg) !important;
+}
+
+/* ── Inline styles that use hardcoded dark brown text ── */
+[data-dark="1"] [style*="color: #1a0e05"],
+[data-dark="1"] [style*="color:#1a0e05"] {
+  color: var(--dark) !important;
+}
+
+/* ── "পেমেন্ট পদ্ধতি" and footer labels ── */
+[data-dark="1"] .text-stone-600 {
+  color: var(--text3) !important;
+}
+
+/* ── Artwork detail price breakdown ── */
+[data-dark="1"] .line-through {
+  color: var(--text3) !important;
+}
+
+/* ── Focus ring ── */
+[data-dark="1"] *:focus-visible {
+  outline-color: var(--accent);
+}
+

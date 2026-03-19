@@ -15,7 +15,27 @@ export default function Cart() {
   const [customer, setCustomer] = useState({ name: '', phone: '', address: '', district: '', note: '' });
   const set = (k: string, v: string) => setCustomer(c => ({ ...c, [k]: v }));
 
-  const DISTRICTS = ['ঢাকা','চট্টগ্রাম','রাজশাহী','খুলনা','বরিশাল','সিলেট','রংপুর','ময়মনসিংহ','কুমিল্লা','গাজীপুর','নারায়ণগঞ্জ','টাঙ্গাইল','কক্সবাজার','ফেনী','নোয়াখালী'];
+  // ঢাকার মধ্যে থাকা জেলাগুলো
+  const DHAKA_DISTRICTS = ['ঢাকা', 'গাজীপুর', 'নারায়ণগঞ্জ', 'মুন্সিগঞ্জ', 'মানিকগঞ্জ', 'নরসিংদী'];
+  const ALL_DISTRICTS = [
+    'ঢাকা','গাজীপুর','নারায়ণগঞ্জ','মুন্সিগঞ্জ','মানিকগঞ্জ','নরসিংদী',
+    'চট্টগ্রাম','রাজশাহী','খুলনা','বরিশাল','সিলেট','রংপুর','ময়মনসিংহ',
+    'কুমিল্লা','টাঙ্গাইল','কক্সবাজার','ফেনী','নোয়াখালী','ব্রাহ্মণবাড়িয়া',
+    'চাঁদপুর','লক্ষ্মীপুর','হবিগঞ্জ','মৌলভীবাজার','সুনামগঞ্জ','কিশোরগঞ্জ',
+    'নেত্রকোণা','শেরপুর','জামালপুর','ময়মনসিংহ','বগুড়া','পাবনা','সিরাজগঞ্জ',
+    'নাটোর','নওগাঁ','চাঁপাইনবাবগঞ্জ','জয়পুরহাট','যশোর','সাতক্ষীরা','বাগেরহাট',
+    'ঝিনাইদহ','নড়াইল','মাগুরা','মেহেরপুর','চুয়াডাঙ্গা','কুষ্টিয়া','পটুয়াখালী',
+    'পিরোজপুর','ঝালকাঠি','ভোলা','বরগুনা','দিনাজপুর','রংপুর','গাইবান্ধা',
+    'নীলফামারী','লালমনিরহাট','কুড়িগ্রাম','ঠাকুরগাঁও','পঞ্চগড়'
+  ];
+
+  // জেলা অনুযায়ী ডেলিভারি চার্জ
+  const getDeliveryCharge = (district: string): number => {
+    if (!district) return 0;
+    return DHAKA_DISTRICTS.includes(district) ? 60 : 130;
+  };
+  const deliveryCharge = getDeliveryCharge(customer.district);
+  const grandTotal = totalPrice + deliveryCharge;
 
   const handleOrder = async () => {
     if (!customer.name || !customer.phone || !customer.address || !customer.district) {
@@ -27,20 +47,22 @@ export default function Cart() {
       const nums: string[] = [];
       for (const item of items) {
         const orderNum = 'SH' + Date.now().toString().slice(-6) + Math.floor(Math.random() * 1000);
+        const qty = item.quantity;
+        const charge = getDeliveryCharge(customer.district);
+        const itemTotal = item.artwork.price * qty;
+        const totalWithDelivery = itemTotal + charge;
         const { error } = await supabase.from('orders').insert({
           artwork_id: item.artwork.id,
           artist_id: item.artwork.artist_id,
-          artwork_title: item.artwork.title,
-          artwork_price: item.artwork.price * item.quantity,
+          artwork_title: qty > 1 ? `${item.artwork.title} (×${qty})` : item.artwork.title,
+          artwork_price: totalWithDelivery,
           customer_name: customer.name,
           customer_phone: customer.phone,
-          customer_address: customer.address,
+          customer_address: `${customer.address} [ডেলিভারি চার্জ: ৳${charge}]`,
           customer_district: customer.district,
-          customer_note: customer.note,
-          quantity: item.quantity,
+          customer_note: customer.note || null,
           status: 'new',
-          order_number: orderNum,
-          created_at: new Date().toISOString(),
+          payment_method: 'Cash on Delivery',
         });
         if (error) throw error;
         nums.push(orderNum);
@@ -48,9 +70,8 @@ export default function Cart() {
         await supabase.from('notifications').insert({
           artist_id: item.artwork.artist_id,
           title: '🛒 নতুন অর্ডার!',
-          message: `"${item.artwork.title}" এর জন্য নতুন অর্ডার এসেছে। ক্রেতা: ${customer.name}`,
+          message: `"${item.artwork.title}" এর নতুন অর্ডার। ক্রেতা: ${customer.name} · মোট: ৳${totalWithDelivery.toLocaleString()}`,
           is_read: false,
-          created_at: new Date().toISOString(),
         });
       }
       setOrderNumbers(nums);
@@ -78,7 +99,8 @@ export default function Cart() {
               style={{ background: 'rgba(194,160,110,0.08)', color: 'var(--accent-dk)', borderColor: 'rgba(194,160,110,0.25)' }}>#{n}</span>
           ))}
         </div>
-        <p className="text-sm mb-8" style={{ color: 'var(--text3)' }}>শিল্পী শীঘ্রই যোগাযোগ করবেন। ক্যাশ অন ডেলিভারিতে পেমেন্ট করুন।</p>
+        <p className="text-sm mb-2" style={{ color: 'var(--text3)' }}>এই অর্ডার রেফারেন্স নম্বর সংরক্ষণ করুন।</p>
+        <p className="text-sm mb-8" style={{ color: 'var(--text3)' }}>শিল্পী শীঘ্রই যোগাযোগ করবেন। পণ্য পেলে ক্যাশ অন ডেলিভারিতে পরিশোধ করুন।</p>
         <button onClick={() => navigate('/marketplace')}
           className="w-full py-4 rounded-2xl font-bold transition-all hover:opacity-90"
           style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dk))', color: 'var(--dark)' }}>
@@ -192,17 +214,25 @@ export default function Cart() {
               <h3 className="text-lg font-bold mb-5" style={{ color: 'var(--text)' }}>অর্ডার সারসংক্ষেপ</h3>
               <div className="space-y-3 mb-4">
                 <div className="flex justify-between" style={{ color: 'var(--text2)' }}>
-                  <span>পণ্য ({totalItems}টি)</span>
+                  <span>পণ্যমূল্য ({totalItems}টি)</span>
                   <span>৳{totalPrice.toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between text-sm" style={{ color: 'var(--text3)' }}>
-                  <span>ডেলিভারি চার্জ</span>
-                  <span className="text-right text-xs" style={{ color: 'var(--text3)' }}>ঢাকা: ৳৬০ · বাইরে: ৳১৩০</span>
+                <div className="flex justify-between text-sm">
+                  <span style={{ color: 'var(--text2)' }}>ডেলিভারি চার্জ</span>
+                  {customer.district ? (
+                    <span className="font-bold" style={{ color: deliveryCharge === 60 ? '#16a34a' : 'var(--text)' }}>
+                      ৳{deliveryCharge} ({deliveryCharge === 60 ? 'ঢাকার মধ্যে' : 'ঢাকার বাইরে'})
+                    </span>
+                  ) : (
+                    <span className="text-xs" style={{ color: 'var(--text3)' }}>জেলা নির্বাচন করুন</span>
+                  )}
                 </div>
                 <div className="border-t pt-3 flex justify-between font-bold text-lg"
-                  style={{ borderColor: 'var(--border)', color: 'var(--text)' }}>
-                  <span>পণ্যমূল্য</span>
-                  <span style={{ color: 'var(--accent)' }}>৳{totalPrice.toLocaleString()}</span>
+                  style={{ borderColor: 'var(--border)' }}>
+                  <span style={{ color: 'var(--text)' }}>সর্বমোট</span>
+                  <span style={{ color: 'var(--accent)' }}>
+                    ৳{customer.district ? grandTotal.toLocaleString() : `${totalPrice.toLocaleString()} + ডেলিভারি`}
+                  </span>
                 </div>
               </div>
 
@@ -236,7 +266,7 @@ export default function Cart() {
                     className="w-full px-3 py-2.5 rounded-xl border outline-none text-sm"
                     style={{ background: 'var(--bg)', borderColor: 'var(--border)', color: 'var(--text)' }}>
                     <option value="">জেলা বেছে নিন</option>
-                    {DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}
+                    {ALL_DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}
                   </select>
                 </div>
                 <div>

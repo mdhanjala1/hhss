@@ -72,19 +72,18 @@ export default function ArtworkDetail() {
     setSubmitting(true);
     try {
       for (let q = 0; q < quantity; q++) {
+        const itemPrice = (discountedPrice || artwork.price);
+        const totalWithDelivery = (itemPrice * quantity) + deliveryCharge;
         const { error } = await supabase.from('orders').insert({
           artwork_id: artwork.id,
           artist_id: artwork.artist_id,
           customer_name: orderData.name,
           customer_phone: orderData.phone,
-          customer_address: orderData.address,
+          customer_address: `${orderData.address} [ডেলিভারি: ৳${deliveryCharge}]`,
           customer_district: orderData.district,
-          customer_note: orderData.note,
-          artwork_title: artwork.title,
-          artwork_price: artwork.price,
-          delivery_charge: deliveryCharge,
-          delivery_zone: deliveryZone,
-          total_amount: ((discountedPrice || artwork.price) * quantity) + deliveryCharge,
+          customer_note: orderData.note || null,
+          artwork_title: quantity > 1 ? `${artwork.title} (×${quantity})` : artwork.title,
+          artwork_price: totalWithDelivery,
           payment_method: 'Cash on Delivery',
         });
         if (error) throw error;

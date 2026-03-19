@@ -3,15 +3,26 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   ShieldCheck, Users, ImageIcon, ShoppingBag, DollarSign,
-  CheckCircle, XCircle, Clock, Search, Eye, AlertCircle,
-  TrendingUp, RefreshCw, Package, Bell, ZoomIn, RotateCcw, Star
+  CheckCircle, Clock, Search, AlertCircle,
+  TrendingUp, RefreshCw, Package, Bell, ZoomIn, Star, Eye
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { format } from 'date-fns';
 import { supabase } from '../lib/supabase';
 import { Artist, Artwork, Order } from '../types';
 
-export default function AdminDashboard() {
+// মডারেটর ইমেইল তালিকা — .env থেকে পড়া হয়
+const _ADMIN_EMAIL = (import.meta.env.VITE_ADMIN_EMAIL || '').trim().toLowerCase();
+const MODERATOR_EMAILS: string[] = (import.meta.env.VITE_MODERATOR_EMAILS || '')
+  .split(',')
+  .map((e: string) => e.trim().toLowerCase())
+  .filter(e => Boolean(e) && e !== _ADMIN_EMAIL); // admin email moderator list-এ থাকলে বাদ দাও
+
+export function isModeratorEmail(email: string): boolean {
+  return MODERATOR_EMAILS.includes(email.trim().toLowerCase());
+}
+
+export default function ModeratorDashboard() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'stats' | 'artworks' | 'artists' | 'orders' | 'nid' | 'messages'>('stats');
   const [contactMessages, setContactMessages] = useState<any[]>([]);
@@ -24,30 +35,30 @@ export default function AdminDashboard() {
   const [lightboxImg, setLightboxImg] = useState<string | null>(null);
   const [searchArt, setSearchArt] = useState('');
   const [searchArtist, setSearchArtist] = useState('');
-  const [artFilter, setArtFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
+  const [artFilter, setArtFilter] = useState<'all' | 'pending' | 'approved'>('pending');
   const navigate = useNavigate();
 
-  useEffect(() => { initAdmin(); }, []);
+  useEffect(() => { initModerator(); }, []);
 
-  const initAdmin = async () => {
+  const initModerator = async () => {
     await new Promise(r => setTimeout(r, 400));
     const { data: { session } } = await supabase.auth.getSession();
-    const adminEmail = (import.meta.env.VITE_ADMIN_EMAIL || 'blog.alfamito@gmail.com').trim().toLowerCase();
     if (!session) { navigate('/login'); return; }
     const userEmail = (session.user.email || '').trim().toLowerCase();
-    if (userEmail !== adminEmail) {
+    const adminEmail = (import.meta.env.VITE_ADMIN_EMAIL || '').trim().toLowerCase();
+    if (userEmail !== adminEmail && !isModeratorEmail(userEmail)) {
       toast.error(`অ্যাক্সেস নেই। (${userEmail})`);
       navigate('/');
       return;
     }
-    fetchAdminData();
+    fetchData();
   };
 
-  const fetchAdminData = async () => {
+  const fetchData = async () => {
     setLoading(true);
     try {
       const [
-        { data: allArts, error: artErr },
+        { data: allArts },
         { data: allArtists },
         { data: allOrders },
         { data: nidArtists },
@@ -57,7 +68,6 @@ export default function AdminDashboard() {
         supabase.from('orders').select('*, artwork:artworks(*), artist:artists(*)').order('created_at', { ascending: false }),
         supabase.from('artists').select('*').eq('verification_status', 'pending').order('created_at', { ascending: false }),
       ]);
-      if (artErr) console.error(artErr);
       const arts = allArts || [];
       const pending = arts.filter(a => a.status === 'pending');
       const revenue = (allOrders || []).filter(o => o.status === 'delivered').reduce((s, o) => s + (o.artwork_price || 0), 0);
@@ -70,26 +80,28 @@ export default function AdminDashboard() {
     finally { setLoading(false); }
   };
 
-  const handleArtworkStatus = async (id: string, status: 'approved' | 'rejected', artistId?: string) => {
-    const { error } = await supabase.from('artworks').update({ status, approved_at: status === 'approved' ? new Date().toISOString() : null }).eq('id', id);
+  // ✅ শুধু APPROVE করতে পারবে, DELETE/REJECT নয়
+  const handleArtworkApprove = async (id: string, artistId?: string) => {
+    const { error } = await supabase.from('artworks').update({ status: 'approved', approved_at: new Date().toISOString() }).eq('id', id);
     if (error) { toast.error('আপডেট ব্যর্থ: ' + error.message); return; }
     if (artistId) {
-      await supabase.from('notifications').insert({ artist_id: artistId, title: status === 'approved' ? 'শিল্পকর্ম অনুমোদিত ✅' : 'শিল্পকর্ম বাতিল ❌', message: status === 'approved' ? 'আপনার শিল্পকর্মটি মার্কেটপ্লেসে প্রকাশিত হয়েছে।' : 'আপনার শিল্পকর্মটি অনুমোদন পায়নি।', is_read: false, created_at: new Date().toISOString() });
+      await supabase.from('notifications').insert({ artist_id: artistId, title: 'শিল্পকর্ম অনুমোদিত ✅', message: 'আপনার শিল্পকর্মটি মার্কেটপ্লেসে প্রকাশিত হয়েছে।', is_read: false, created_at: new Date().toISOString() });
     }
-    toast.success(status === 'approved' ? '✅ অনুমোদিত!' : '❌ বাতিল'); fetchAdminData();
+    toast.success('✅ অনুমোদিত!'); fetchData();
   };
 
   const handleToggleFeatured = async (id: string, current: boolean) => {
     const { error } = await supabase.from('artworks').update({ is_featured: !current }).eq('id', id);
     if (!error) toast.success(!current ? '⭐ ফিচার্ড করা হয়েছে!' : 'ফিচার্ড বাতিল করা হয়েছে');
-    fetchAdminData();
+    fetchData();
   };
 
-  const handleArtistVerify = async (id: string, verify: boolean) => {
-    const { error } = await supabase.from('artists').update({ is_verified: verify, verification_status: verify ? 'verified' : 'rejected' }).eq('id', id);
+  // ✅ শুধু VERIFY করতে পারবে, Unverify নয়
+  const handleArtistVerify = async (id: string) => {
+    const { error } = await supabase.from('artists').update({ is_verified: true, verification_status: 'verified' }).eq('id', id);
     if (error) { toast.error('ভেরিফাই ব্যর্থ: ' + error.message); return; }
-    await supabase.from('notifications').insert({ artist_id: id, title: verify ? '🎉 অ্যাকাউন্ট ভেরিফাইড!' : 'ভেরিফিকেশন বাতিল', message: verify ? 'অভিনন্দন! আপনার অ্যাকাউন্ট ভেরিফাইড হয়েছে।' : 'আপনার ভেরিফিকেশন বাতিল করা হয়েছে।', is_read: false, created_at: new Date().toISOString() });
-    toast.success(verify ? '✅ ভেরিফাইড!' : '❌ বাতিল'); fetchAdminData();
+    await supabase.from('notifications').insert({ artist_id: id, title: '🎉 অ্যাকাউন্ট ভেরিফাইড!', message: 'অভিনন্দন! আপনার অ্যাকাউন্ট ভেরিফাইড হয়েছে।', is_read: false, created_at: new Date().toISOString() });
+    toast.success('✅ ভেরিফাইড!'); fetchData();
   };
 
   const filteredArtworks = allArtworks.filter(a => {
@@ -124,13 +136,17 @@ export default function AdminDashboard() {
         <div className="p-5 border-b" style={{ borderColor: 'rgba(194,160,110,0.18)' }}>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-              style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dk))' }}>
-              <ShieldCheck className="w-5 h-5" style={{ color: 'var(--dark)' }} />
+              style={{ background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)' }}>
+              <Eye className="w-5 h-5 text-white" />
             </div>
             <div>
-              <p className="font-bold text-sm" style={{ color: 'var(--bg)' }}>Admin Panel</p>
+              <p className="font-bold text-sm" style={{ color: 'var(--bg)' }}>Moderator Panel</p>
               <p className="text-xs" style={{ color: 'var(--text3)' }}>শিল্পশপ</p>
             </div>
+          </div>
+          {/* মডারেটর সীমাবদ্ধতা নোট */}
+          <div className="mt-3 px-3 py-2 rounded-xl text-xs" style={{ background: 'rgba(59,130,246,0.15)', color: '#93c5fd' }}>
+            📋 শুধু অনুমোদন ও যাচাইয়ের অধিকার আছে
           </div>
         </div>
         <nav className="p-3 flex-1 space-y-1">
@@ -147,7 +163,7 @@ export default function AdminDashboard() {
           ))}
         </nav>
         <div className="p-4 border-t" style={{ borderColor: 'rgba(194,160,110,0.18)' }}>
-          <button onClick={fetchAdminData}
+          <button onClick={fetchData}
             className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all"
             style={{ background: 'rgba(194,160,110,0.1)', color: 'var(--accent)' }}>
             <RefreshCw className="w-4 h-4" /> রিফ্রেশ করুন
@@ -160,10 +176,10 @@ export default function AdminDashboard() {
         <div className="px-8 py-5 flex items-center justify-between border-b"
           style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
           <h1 className="text-xl font-bold" style={{ color: 'var(--text)' }}>
-            {activeTab === 'stats' && 'ড্যাশবোর্ড'}
+            {activeTab === 'stats' && 'মডারেটর ড্যাশবোর্ড'}
             {activeTab === 'artworks' && `শিল্পকর্ম ব্যবস্থাপনা${stats.pendingArtworks > 0 ? ` (${stats.pendingArtworks}টি অপেক্ষমাণ)` : ''}`}
             {activeTab === 'artists' && 'শিল্পী ব্যবস্থাপনা'}
-            {activeTab === 'orders' && 'অর্ডার ব্যবস্থাপনা'}
+            {activeTab === 'orders' && 'অর্ডার দেখুন'}
             {activeTab === 'nid' && `NID যাচাই${stats.pendingNid > 0 ? ` (${stats.pendingNid}টি অপেক্ষমাণ)` : ''}`}
             {activeTab === 'messages' && `বার্তাসমূহ (${contactMessages.length})`}
           </h1>
@@ -211,7 +227,7 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {/* ARTWORKS */}
+          {/* ARTWORKS — শুধু Approve, featured toggle; reject/delete নেই */}
           {activeTab === 'artworks' && (
             <div>
               <div className="flex flex-wrap gap-3 mb-6">
@@ -221,7 +237,7 @@ export default function AdminDashboard() {
                     className="w-full pl-11 pr-4 py-3 rounded-2xl outline-none text-sm border"
                     style={{ background: 'var(--card)', borderColor: 'var(--border)', color: 'var(--text)' }} />
                 </div>
-                {(['pending', 'approved', 'rejected', 'all'] as const).map(f => (
+                {(['pending', 'approved', 'all'] as const).map(f => (
                   <button key={f} onClick={() => setArtFilter(f)}
                     className="px-4 py-3 rounded-2xl text-sm font-bold transition-all border"
                     style={{
@@ -229,7 +245,7 @@ export default function AdminDashboard() {
                       borderColor: artFilter === f ? 'transparent' : 'var(--border)',
                       color: artFilter === f ? 'var(--dark)' : 'var(--text2)',
                     }}>
-                    {f === 'pending' ? `অপেক্ষমাণ (${pendingArt.length})` : f === 'approved' ? 'অনুমোদিত' : f === 'rejected' ? 'বাতিল' : 'সবগুলো'}
+                    {f === 'pending' ? `অপেক্ষমাণ (${pendingArt.length})` : f === 'approved' ? 'অনুমোদিত' : 'সবগুলো'}
                   </button>
                 ))}
               </div>
@@ -244,7 +260,6 @@ export default function AdminDashboard() {
                     <div key={art.id} className="rounded-2xl border overflow-hidden transition-all hover:shadow-md"
                       style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
                       <div className="flex gap-0 items-stretch">
-                        {/* Clickable image */}
                         <div className="relative shrink-0 cursor-zoom-in group w-36 sm:w-44"
                           onClick={() => setLightboxImg(art.image_url)}>
                           <img src={art.image_url} alt={art.title}
@@ -254,10 +269,7 @@ export default function AdminDashboard() {
                             style={{ background: 'rgba(26,14,5,0.5)' }}>
                             <ZoomIn className="w-8 h-8 text-white" />
                           </div>
-                          <div className="absolute bottom-2 right-2 px-1.5 py-0.5 rounded-md text-[10px] font-bold text-white"
-                            style={{ background: 'rgba(0,0,0,0.6)' }}>বড় করুন</div>
                         </div>
-                        {/* Info */}
                         <div className="flex-1 p-4 min-w-0 flex flex-col justify-between">
                           <div>
                             <div className="flex items-start justify-between gap-2 flex-wrap">
@@ -267,45 +279,23 @@ export default function AdminDashboard() {
                                 <p className="font-bold mt-1" style={{ color: 'var(--accent)' }}>৳{art.price?.toLocaleString()}</p>
                               </div>
                               <span className="shrink-0 px-3 py-1 rounded-full text-xs font-bold"
-                                style={art.status === 'approved' ? { background: 'rgba(194,160,110,0.12)', color: 'var(--accent-dk)' }
-                                  : art.status === 'pending' ? { background: 'rgba(245,158,11,0.12)', color: '#b45309' }
-                                  : { background: 'rgba(239,68,68,0.1)', color: '#dc2626' }}>
-                                {art.status === 'approved' ? '✅ অনুমোদিত' : art.status === 'pending' ? '⏳ অপেক্ষমাণ' : '❌ বাতিল'}
+                                style={art.status === 'approved'
+                                  ? { background: 'rgba(194,160,110,0.12)', color: 'var(--accent-dk)' }
+                                  : { background: 'rgba(245,158,11,0.12)', color: '#b45309' }}>
+                                {art.status === 'approved' ? '✅ অনুমোদিত' : '⏳ অপেক্ষমাণ'}
                               </span>
                             </div>
                             {art.description && <p className="text-xs mt-2 line-clamp-2" style={{ color: 'var(--text3)' }}>{art.description}</p>}
                             <p className="text-xs mt-1" style={{ color: 'var(--text3)' }}>{art.created_at ? format(new Date(art.created_at), 'dd MMM yyyy') : ''}</p>
-                            {art.medium && <p className="text-xs mt-0.5" style={{ color: 'var(--text3)' }}>মাধ্যম: {art.medium}</p>}
                           </div>
-                          {/* Action buttons */}
                           <div className="flex flex-wrap gap-2 mt-3">
-                            {art.status === 'pending' && (<>
-                              <button onClick={() => handleArtworkStatus(art.id, 'approved', art.artist_id)}
+                            {art.status === 'pending' && (
+                              <button onClick={() => handleArtworkApprove(art.id, art.artist_id)}
                                 className="flex items-center gap-1.5 px-4 py-2 text-sm font-bold rounded-xl transition-all hover:opacity-90"
                                 style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dk))', color: 'var(--dark)' }}>
-                                <CheckCircle className="w-4 h-4" /> অনুমোদন
-                              </button>
-                              <button onClick={() => handleArtworkStatus(art.id, 'rejected', art.artist_id)}
-                                className="flex items-center gap-1.5 px-4 py-2 text-sm font-bold rounded-xl transition-all border"
-                                style={{ background: 'rgba(239,68,68,0.06)', borderColor: 'rgba(239,68,68,0.3)', color: '#dc2626' }}>
-                                <XCircle className="w-4 h-4" /> বাতিল
-                              </button>
-                            </>)}
-                            {art.status === 'approved' && (
-                              <button onClick={() => handleArtworkStatus(art.id, 'rejected', art.artist_id)}
-                                className="flex items-center gap-1.5 px-4 py-2 text-sm font-bold rounded-xl transition-all border"
-                                style={{ background: 'rgba(239,68,68,0.06)', borderColor: 'rgba(239,68,68,0.3)', color: '#dc2626' }}>
-                                <RotateCcw className="w-3.5 h-3.5" /> অনুমোদন বাতিল
+                                <CheckCircle className="w-4 h-4" /> অনুমোদন করুন
                               </button>
                             )}
-                            {art.status === 'rejected' && (
-                              <button onClick={() => handleArtworkStatus(art.id, 'approved', art.artist_id)}
-                                className="flex items-center gap-1.5 px-4 py-2 text-sm font-bold rounded-xl transition-all"
-                                style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dk))', color: 'var(--dark)' }}>
-                                <CheckCircle className="w-4 h-4" /> পুনরায় অনুমোদন
-                              </button>
-                            )}
-                            {/* Featured toggle — always shown */}
                             <button onClick={() => handleToggleFeatured(art.id, art.is_featured || false)}
                               className="flex items-center gap-1.5 px-4 py-2 text-sm font-bold rounded-xl transition-all border"
                               style={art.is_featured
@@ -324,7 +314,7 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {/* ARTISTS */}
+          {/* ARTISTS — শুধু Verify, Unverify নেই */}
           {activeTab === 'artists' && (
             <div>
               <div className="relative mb-5">
@@ -350,13 +340,18 @@ export default function AdminDashboard() {
                       <p className="text-xs mt-1" style={{ color: 'var(--text3)' }}>{artist.total_sales} বিক্রয় · {format(new Date(artist.created_at || Date.now()), 'dd MMM yyyy')}</p>
                     </div>
                     <div className="shrink-0">
-                      <button onClick={() => handleArtistVerify(artist.id, !artist.is_verified)}
-                        className="px-4 py-2.5 rounded-xl font-bold text-sm transition-all border"
-                        style={artist.is_verified
-                          ? { background: 'rgba(239,68,68,0.06)', borderColor: 'rgba(239,68,68,0.3)', color: '#dc2626' }
-                          : { background: 'linear-gradient(135deg, var(--accent), var(--accent-dk))', borderColor: 'transparent', color: 'var(--dark)' }}>
-                        {artist.is_verified ? '❌ বাতিল করুন' : '✅ ভেরিফাই করুন'}
-                      </button>
+                      {!artist.is_verified ? (
+                        <button onClick={() => handleArtistVerify(artist.id)}
+                          className="px-4 py-2.5 rounded-xl font-bold text-sm transition-all"
+                          style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dk))', color: 'var(--dark)' }}>
+                          ✅ ভেরিফাই করুন
+                        </button>
+                      ) : (
+                        <span className="px-4 py-2.5 rounded-xl font-bold text-sm block text-center"
+                          style={{ background: 'rgba(16,185,129,0.1)', color: '#10b981' }}>
+                          ✓ ভেরিফাইড
+                        </span>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -364,39 +359,44 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {/* ORDERS */}
+          {/* ORDERS — শুধু দেখা যাবে */}
           {activeTab === 'orders' && (
-            <div className="space-y-3">
-              {orders.length === 0 ? (
-                <div className="rounded-2xl border py-20 text-center" style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
-                  <Package className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--border)' }} />
-                  <p style={{ color: 'var(--text2)' }}>কোনো অর্ডার নেই</p>
-                </div>
-              ) : orders.map(order => (
-                <div key={order.id} className="rounded-2xl border p-5 flex items-center gap-4"
-                  style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
-                  <img src={order.artwork?.image_url} alt="" className="w-14 h-14 rounded-xl object-cover shrink-0" style={{ background: 'var(--bg)' }} />
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-sm" style={{ color: 'var(--text)' }}>{order.artwork?.title}</h3>
-                    <p className="text-xs mt-0.5" style={{ color: 'var(--text3)' }}>{order.buyer_name} · {order.buyer_phone}</p>
-                    <p className="text-xs" style={{ color: 'var(--text3)' }}>{order.buyer_address}</p>
+            <div>
+              <div className="mb-4 px-4 py-3 rounded-2xl text-sm flex items-center gap-2" style={{ background: 'rgba(59,130,246,0.08)', color: '#60a5fa', border: '1px solid rgba(59,130,246,0.2)' }}>
+                <Eye className="w-4 h-4 shrink-0" /> অর্ডারগুলো শুধু দেখার অধিকার আছে। স্ট্যাটাস পরিবর্তন করতে হলে এডমিনকে অনুরোধ করুন।
+              </div>
+              <div className="space-y-3">
+                {orders.length === 0 ? (
+                  <div className="rounded-2xl border py-20 text-center" style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
+                    <Package className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--border)' }} />
+                    <p style={{ color: 'var(--text2)' }}>কোনো অর্ডার নেই</p>
                   </div>
-                  <div className="text-right shrink-0">
-                    <p className="font-bold" style={{ color: 'var(--accent)' }}>৳{order.artwork_price?.toLocaleString()}</p>
-                    <span className="inline-block mt-1 px-2.5 py-1 rounded-full text-[10px] font-bold"
-                      style={order.status === 'delivered' ? { background: 'rgba(194,160,110,0.12)', color: 'var(--accent-dk)' }
-                        : order.status === 'cancelled' ? { background: 'rgba(239,68,68,0.1)', color: '#dc2626' }
-                        : { background: 'rgba(245,158,11,0.1)', color: '#b45309' }}>
-                      {order.status}
-                    </span>
-                    <p className="text-[10px] mt-1" style={{ color: 'var(--text3)' }}>{order.created_at ? format(new Date(order.created_at), 'dd MMM yy') : ''}</p>
+                ) : orders.map(order => (
+                  <div key={order.id} className="rounded-2xl border p-5 flex items-center gap-4"
+                    style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
+                    <img src={order.artwork?.image_url} alt="" className="w-14 h-14 rounded-xl object-cover shrink-0" style={{ background: 'var(--bg)' }} />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-sm" style={{ color: 'var(--text)' }}>{order.artwork?.title}</h3>
+                      <p className="text-xs mt-0.5" style={{ color: 'var(--text3)' }}>{order.customer_name} · {order.customer_phone}</p>
+                      <p className="text-xs" style={{ color: 'var(--text3)' }}>{order.customer_address}</p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="font-bold" style={{ color: 'var(--accent)' }}>৳{order.artwork_price?.toLocaleString()}</p>
+                      <span className="inline-block mt-1 px-2.5 py-1 rounded-full text-[10px] font-bold"
+                        style={order.status === 'delivered' ? { background: 'rgba(194,160,110,0.12)', color: 'var(--accent-dk)' }
+                          : order.status === 'cancelled' ? { background: 'rgba(239,68,68,0.1)', color: '#dc2626' }
+                          : { background: 'rgba(245,158,11,0.1)', color: '#b45309' }}>
+                        {order.status}
+                      </span>
+                      <p className="text-[10px] mt-1" style={{ color: 'var(--text3)' }}>{order.created_at ? format(new Date(order.created_at), 'dd MMM yy') : ''}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
 
-          {/* NID */}
+          {/* NID — শুধু Verify */}
           {activeTab === 'nid' && (
             <div>
               {pendingNid.length === 0 ? (
@@ -438,16 +438,15 @@ export default function AdminDashboard() {
                         )}
                       </div>
                       <div className="flex gap-3 mt-5 pt-5 border-t" style={{ borderColor: 'var(--border)' }}>
-                        <button onClick={() => handleArtistVerify(artist.id, true)}
+                        <button onClick={() => handleArtistVerify(artist.id)}
                           className="flex items-center gap-2 px-6 py-3 font-bold rounded-xl transition-all hover:opacity-90"
                           style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dk))', color: 'var(--dark)' }}>
                           <CheckCircle className="w-4 h-4" /> ভেরিফাই করুন
                         </button>
-                        <button onClick={() => handleArtistVerify(artist.id, false)}
-                          className="flex items-center gap-2 px-6 py-3 font-bold rounded-xl transition-all border"
-                          style={{ background: 'rgba(239,68,68,0.06)', borderColor: 'rgba(239,68,68,0.3)', color: '#dc2626' }}>
-                          <XCircle className="w-4 h-4" /> বাতিল করুন
-                        </button>
+                        <span className="flex items-center gap-2 px-4 py-3 text-sm rounded-xl"
+                          style={{ background: 'rgba(239,68,68,0.05)', color: 'var(--text3)', border: '1px solid var(--border)' }}>
+                          ❌ বাতিলের অধিকার নেই — এডমিনকে জানান
+                        </span>
                       </div>
                     </div>
                   ))}
@@ -456,7 +455,7 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {/* MESSAGES */}
+          {/* MESSAGES — পড়া এবং পঠিত চিহ্নিত করা */}
           {activeTab === 'messages' && (
             <div className="space-y-3">
               {contactMessages.length === 0 ? (
@@ -483,7 +482,7 @@ export default function AdminDashboard() {
                     <div className="shrink-0 text-right space-y-2">
                       <p className="text-xs" style={{ color: 'var(--text3)' }}>{msg.created_at ? new Date(msg.created_at).toLocaleDateString('bn-BD') : ''}</p>
                       {!msg.is_read && (
-                        <button onClick={async () => { await supabase.from('contact_messages').update({ is_read: true }).eq('id', msg.id); fetchAdminData(); }}
+                        <button onClick={async () => { await supabase.from('contact_messages').update({ is_read: true }).eq('id', msg.id); fetchData(); }}
                           className="block w-full px-3 py-1.5 text-xs font-bold rounded-xl transition-all hover:opacity-90"
                           style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dk))', color: 'var(--dark)' }}>
                           পঠিত চিহ্নিত করুন
@@ -503,7 +502,8 @@ export default function AdminDashboard() {
 
         </div>
       </main>
-      {/* ── LIGHTBOX ── */}
+
+      {/* LIGHTBOX */}
       <AnimatePresence>
         {lightboxImg && (
           <motion.div
@@ -523,9 +523,6 @@ export default function AdminDashboard() {
                 style={{ background: 'rgba(255,255,255,0.15)', color: '#fff' }}>
                 ✕
               </button>
-              <p className="absolute bottom-3 left-1/2 -translate-x-1/2 text-white/50 text-xs">
-                ক্লিক করে বন্ধ করুন
-              </p>
             </motion.div>
           </motion.div>
         )}

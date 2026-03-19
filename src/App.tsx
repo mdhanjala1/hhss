@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
-import { ShoppingBag, User, LayoutDashboard, LogOut, Menu, X, Palette, ShieldCheck, Heart, Moon, Sun, UserPlus } from 'lucide-react';
+import { ShoppingBag, User, LayoutDashboard, LogOut, Menu, X, Palette, ShieldCheck, Heart, Moon, Sun, UserPlus, Eye } from 'lucide-react';
 import { Toaster } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'motion/react';
 import { supabase } from './lib/supabase';
@@ -14,6 +14,7 @@ import ArtworkDetail from './pages/ArtworkDetail';
 import ArtistProfile from './pages/ArtistProfile';
 import ArtistDashboard from './pages/ArtistDashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import ModeratorDashboard, { isModeratorEmail } from './pages/ModeratorDashboard';
 import Login from './pages/Login';
 import Cart from './pages/Cart';
 import Wishlist from './pages/Wishlist';
@@ -99,6 +100,7 @@ function Navbar() {
 
   const logout = async () => { await supabase.auth.signOut(); navigate('/'); setIsOpen(false); };
   const isAdmin = session?.user?.email?.trim().toLowerCase() === (import.meta.env.VITE_ADMIN_EMAIL || 'blog.alfamito@gmail.com').trim().toLowerCase();
+  const isModerator = !isAdmin && isModeratorEmail(session?.user?.email || '');
 
   const navBg = scrolled
     ? 'bg-[rgba(26,14,5,0.97)] shadow-lg shadow-black/30'
@@ -164,6 +166,12 @@ function Navbar() {
                     <ShieldCheck className="w-4 h-4" />এডমিন
                   </Link>
                 )}
+                {isModerator && (
+                  <Link to="/moderator" className="flex items-center gap-1.5 px-3 py-2 rounded-xl transition-all text-sm font-semibold"
+                    style={{ color: '#93c5fd', background: 'rgba(59,130,246,0.1)' }}>
+                    <Eye className="w-4 h-4" />মডারেটর
+                  </Link>
+                )}
                 <Link to="/dashboard" className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-stone-300 hover:text-white hover:bg-white/8 transition-all text-sm font-semibold">
                   <LayoutDashboard className="w-4 h-4" />ড্যাশবোর্ড
                 </Link>
@@ -226,6 +234,7 @@ function Navbar() {
               {session ? (
                 <>
                   {isAdmin && <Link to="/admin" onClick={() => setIsOpen(false)} className="block px-4 py-3 text-stone-300 font-semibold rounded-xl hover:bg-white/8">এডমিন</Link>}
+                  {isModerator && <Link to="/moderator" onClick={() => setIsOpen(false)} className="block px-4 py-3 font-semibold rounded-xl" style={{ color: '#93c5fd', background: 'rgba(59,130,246,0.08)' }}>মডারেটর</Link>}
                   <Link to="/dashboard" onClick={() => setIsOpen(false)} className="block px-4 py-3 text-stone-300 font-semibold rounded-xl hover:bg-white/8">ড্যাশবোর্ড</Link>
                   <button onClick={logout} className="w-full text-left px-4 py-3 text-red-400 font-semibold rounded-xl hover:bg-red-500/10">লগআউট</button>
                 </>
@@ -347,6 +356,7 @@ export default function App() {
                   <Route path="/artist/:id" element={<ArtistProfile />} />
                   <Route path="/dashboard" element={<ArtistDashboard />} />
                   <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="/moderator" element={<ModeratorDashboard />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/artists" element={<Artists />} />
                   <Route path="/cart" element={<Cart />} />

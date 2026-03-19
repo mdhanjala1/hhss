@@ -408,6 +408,7 @@ export default function ArtistDashboard() {
   const [nidFile, setNidFile] = useState<File | null>(null);
   const [nidPreview, setNidPreview] = useState<string | null>(null);
   const [submittingNid, setSubmittingNid] = useState(false);
+  const [docType, setDocType] = useState<'nid' | 'birth'>('nid');
 
   useEffect(() => { fetchData(); }, []);
 
@@ -483,7 +484,13 @@ export default function ArtistDashboard() {
     setSubmittingNid(true);
     try {
       const { url } = await uploadToCloudinary(nidFile, 'shilposhop_nid_photo');
-      const { error } = await supabase.from('artists').update({ nid_number: nidData.nid_number, nid_name: nidData.nid_name, nid_photo_url: url, verification_status: 'pending' }).eq('id', artist.id);
+      const docLabel = docType === 'birth' ? '[জন্ম নিবন্ধন] ' : '[NID] ';
+      const { error } = await supabase.from('artists').update({
+        nid_number: nidData.nid_number,
+        nid_name: docLabel + nidData.nid_name,
+        nid_photo_url: url,
+        verification_status: 'pending',
+      }).eq('id', artist.id);
       if (error) throw error;
       toast.success('✅ যাচাইয়ের আবেদন জমা হয়েছে!'); fetchData();
     } catch (err: any) { toast.error(err.message); }
@@ -598,12 +605,12 @@ export default function ArtistDashboard() {
         <aside className="hidden lg:flex w-64 border-r min-h-screen flex-col fixed top-16 bottom-0" style={{ background: "var(--card)", borderColor: "var(--border)" }}>
           <div className="p-5 border-b border-[var(--border)]">
             <div className="flex items-center gap-3">
-              <img src={artist?.profile_image_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${artist?.full_name}`} className="w-11 h-11 rounded-2xl object-cover border-2 border-[var(--border)]" alt="" />
+              <img src={artist?.profile_image_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${artist?.full_name}`} className="w-11 h-11 rounded-2xl object-cover object-center border-2 border-[var(--border)]" alt="" />
               <div className="flex-1 min-w-0">
                 <p className="font-bold text-[var(--text)] text-sm truncate">{artist?.full_name}</p>
                 <div className="flex items-center gap-1">
                   {isVerified ? <span className="text-[10px] text-[#c2a06e] font-bold flex items-center gap-0.5"><ShieldCheck className="w-3 h-3" />যাচাইকৃত</span>
-                    : <span className="text-[10px] text-amber-600 font-bold">যাচাই করুন</span>}
+                    : <span className="text-[10px] text-[var(--warning)] font-bold">যাচাই করুন</span>}
                 </div>
               </div>
             </div>
@@ -637,8 +644,8 @@ export default function ArtistDashboard() {
         <main className="flex-1 lg:ml-64 p-4 lg:p-8 pt-6">
           {/* Verification alert */}
           {!isVerified && (
-            <div className={`mb-6 p-4 rounded-2xl border flex items-center gap-3 ${pendingNid ? 'bg-blue-50 border-blue-200' : 'bg-amber-50 border-amber-200'}`}>
-              {pendingNid ? <Clock className="w-5 h-5 text-blue-600 shrink-0" /> : <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />}
+            <div className={`mb-6 p-4 rounded-2xl border flex items-center gap-3 ${pendingNid ? 'bg-[var(--card)] border-blue-200' : 'bg-[var(--card)] border-amber-200'}`}>
+              {pendingNid ? <Clock className="w-5 h-5 text-blue-400 shrink-0" /> : <AlertTriangle className="w-5 h-5 text-[var(--warning)] shrink-0" />}
               <div className="flex-1">
                 <p className={`font-bold text-sm ${pendingNid ? 'text-blue-800' : 'text-amber-800'}`}>{pendingNid ? 'NID যাচাই পর্যালোচনায় আছে' : '⚠️ অ্যাকাউন্ট যাচাই হয়নি'}</p>
                 <p className={`text-xs ${pendingNid ? 'text-blue-600' : 'text-amber-600'}`}>{pendingNid ? 'অ্যাডমিন শীঘ্রই দেখবেন (১-২ কার্যদিবস)' : 'NID দিয়ে যাচাই করুন — ক্রেতাদের আস্থা বাড়বে'}</p>
@@ -655,9 +662,9 @@ export default function ArtistDashboard() {
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   {[
                     { label: 'মোট আয়', value: `৳${stats.earnings.toLocaleString()}`, icon: <DollarSign className="w-5 h-5" />, color: 'bg-[var(--bg)] text-[#c2a06e]' },
-                    { label: 'সক্রিয় শিল্পকর্ম', value: stats.active, icon: <ImageIcon className="w-5 h-5" />, color: 'bg-blue-50 text-blue-600' },
+                    { label: 'সক্রিয় শিল্পকর্ম', value: stats.active, icon: <ImageIcon className="w-5 h-5" />, color: 'bg-[var(--card)] text-blue-600' },
                     { label: 'নতুন অর্ডার', value: stats.pending, icon: <ShoppingBag className="w-5 h-5" />, color: 'bg-purple-50 text-purple-600' },
-                    { label: 'সফল ডেলিভারি', value: stats.delivered, icon: <CheckCircle className="w-5 h-5" />, color: 'bg-amber-50 text-amber-600' },
+                    { label: 'সফল ডেলিভারি', value: stats.delivered, icon: <CheckCircle className="w-5 h-5" />, color: 'bg-[var(--card)] text-amber-600' },
                   ].map((s, i) => (
                     <div key={i} className="rounded-2xl border border-[var(--border)] shadow-sm p-5">
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${s.color}`}>{s.icon}</div>
@@ -674,16 +681,23 @@ export default function ArtistDashboard() {
                       <button onClick={() => setActiveTab('orders')} className="text-[#c2a06e] font-bold text-sm">সবগুলো দেখুন →</button>
                     </div>
                     {orders.slice(0, 3).map(o => (
-                      <div key={o.id} className="px-5 py-4 flex items-center gap-4 border-b border-stone-50 last:border-0">
-                        <div className="w-9 h-9 bg-[var(--bg)] rounded-xl text-[10px] font-bold text-[var(--text2)] flex items-center justify-center shrink-0">#{o.order_number?.slice(-4)}</div>
+                      <div key={o.id} className="px-5 py-4 flex items-center gap-3 border-b border-[var(--border)] last:border-0">
+                        {o.artwork?.image_url ? (
+                          <img src={o.artwork.image_url} alt={o.artwork_title}
+                            className="w-10 h-10 rounded-xl object-cover object-center shrink-0"
+                            style={{ border: '1px solid var(--border)' }} />
+                        ) : (
+                          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-[10px] font-bold"
+                            style={{ background: 'var(--bg)', color: 'var(--text2)' }}>#{o.id?.slice(-3)}</div>
+                        )}
                         <div className="flex-1 min-w-0">
                           <p className="font-bold text-[var(--text)] text-sm truncate">{o.artwork_title}</p>
                           <p className="text-[var(--text3)] text-xs">{o.customer_name} · {o.customer_district}</p>
                         </div>
                         <div className="text-right shrink-0">
-                          <p className="font-bold text-[var(--text)] text-sm">৳{o.artwork_price}</p>
-                          <span className={`text-[10px] font-bold ${o.status === 'new' ? 'text-blue-600' : o.status === 'confirmed' ? 'text-amber-600' : o.status === 'delivered' ? 'text-[#c2a06e]' : 'text-red-500'}`}>
-                            {o.status === 'new' ? 'নতুন' : o.status === 'confirmed' ? 'নিশ্চিত' : o.status === 'delivered' ? 'ডেলিভারড' : 'বাতিল'}
+                          <p className="font-bold text-sm" style={{ color: 'var(--accent)' }}>৳{o.artwork_price?.toLocaleString()}</p>
+                          <span className={`text-[10px] font-bold ${o.status === 'new' ? 'text-blue-400' : o.status === 'confirmed' ? 'text-[var(--warning)]' : o.status === 'delivered' ? 'text-[#c2a06e]' : 'text-red-400'}`}>
+                            {o.status === 'new' ? '🆕 নতুন' : o.status === 'confirmed' ? '✅ নিশ্চিত' : o.status === 'delivered' ? '📦 ডেলিভারড' : '❌ বাতিল'}
                           </span>
                         </div>
                       </div>
@@ -718,8 +732,8 @@ export default function ArtistDashboard() {
                   </button>
                 </div>
                 {artworks.length === 0 ? (
-                  <div className="bg-white p-16 rounded-2xl border border-[var(--border)] text-center">
-                    <Palette className="w-14 h-14 text-stone-200 mx-auto mb-3" />
+                  <div className="bg-[var(--card)] p-16 rounded-2xl border border-[var(--border)] text-center">
+                    <Palette className="w-14 h-14 text-[var(--border)] mx-auto mb-3" />
                     <p className="text-[var(--text3)] mb-4">এখনো কোনো শিল্পকর্ম নেই</p>
                     <button onClick={() => setActiveTab('upload')} className="px-6 py-3 bg-[var(--accent)] text-white rounded-xl font-bold text-sm">প্রথম শিল্পকর্ম আপলোড করুন</button>
                   </div>
@@ -781,29 +795,60 @@ export default function ArtistDashboard() {
               <motion.div key="od" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-4">
                 <h1 className="text-xl font-bold text-[var(--text)] mb-5">অর্ডারসমূহ ({orders.length})</h1>
                 {orders.length === 0 ? (
-                  <div className="bg-white p-16 rounded-2xl border border-[var(--border)] text-center"><ShoppingBag className="w-14 h-14 text-stone-200 mx-auto mb-3" /><p className="text-[var(--text3)]">কোনো অর্ডার নেই</p></div>
+                  <div className="bg-[var(--card)] p-16 rounded-2xl border border-[var(--border)] text-center"><ShoppingBag className="w-14 h-14 text-[var(--border)] mx-auto mb-3" /><p className="text-[var(--text3)]">কোনো অর্ডার নেই</p></div>
                 ) : orders.map(o => (
-                  <div key={o.id} className="rounded-2xl border border-[var(--border)] shadow-sm overflow-hidden">
-                    <div className="p-4 border-b border-[var(--border)] flex flex-wrap justify-between items-center gap-3">
+                  <div key={o.id} className="rounded-2xl border shadow-sm overflow-hidden transition-all hover:shadow-md" style={{ borderColor: 'var(--border)', background: 'var(--card)' }}>
+                    {/* Order header */}
+                    <div className="p-4 border-b flex flex-wrap justify-between items-center gap-3" style={{ borderColor: 'var(--border)', background: 'var(--bg)' }}>
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 bg-[var(--bg)] rounded-xl text-[10px] font-bold text-[var(--text2)] flex items-center justify-center">#{o.order_number?.slice(-4)}</div>
-                        <div><p className="font-bold text-[var(--text)] text-sm">{o.customer_name}</p><p className="text-[var(--text3)] text-xs">{o.created_at ? format(new Date(o.created_at), 'dd MMM yyyy') : ''}</p></div>
+                        {/* Artwork thumbnail */}
+                        {o.artwork?.image_url && (
+                          <img src={o.artwork.image_url} alt={o.artwork_title}
+                            className="w-12 h-12 rounded-xl object-cover object-center shrink-0"
+                            style={{ border: '1px solid var(--border)', background: 'var(--border)' }} />
+                        )}
+                        <div>
+                          <p className="font-bold text-sm" style={{ color: 'var(--text)' }}>{o.artwork_title}</p>
+                          <p className="text-xs" style={{ color: 'var(--text3)' }}>{o.customer_name} · {o.created_at ? format(new Date(o.created_at), 'dd MMM yyyy') : ''}</p>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <p className="font-bold text-[var(--text)]">৳{o.artwork_price}</p>
-                        <select value={o.status} onChange={e => updateOrderStatus(o.id, e.target.value)} className="bg-[var(--bg)] border border-[var(--border)] rounded-xl px-2 py-1.5 text-xs font-bold outline-none cursor-pointer">
-                          <option value="new">নতুন</option><option value="confirmed">নিশ্চিত</option><option value="delivered">ডেলিভারড</option><option value="cancelled">বাতিল</option>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <div className="text-right">
+                          <p className="font-bold" style={{ color: 'var(--accent)' }}>৳{o.artwork_price?.toLocaleString()}</p>
+                          <p className="text-[10px]" style={{ color: 'var(--text3)' }}>পণ্যমূল্য</p>
+                        </div>
+                        <select value={o.status} onChange={e => updateOrderStatus(o.id, e.target.value)}
+                          className="border rounded-xl px-2 py-1.5 text-xs font-bold outline-none cursor-pointer"
+                          style={{ background: 'var(--bg)', borderColor: 'var(--border)', color: 'var(--text)' }}>
+                          <option value="new">নতুন</option>
+                          <option value="confirmed">নিশ্চিত</option>
+                          <option value="delivered">ডেলিভারড</option>
+                          <option value="cancelled">বাতিল</option>
                         </select>
                       </div>
                     </div>
+                    {/* Order details */}
                     <div className="p-4 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
-                      <div><p className="text-xs font-bold text-[var(--text3)] mb-1">পণ্য</p><p className="font-medium text-stone-800">{o.artwork_title}</p></div>
                       <div>
-                        <p className="text-xs font-bold text-[var(--text3)] mb-1">ঠিকানা</p>
-                        <p className="text-stone-600 flex items-center gap-1 text-xs"><Phone className="w-3 h-3" />{o.customer_phone}</p>
-                        <p className="text-stone-600 flex items-center gap-1 text-xs mt-1"><MapPin className="w-3 h-3" />{o.customer_address}, {o.customer_district}</p>
+                        <p className="text-xs font-bold mb-1" style={{ color: 'var(--text3)' }}>ক্রেতার তথ্য</p>
+                        <p className="flex items-center gap-1 text-xs" style={{ color: 'var(--text2)' }}><Phone className="w-3 h-3" />{o.customer_phone}</p>
+                        <p className="flex items-center gap-1 text-xs mt-1" style={{ color: 'var(--text2)' }}><MapPin className="w-3 h-3" />{o.customer_district}</p>
                       </div>
-                      <div><p className="text-xs font-bold text-[var(--text3)] mb-1">নোট</p><p className="text-[var(--text2)] text-xs italic">{o.customer_note || 'কোনো নোট নেই'}</p></div>
+                      <div>
+                        <p className="text-xs font-bold mb-1" style={{ color: 'var(--text3)' }}>ঠিকানা</p>
+                        <p className="text-xs leading-relaxed" style={{ color: 'var(--text2)' }}>{o.customer_address}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold mb-1" style={{ color: 'var(--text3)' }}>নোট</p>
+                        <p className="text-xs italic" style={{ color: 'var(--text2)' }}>{o.customer_note || '—'}</p>
+                        <span className="inline-block mt-2 px-2 py-0.5 rounded-full text-[10px] font-bold"
+                          style={o.status === 'delivered' ? { background: 'rgba(22,163,74,0.1)', color: '#16a34a' }
+                            : o.status === 'cancelled' ? { background: 'rgba(239,68,68,0.1)', color: '#dc2626' }
+                            : o.status === 'confirmed' ? { background: 'rgba(59,130,246,0.1)', color: '#2563eb' }
+                            : { background: 'rgba(245,158,11,0.1)', color: '#b45309' }}>
+                          {o.status === 'new' ? '🆕 নতুন' : o.status === 'confirmed' ? '✅ নিশ্চিত' : o.status === 'delivered' ? '📦 ডেলিভারড' : '❌ বাতিল'}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -816,14 +861,14 @@ export default function ArtistDashboard() {
                 <h1 className="text-xl font-bold text-[var(--text)]">আয়ের বিবরণ</h1>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {[
-                    { label: 'মোট আয়', value: `৳${stats.earnings.toLocaleString()}`, sub: `${stats.delivered} টি ডেলিভারি থেকে`, color: 'text-[#c2a06e]', bg: 'bg-[var(--bg)]' },
-                    { label: 'গড় অর্ডার মূল্য', value: stats.delivered > 0 ? `৳${Math.round(stats.earnings / stats.delivered).toLocaleString()}` : '৳০', sub: 'প্রতি ডেলিভারিতে', color: 'text-blue-600', bg: 'bg-blue-50' },
-                    { label: 'মোট অর্ডার', value: stats.totalOrders, sub: `${stats.pending} টি চলমান`, color: 'text-purple-600', bg: 'bg-purple-50' },
+                    { label: 'মোট আয়', value: `৳${stats.earnings.toLocaleString()}`, sub: `${stats.delivered} টি ডেলিভারি থেকে`, color: 'var(--accent)', bg: 'var(--bg)' },
+                    { label: 'গড় অর্ডার মূল্য', value: stats.delivered > 0 ? `৳${Math.round(stats.earnings / stats.delivered).toLocaleString()}` : '৳০', sub: 'প্রতি ডেলিভারিতে', color: '#60a5fa', bg: 'var(--bg)' },
+                    { label: 'মোট অর্ডার', value: stats.totalOrders, sub: `${stats.pending} টি চলমান`, color: '#a78bfa', bg: 'var(--bg)' },
                   ].map((s, i) => (
-                    <div key={i} className={`${s.bg} rounded-2xl p-6 border border-[var(--border)]`}>
-                      <p className="text-[var(--text2)] text-sm font-medium">{s.label}</p>
-                      <p className={`text-3xl font-bold mt-2 ${s.color}`}>{s.value}</p>
-                      <p className="text-[var(--text3)] text-xs mt-1">{s.sub}</p>
+                    <div key={i} className="rounded-2xl p-6 border" style={{ background: s.bg, borderColor: 'var(--border)' }}>
+                      <p className="text-sm font-medium" style={{ color: 'var(--text2)' }}>{s.label}</p>
+                      <p className="text-3xl font-bold mt-2" style={{ color: s.color }}>{s.value}</p>
+                      <p className="text-xs mt-1" style={{ color: 'var(--text3)' }}>{s.sub}</p>
                     </div>
                   ))}
                 </div>
@@ -840,7 +885,7 @@ export default function ArtistDashboard() {
                       { label: 'বাতিল', count: orders.filter(o => o.status === 'cancelled').length, color: 'bg-red-400' },
                     ].map((item, i) => (
                       <div key={i} className="flex items-center gap-3">
-                        <span className="text-sm text-stone-600 w-28 shrink-0">{item.label}</span>
+                        <span className="text-sm text-[var(--text2)] w-28 shrink-0">{item.label}</span>
                         <div className="flex-1 bg-[var(--bg)] rounded-full h-3 overflow-hidden">
                           <div className={`h-full rounded-full ${item.color} transition-all`} style={{ width: `${stats.totalOrders > 0 ? (item.count / stats.totalOrders) * 100 : 0}%` }} />
                         </div>
@@ -928,9 +973,9 @@ export default function ArtistDashboard() {
                       </div>
                     </div>
                     <div className="space-y-3">
-                      <div><label className="block text-xs font-bold text-stone-600 mb-1">শিরোনাম *</label><input type="text" required placeholder="শিল্পকর্মের নাম" className="w-full px-3 py-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[#c2a06e] outline-none text-sm" value={newArt.title} onChange={e => setNewArt({ ...newArt, title: e.target.value })} /></div>
+                      <div><label className="block text-xs font-bold mb-1" style={{ color: 'var(--text2)' }}>শিরোনাম *</label><input type="text" required placeholder="শিল্পকর্মের নাম" className="w-full px-3 py-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[#c2a06e] outline-none text-sm" value={newArt.title} onChange={e => setNewArt({ ...newArt, title: e.target.value })} /></div>
                       <div className="grid grid-cols-2 gap-3">
-                        <div><label className="block text-xs font-bold text-stone-600 mb-1">ক্যাটাগরি *</label>
+                        <div><label className="block text-xs font-bold mb-1" style={{ color: 'var(--text2)' }}>ক্যাটাগরি *</label>
                           <select className="w-full px-3 py-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[#c2a06e] outline-none text-sm" value={newArt.category} onChange={e => setNewArt({ ...newArt, category: e.target.value })}>
                             <option value="Painting">পেইন্টিং</option>
                             <option value="Arabic Calligraphy">আরবি ক্যালিগ্রাফি</option>
@@ -940,20 +985,21 @@ export default function ArtistDashboard() {
                             <option value="Framing Art">ফটোগ্রাফি</option>
                             <option value="Watercolor">জলরঙ</option>
                             <option value="Sketch">স্কেচ</option>
+                            <option value="Typography Art">টাইপোগ্রাফি আর্ট</option>
                           </select>
                         </div>
-                        <div><label className="block text-xs font-bold text-stone-600 mb-1">মূল্য (৳) *</label><input type="number" required placeholder="0" className="w-full px-3 py-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[#c2a06e] outline-none text-sm" value={newArt.price} onChange={e => setNewArt({ ...newArt, price: e.target.value })} /></div>
-                        <div><label className="block text-xs font-bold text-stone-600 mb-1">ছাড় (%) <span className="font-normal text-[var(--text3)]">ঐচ্ছিক</span></label><input type="number" min="0" max="90" placeholder="০-৯০%" className="w-full px-3 py-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[#c2a06e] outline-none text-sm" value={newArt.discount_percent} onChange={e => setNewArt({ ...newArt, discount_percent: e.target.value })} /></div>
+                        <div><label className="block text-xs font-bold mb-1" style={{ color: 'var(--text2)' }}>মূল্য (৳) *</label><input type="number" required placeholder="0" className="w-full px-3 py-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[#c2a06e] outline-none text-sm" value={newArt.price} onChange={e => setNewArt({ ...newArt, price: e.target.value })} /></div>
+                        <div><label className="block text-xs font-bold mb-1" style={{ color: 'var(--text2)' }}>ছাড় (%) <span className="font-normal text-[var(--text3)]">ঐচ্ছিক</span></label><input type="number" min="0" max="90" placeholder="০-৯০%" className="w-full px-3 py-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[#c2a06e] outline-none text-sm" value={newArt.discount_percent} onChange={e => setNewArt({ ...newArt, discount_percent: e.target.value })} /></div>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
-                        <div><label className="block text-xs font-bold text-stone-600 mb-1">সাইজ</label><input type="text" placeholder="১২x১৮ ইঞ্চি" className="w-full px-3 py-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[#c2a06e] outline-none text-sm" value={newArt.size} onChange={e => setNewArt({ ...newArt, size: e.target.value })} /></div>
-                        <div><label className="block text-xs font-bold text-stone-600 mb-1">মাধ্যম</label><input type="text" placeholder="তেলরঙ, জলরঙ..." className="w-full px-3 py-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[#c2a06e] outline-none text-sm" value={newArt.medium} onChange={e => setNewArt({ ...newArt, medium: e.target.value })} /></div>
+                        <div><label className="block text-xs font-bold mb-1" style={{ color: 'var(--text2)' }}>সাইজ</label><input type="text" placeholder="১২x১৮ ইঞ্চি" className="w-full px-3 py-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[#c2a06e] outline-none text-sm" value={newArt.size} onChange={e => setNewArt({ ...newArt, size: e.target.value })} /></div>
+                        <div><label className="block text-xs font-bold mb-1" style={{ color: 'var(--text2)' }}>মাধ্যম</label><input type="text" placeholder="তেলরঙ, জলরঙ..." className="w-full px-3 py-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[#c2a06e] outline-none text-sm" value={newArt.medium} onChange={e => setNewArt({ ...newArt, medium: e.target.value })} /></div>
                       </div>
                       <div className="grid grid-cols-2 gap-3">
-                        <div><label className="block text-xs font-bold text-stone-600 mb-1">রঙ</label><input type="text" placeholder="লাল, নীল..." className="w-full px-3 py-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[#c2a06e] outline-none text-sm" value={newArt.colors} onChange={e => setNewArt({ ...newArt, colors: e.target.value })} /></div>
-                        <div><label className="block text-xs font-bold text-stone-600 mb-1">বছর</label><input type="text" placeholder="২০২৪" className="w-full px-3 py-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[#c2a06e] outline-none text-sm" value={newArt.year_created} onChange={e => setNewArt({ ...newArt, year_created: e.target.value })} /></div>
+                        <div><label className="block text-xs font-bold mb-1" style={{ color: 'var(--text2)' }}>রঙ</label><input type="text" placeholder="লাল, নীল..." className="w-full px-3 py-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[#c2a06e] outline-none text-sm" value={newArt.colors} onChange={e => setNewArt({ ...newArt, colors: e.target.value })} /></div>
+                        <div><label className="block text-xs font-bold mb-1" style={{ color: 'var(--text2)' }}>বছর</label><input type="text" placeholder="২০২৪" className="w-full px-3 py-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[#c2a06e] outline-none text-sm" value={newArt.year_created} onChange={e => setNewArt({ ...newArt, year_created: e.target.value })} /></div>
                       </div>
-                      <div><label className="block text-xs font-bold text-stone-600 mb-1">বিবরণ</label><textarea rows={3} placeholder="শিল্পকর্মের গল্প বলুন..." className="w-full px-3 py-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[#c2a06e] outline-none text-sm resize-none" value={newArt.description} onChange={e => setNewArt({ ...newArt, description: e.target.value })} /></div>
+                      <div><label className="block text-xs font-bold mb-1" style={{ color: 'var(--text2)' }}>বিবরণ</label><textarea rows={3} placeholder="শিল্পকর্মের গল্প বলুন..." className="w-full px-3 py-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[#c2a06e] outline-none text-sm resize-none" value={newArt.description} onChange={e => setNewArt({ ...newArt, description: e.target.value })} /></div>
                     </div>
                   </div>
                   <div className="p-4 border-t flex justify-end gap-3" style={{ background: 'var(--bg)', borderColor: 'var(--border)' }}>
@@ -989,8 +1035,8 @@ export default function ArtistDashboard() {
                   {unreadCount > 0 && <button onClick={markAllRead} className="text-sm text-[#c2a06e] font-bold hover:text-[var(--accent-dk)]">সব পড়া হয়েছে চিহ্নিত করুন</button>}
                 </div>
                 {notifications.length === 0 ? (
-                  <div className="bg-white p-16 rounded-2xl border border-[var(--border)] text-center">
-                    <Bell className="w-14 h-14 text-stone-200 mx-auto mb-3" />
+                  <div className="bg-[var(--card)] p-16 rounded-2xl border border-[var(--border)] text-center">
+                    <Bell className="w-14 h-14 text-[var(--border)] mx-auto mb-3" />
                     <p className="text-[var(--text3)]">কোনো বিজ্ঞপ্তি নেই</p>
                   </div>
                 ) : notifications.map(n => (
@@ -1003,7 +1049,7 @@ export default function ArtistDashboard() {
                       <div className="flex-1">
                         <p className="font-bold text-[var(--text)] text-sm">{n.title}</p>
                         <p className="text-[var(--text2)] text-xs mt-0.5">{n.message}</p>
-                        <p className="text-stone-300 text-xs mt-1">{format(new Date(n.created_at), 'dd MMM yyyy, hh:mm a')}</p>
+                        <p className="text-xs mt-1" style={{ color: 'var(--text3)' }}>{format(new Date(n.created_at), 'dd MMM yyyy, hh:mm a')}</p>
                       </div>
                       {!n.is_read && <div className="w-2 h-2 bg-[var(--accent)] rounded-full mt-2 shrink-0" />}
                     </div>
@@ -1012,11 +1058,11 @@ export default function ArtistDashboard() {
               </motion.div>
             )}
 
-            {/* NID VERIFY */}
+            {/* VERIFY — NID or Birth Certificate */}
             {activeTab === 'verify' && (
               <motion.div key="nid" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="max-w-2xl mx-auto">
-                <h1 className="text-xl font-bold text-[var(--text)] mb-2">NID যাচাইকরণ</h1>
-                <p className="text-[var(--text3)] text-sm mb-5">জাতীয় পরিচয়পত্র দিয়ে অ্যাকাউন্ট যাচাই করুন</p>
+                <h1 className="text-xl font-bold text-[var(--text)] mb-2">পরিচয় যাচাইকরণ</h1>
+                <p className="text-[var(--text3)] text-sm mb-5">জাতীয় পরিচয়পত্র বা জন্ম নিবন্ধন দিয়ে অ্যাকাউন্ট যাচাই করুন</p>
                 {isVerified ? (
                   <div className="bg-[var(--bg)] border border-[var(--border)] rounded-2xl p-8 text-center">
                     <div className="w-14 h-14 bg-[var(--accent)] rounded-full flex items-center justify-center mx-auto mb-3"><ShieldCheck className="w-7 h-7 text-white" /></div>
@@ -1024,42 +1070,102 @@ export default function ArtistDashboard() {
                     <p className="text-[var(--accent-dk)] text-sm mt-1">আপনার প্রোফাইলে যাচাইকৃত ব্যাজ আছে।</p>
                   </div>
                 ) : pendingNid ? (
-                  <div className="bg-blue-50 border border-blue-200 rounded-2xl p-8 text-center">
-                    <div className="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3"><Clock className="w-7 h-7 text-blue-600" /></div>
-                    <h3 className="text-lg font-bold text-blue-800">পর্যালোচনায় আছে</h3>
-                    <p className="text-blue-600 text-sm mt-1">অ্যাডমিন শীঘ্রই যাচাই করবেন (১-২ কার্যদিবস)</p>
+                  <div className="border border-blue-400/30 rounded-2xl p-8 text-center" style={{ background: 'var(--card)' }}>
+                    <div className="w-14 h-14 bg-[var(--bg2)] rounded-full flex items-center justify-center mx-auto mb-3"><Clock className="w-7 h-7 text-blue-400" /></div>
+                    <h3 className="text-lg font-bold" style={{ color: 'var(--text)' }}>পর্যালোচনায় আছে</h3>
+                    <p className="text-blue-500 text-sm mt-1">অ্যাডমিন শীঘ্রই যাচাই করবেন (১-২ কার্যদিবস)</p>
                   </div>
                 ) : (
-                  <div className="rounded-2xl border border-[var(--border)] shadow-sm overflow-hidden">
-                    <div className="p-4 bg-amber-50 border-b border-amber-100 flex items-start gap-2">
-                      <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
-                      <p className="text-amber-700 text-xs font-medium">যাচাইকৃত শিল্পীরা ক্রেতাদের বেশি আস্থা পান এবং বেশি বিক্রয় করতে পারেন।</p>
+                  <div className="rounded-2xl border shadow-sm overflow-hidden" style={{ borderColor: 'var(--border)' }}>
+                    <div className="p-4 border-b flex items-start gap-2" style={{ background: 'rgba(245,158,11,0.06)', borderColor: 'rgba(245,158,11,0.2)' }}>
+                      <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
+                      <p className="text-xs font-medium" style={{ color: 'var(--text2)' }}>যাচাইকৃত শিল্পীরা ক্রেতাদের বেশি আস্থা পান এবং বেশি বিক্রয় করতে পারেন।</p>
                     </div>
-                    <div className="p-5 space-y-4">
+                    <div className="p-5 space-y-4" style={{ background: 'var(--card)' }}>
+
+                      {/* ── Document type selector ── */}
                       <div>
-                        <p className="text-sm font-bold text-stone-700 mb-2">NID কার্ডের সামনের ছবি *</p>
-                        <div className={`aspect-video border-2 border-dashed rounded-2xl flex flex-col items-center justify-center gap-2 relative overflow-hidden cursor-pointer transition-all ${nidPreview ? 'border-[var(--accent)]' : 'border-[var(--border)] hover:border-[var(--accent)] bg-[var(--bg)]'}`}>
+                        <p className="text-sm font-bold mb-3" style={{ color: 'var(--text)' }}>পরিচয় দলিলের ধরন বেছে নিন *</p>
+                        <div className="grid grid-cols-2 gap-3">
+                          <button type="button" onClick={() => { setDocType('nid'); setNidFile(null); setNidPreview(null); setNidData({ nid_number: '', nid_name: '' }); }}
+                            className="flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all"
+                            style={docType === 'nid'
+                              ? { borderColor: 'var(--accent)', background: 'rgba(194,160,110,0.1)' }
+                              : { borderColor: 'var(--border)', background: 'var(--bg)' }}>
+                            <CreditCard className="w-7 h-7" style={{ color: docType === 'nid' ? 'var(--accent)' : 'var(--text3)' }} />
+                            <span className="text-sm font-bold" style={{ color: docType === 'nid' ? 'var(--accent-dk)' : 'var(--text2)' }}>জাতীয় পরিচয়পত্র</span>
+                            <span className="text-[10px]" style={{ color: 'var(--text3)' }}>NID Card</span>
+                          </button>
+                          <button type="button" onClick={() => { setDocType('birth'); setNidFile(null); setNidPreview(null); setNidData({ nid_number: '', nid_name: '' }); }}
+                            className="flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all"
+                            style={docType === 'birth'
+                              ? { borderColor: 'var(--accent)', background: 'rgba(194,160,110,0.1)' }
+                              : { borderColor: 'var(--border)', background: 'var(--bg)' }}>
+                            <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: docType === 'birth' ? 'var(--accent)' : 'var(--text3)' }}>
+                              <path d="M9 12h6M9 16h6M9 8h6M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/>
+                            </svg>
+                            <span className="text-sm font-bold" style={{ color: docType === 'birth' ? 'var(--accent-dk)' : 'var(--text2)' }}>জন্ম নিবন্ধন</span>
+                            <span className="text-[10px]" style={{ color: 'var(--text3)' }}>Birth Certificate</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* ── Document image upload ── */}
+                      <div>
+                        <p className="text-sm font-bold mb-2" style={{ color: 'var(--text)' }}>
+                          {docType === 'nid' ? 'NID কার্ডের সামনের ছবি *' : 'জন্ম নিবন্ধন সনদের ছবি *'}
+                        </p>
+                        <div className={`aspect-video border-2 border-dashed rounded-2xl flex flex-col items-center justify-center gap-2 relative overflow-hidden cursor-pointer transition-all ${nidPreview ? 'border-[var(--accent)]' : 'hover:border-[var(--accent)]'}`}
+                          style={{ borderColor: nidPreview ? 'var(--accent)' : 'var(--border)', background: 'var(--bg)' }}>
                           {nidPreview ? (
                             <><img src={nidPreview} alt="" className="w-full h-full object-cover" />
                               <button type="button" onClick={() => { setNidFile(null); setNidPreview(null); }} className="absolute top-2 right-2 bg-white/90 p-1.5 rounded-full shadow-md text-red-500 z-10"><X className="w-3.5 h-3.5" /></button></>
                           ) : (
-                            <><CreditCard className="w-10 h-10 text-stone-300" />
-                              <div className="text-center"><p className="font-bold text-stone-600 text-sm">NID কার্ডের ছবি আপলোড করুন</p><p className="text-xs text-[var(--text3)]">সামনের অংশ স্পষ্ট হতে হবে</p></div></>
+                            <>{docType === 'nid'
+                                ? <CreditCard className="w-10 h-10" style={{ color: 'var(--border)' }} />
+                                : <svg className="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: 'var(--border)' }}><path d="M9 12h6M9 16h6M9 8h6M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/></svg>}
+                              <div className="text-center">
+                                <p className="font-bold text-sm" style={{ color: 'var(--text2)' }}>
+                                  {docType === 'nid' ? 'NID কার্ডের ছবি আপলোড করুন' : 'জন্ম নিবন্ধনের ছবি আপলোড করুন'}
+                                </p>
+                                <p className="text-xs mt-1" style={{ color: 'var(--text3)' }}>স্পষ্ট ও পাঠযোগ্য হতে হবে · JPG/PNG</p>
+                              </div></>
                           )}
                           <input type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) { setNidFile(f); setNidPreview(URL.createObjectURL(f)); } }} className="absolute inset-0 opacity-0 cursor-pointer" />
                         </div>
                       </div>
+
+                      {/* ── Number & Name ── */}
                       <div className="grid grid-cols-2 gap-4">
-                        <div><label className="block text-sm font-bold text-stone-700 mb-1.5">NID নম্বর *</label><input type="text" placeholder="১৯ ডিজিটের NID" className="w-full px-3 py-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[#c2a06e] outline-none text-sm" value={nidData.nid_number} onChange={e => setNidData({ ...nidData, nid_number: e.target.value })} /></div>
-                        <div><label className="block text-sm font-bold text-stone-700 mb-1.5">NID তে নাম</label><input type="text" placeholder="NID কার্ডের নাম" className="w-full px-3 py-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[#c2a06e] outline-none text-sm" value={nidData.nid_name} onChange={e => setNidData({ ...nidData, nid_name: e.target.value })} /></div>
+                        <div>
+                          <label className="block text-sm font-bold mb-1.5" style={{ color: 'var(--text)' }}>
+                            {docType === 'nid' ? 'NID নম্বর *' : 'জন্ম নিবন্ধন নম্বর *'}
+                          </label>
+                          <input type="text"
+                            placeholder={docType === 'nid' ? '১০ বা ১৭ ডিজিটের NID' : '১৭ ডিজিটের নম্বর'}
+                            className="w-full px-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-[#c2a06e] outline-none text-sm"
+                            style={{ background: 'var(--bg)', borderColor: 'var(--border)', color: 'var(--text)' }}
+                            value={nidData.nid_number} onChange={e => setNidData({ ...nidData, nid_number: e.target.value })} />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold mb-1.5" style={{ color: 'var(--text)' }}>
+                            {docType === 'nid' ? 'NID তে নাম' : 'জন্ম নিবন্ধনে নাম'}
+                          </label>
+                          <input type="text"
+                            placeholder={docType === 'nid' ? 'NID কার্ডের নাম' : 'সনদে যে নাম আছে'}
+                            className="w-full px-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-[#c2a06e] outline-none text-sm"
+                            style={{ background: 'var(--bg)', borderColor: 'var(--border)', color: 'var(--text)' }}
+                            value={nidData.nid_name} onChange={e => setNidData({ ...nidData, nid_name: e.target.value })} />
+                        </div>
                       </div>
-                      <div className="flex items-start gap-2 p-3 bg-[var(--bg)] rounded-xl">
-                        <AlertCircle className="w-3.5 h-3.5 text-[var(--text3)] mt-0.5 shrink-0" />
-                        <p className="text-xs text-[var(--text2)]">আপনার NID তথ্য শুধুমাত্র যাচাইয়ের জন্য ব্যবহার হবে এবং নিরাপদে সংরক্ষিত থাকবে।</p>
+
+                      <div className="flex items-start gap-2 p-3 rounded-xl" style={{ background: 'var(--bg)' }}>
+                        <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" style={{ color: 'var(--text3)' }} />
+                        <p className="text-xs" style={{ color: 'var(--text2)' }}>আপনার তথ্য শুধুমাত্র যাচাইয়ের জন্য ব্যবহার হবে এবং নিরাপদে সংরক্ষিত থাকবে।</p>
                       </div>
                     </div>
-                    <div className="p-4 bg-[var(--bg)] border-t border-[var(--border)] flex justify-end">
-                      <button onClick={handleNidSubmit} disabled={submittingNid || !nidFile || !nidData.nid_number} className="px-7 py-2.5 bg-[var(--accent)] text-white rounded-xl font-bold hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-2 text-sm">
+                    <div className="p-4 border-t flex justify-end" style={{ background: 'var(--bg)', borderColor: 'var(--border)' }}>
+                      <button onClick={handleNidSubmit} disabled={submittingNid || !nidFile || !nidData.nid_number} className="px-7 py-2.5 rounded-xl font-bold hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-2 text-sm" style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dk))', color: 'var(--dark)' }}>
                         {submittingNid ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />জমা হচ্ছে...</> : <><ShieldCheck className="w-4 h-4" />যাচাইয়ের আবেদন করুন</>}
                       </button>
                     </div>
@@ -1075,19 +1181,37 @@ export default function ArtistDashboard() {
                 <div className="rounded-2xl border border-[var(--border)] shadow-sm overflow-hidden">
                   <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <p className="text-sm font-bold text-stone-700 mb-2">প্রোফাইল ছবি</p>
-                      <div className="w-36 h-36 rounded-3xl mx-auto relative overflow-hidden border-2 border-dashed border-[var(--border)] cursor-pointer hover:border-[var(--accent)] transition-all">
-                        <img src={profilePreview || artist?.profile_image_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${artist?.full_name}`} alt="" className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center"><Upload className="w-7 h-7 text-white" /></div>
-                        <input type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) { setProfileFile(f); setProfilePreview(URL.createObjectURL(f)); } }} className="absolute inset-0 opacity-0 cursor-pointer" />
+                      <p className="text-sm font-bold mb-2" style={{ color: 'var(--text)' }}>প্রোফাইল ছবি</p>
+                      {/* Square crop container — always 1:1 ratio */}
+                      <div className="w-40 h-40 rounded-3xl mx-auto relative overflow-hidden border-2 border-dashed cursor-pointer transition-all group"
+                        style={{ borderColor: profilePreview ? 'var(--accent)' : 'var(--border)' }}>
+                        <img
+                          src={profilePreview || artist?.profile_image_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${artist?.full_name}`}
+                          alt="প্রোফাইল ছবি"
+                          className="w-full h-full object-cover object-center"
+                          style={{ aspectRatio: '1 / 1' }}
+                        />
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                          style={{ background: 'rgba(0,0,0,0.55)' }}>
+                          <Upload className="w-7 h-7 text-white" />
+                          <span className="text-white text-[10px] font-bold">পরিবর্তন করুন</span>
+                        </div>
+                        <input type="file" accept="image/*"
+                          onChange={e => { const f = e.target.files?.[0]; if (f) { setProfileFile(f); setProfilePreview(URL.createObjectURL(f)); } }}
+                          className="absolute inset-0 opacity-0 cursor-pointer" />
                       </div>
-                      <p className="text-center text-xs text-[var(--text3)] mt-2">ক্লিক করে পরিবর্তন করুন</p>
+                      <div className="text-center mt-2 space-y-0.5">
+                        <p className="text-xs font-medium" style={{ color: 'var(--text3)' }}>ক্লিক করে পরিবর্তন করুন</p>
+                        <p className="text-[10px] px-2 py-1 rounded-lg inline-block" style={{ background: 'rgba(194,160,110,0.1)', color: 'var(--accent-dk)' }}>
+                          ✦ সেরা সাইজ: <strong>500×500 px</strong> বা বর্গাকার (1:1)
+                        </p>
+                      </div>
                     </div>
                     <div className="space-y-3">
-                      <div><label className="block text-xs font-bold text-stone-600 mb-1">পূর্ণ নাম *</label><input type="text" className="w-full px-3 py-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[#c2a06e] outline-none text-sm" value={profileData.full_name} onChange={e => setProfileData({ ...profileData, full_name: e.target.value })} /></div>
-                      <div><label className="block text-xs font-bold text-stone-600 mb-1">ফোন</label><input type="tel" className="w-full px-3 py-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[#c2a06e] outline-none text-sm" value={profileData.phone} onChange={e => setProfileData({ ...profileData, phone: e.target.value })} /></div>
-                      <div><label className="block text-xs font-bold text-stone-600 mb-1">WhatsApp</label><input type="tel" placeholder="WhatsApp নম্বর" className="w-full px-3 py-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[#c2a06e] outline-none text-sm" value={profileData.whatsapp} onChange={e => setProfileData({ ...profileData, whatsapp: e.target.value })} /></div>
-                      <div><label className="block text-xs font-bold text-stone-600 mb-1">জেলা *</label>
+                      <div><label className="block text-xs font-bold mb-1" style={{ color: 'var(--text2)' }}>পূর্ণ নাম *</label><input type="text" className="w-full px-3 py-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[#c2a06e] outline-none text-sm" value={profileData.full_name} onChange={e => setProfileData({ ...profileData, full_name: e.target.value })} /></div>
+                      <div><label className="block text-xs font-bold mb-1" style={{ color: 'var(--text2)' }}>ফোন</label><input type="tel" className="w-full px-3 py-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[#c2a06e] outline-none text-sm" value={profileData.phone} onChange={e => setProfileData({ ...profileData, phone: e.target.value })} /></div>
+                      <div><label className="block text-xs font-bold mb-1" style={{ color: 'var(--text2)' }}>WhatsApp</label><input type="tel" placeholder="WhatsApp নম্বর" className="w-full px-3 py-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[#c2a06e] outline-none text-sm" value={profileData.whatsapp} onChange={e => setProfileData({ ...profileData, whatsapp: e.target.value })} /></div>
+                      <div><label className="block text-xs font-bold mb-1" style={{ color: 'var(--text2)' }}>জেলা *</label>
                         <select className="w-full px-3 py-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[#c2a06e] outline-none text-sm" value={profileData.district} onChange={e => setProfileData({ ...profileData, district: e.target.value })}>
                           <option value="">জেলা নির্বাচন করুন</option>
                           {DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}
@@ -1096,13 +1220,13 @@ export default function ArtistDashboard() {
                     </div>
                   </div>
                   <div className="px-6 pb-2">
-                    <div><label className="block text-xs font-bold text-stone-600 mb-1">বায়ো</label><textarea rows={3} className="w-full px-3 py-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[#c2a06e] outline-none text-sm resize-none" value={profileData.bio} onChange={e => setProfileData({ ...profileData, bio: e.target.value })} placeholder="নিজের সম্পর্কে লিখুন..." /></div>
+                    <div><label className="block text-xs font-bold mb-1" style={{ color: 'var(--text2)' }}>বায়ো</label><textarea rows={3} className="w-full px-3 py-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[#c2a06e] outline-none text-sm resize-none" value={profileData.bio} onChange={e => setProfileData({ ...profileData, bio: e.target.value })} placeholder="নিজের সম্পর্কে লিখুন..." /></div>
                   </div>
                   <div className="px-6 pb-5">
-                    <p className="text-sm font-bold text-stone-700 mb-3">সোশ্যাল মিডিয়া লিংক</p>
+                    <p className="text-sm font-bold mb-3" style={{ color: 'var(--text)' }}>সোশ্যাল মিডিয়া লিংক</p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div><label className="block text-xs font-bold text-stone-600 mb-1">Facebook</label><input type="url" placeholder="https://facebook.com/..." className="w-full px-3 py-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[#c2a06e] outline-none text-sm" value={profileData.facebook_url} onChange={e => setProfileData({ ...profileData, facebook_url: e.target.value })} /></div>
-                      <div><label className="block text-xs font-bold text-stone-600 mb-1">Instagram</label><input type="url" placeholder="https://instagram.com/..." className="w-full px-3 py-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[#c2a06e] outline-none text-sm" value={profileData.instagram_url} onChange={e => setProfileData({ ...profileData, instagram_url: e.target.value })} /></div>
+                      <div><label className="block text-xs font-bold mb-1" style={{ color: 'var(--text2)' }}>Facebook</label><input type="url" placeholder="https://facebook.com/..." className="w-full px-3 py-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[#c2a06e] outline-none text-sm" value={profileData.facebook_url} onChange={e => setProfileData({ ...profileData, facebook_url: e.target.value })} /></div>
+                      <div><label className="block text-xs font-bold mb-1" style={{ color: 'var(--text2)' }}>Instagram</label><input type="url" placeholder="https://instagram.com/..." className="w-full px-3 py-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-xl focus:ring-2 focus:ring-[#c2a06e] outline-none text-sm" value={profileData.instagram_url} onChange={e => setProfileData({ ...profileData, instagram_url: e.target.value })} /></div>
                     </div>
                   </div>
                   <div className="p-4 border-t flex justify-end" style={{ background: 'var(--bg)', borderColor: 'var(--border)' }}>

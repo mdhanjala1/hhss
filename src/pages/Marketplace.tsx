@@ -15,10 +15,13 @@ const CATEGORIES = [
   { key: 'All', label: 'সবগুলো' },
   { key: 'Arabic Calligraphy', label: 'আরবি ক্যালিগ্রাফি' },
   { key: 'Painting', label: 'পেইন্টিং' },
-  { key: 'Handicraft', label: 'বিশেষ শিল্পকর্ম' },
+  { key: 'Handicraft', label: 'হস্তশিল্প' },
   { key: 'Home Decor', label: 'হোম ডেকর' },
   { key: 'Digital Art', label: 'ডিজিটাল আর্ট' },
-  { key: 'Framing Art', label: 'ফ্রেমিং আর্ট' },
+  { key: 'Framing Art', label: 'ফটোগ্রাফি' },
+  { key: 'Watercolor', label: 'জলরঙ' },
+  { key: 'Sketch', label: 'স্কেচ' },
+  { key: 'Typography Art', label: 'টাইপোগ্রাফি আর্ট' },
 ];
 
 const SORT_OPTIONS = [

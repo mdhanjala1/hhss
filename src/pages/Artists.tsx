@@ -204,7 +204,7 @@ export default function Artists() {
                         <img
                           src={a.profile_image_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${a.full_name}`}
                           alt={a.full_name}
-                          className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-md"
+                          className="w-20 h-20 rounded-full object-cover object-center border-4 border-white shadow-md"
                         />
                         {/* Online indicator */}
                         <div className="absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-white"

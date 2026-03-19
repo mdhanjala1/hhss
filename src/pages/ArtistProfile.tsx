@@ -91,7 +91,7 @@ export default function ArtistProfile() {
               <div className="relative w-36 h-36 lg:w-48 lg:h-48 rounded-3xl overflow-hidden"
                 style={{ border: '3px solid rgba(194,160,110,0.5)', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}>
                 <img src={artist.profile_image_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${artist.full_name}`}
-                  alt={artist.full_name} className="w-full h-full object-cover" />
+                  alt={artist.full_name} className="w-full h-full object-cover object-center" />
               </div>
               {/* Verified badge */}
               {artist.is_verified && (
