@@ -454,7 +454,7 @@ export default function ArtworkDetail() {
             <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9 }}
               className="relative w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
               style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
-              <div className="p-7">
+              <div className="p-4 sm:p-7">
                 <div className="flex justify-between items-center mb-6">
                   <h3 className="text-2xl font-bold" style={{ color: 'var(--text)' }}>সরাসরি অর্ডার</h3>
                   <button onClick={() => setShowOrderForm(false)}

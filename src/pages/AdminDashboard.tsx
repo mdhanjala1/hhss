@@ -68,9 +68,11 @@ export default function AdminDashboard() {
       setArtists(allArtists || []); setOrders(allOrders || []); setPendingNid(nidArtists || []);
       const { data: msgs } = await supabase.from('contact_messages').select('*').order('created_at', { ascending: false });
       setContactMessages(msgs || []);
-      // Moderators
-      const { data: mods } = await supabase.from('moderators').select('*').order('created_at', { ascending: false });
-      setModerators(mods || []);
+      // Moderators (table might not exist yet - safe fallback)
+      try {
+        const { data: mods } = await supabase.from('moderators').select('*').order('created_at', { ascending: false });
+        setModerators(mods || []);
+      } catch { setModerators([]); }
       setStats({ artists: (allArtists || []).length, artworks: arts.length, pendingArtworks: pending.length, pendingNid: (nidArtists || []).length, totalRevenue: revenue, orders: (allOrders || []).length });
     } catch (e: any) { toast.error('ডেটা লোড হয়নি: ' + e.message); }
     finally { setLoading(false); }
@@ -124,60 +126,94 @@ export default function AdminDashboard() {
   ] as const;
 
   return (
-    <div className="min-h-screen flex" style={{ background: 'var(--bg)' }}>
+    <div className="min-h-screen" style={{ background: 'var(--bg)' }}>
 
-      {/* Sidebar */}
-      <aside className="w-64 text-white shrink-0 flex flex-col" style={{ background: 'var(--dark)' }}>
-        <div className="p-5 border-b" style={{ borderColor: 'rgba(194,160,110,0.18)' }}>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+      {/* ── Mobile top nav ── */}
+      <div className="lg:hidden sticky top-16 z-30 border-b" style={{ background: 'var(--dark)', borderColor: 'rgba(194,160,110,0.18)' }}>
+        <div className="px-4 py-2.5 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
               style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dk))' }}>
-              <ShieldCheck className="w-5 h-5" style={{ color: 'var(--dark)' }} />
+              <ShieldCheck className="w-4 h-4" style={{ color: 'var(--dark)' }} />
             </div>
-            <div>
-              <p className="font-bold text-sm" style={{ color: 'var(--bg)' }}>Admin Panel</p>
-              <p className="text-xs" style={{ color: 'var(--text3)' }}>শিল্পশপ</p>
-            </div>
+            <p className="font-bold text-xs text-white">Admin Panel</p>
           </div>
-        </div>
-        <nav className="p-3 flex-1 space-y-1">
-          {TABS.map(tab => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id as any)}
-              className="w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all text-sm font-semibold"
-              style={{
-                background: activeTab === tab.id ? 'linear-gradient(135deg, var(--accent), var(--accent-dk))' : 'transparent',
-                color: activeTab === tab.id ? 'var(--dark)' : 'var(--text3)',
-              }}>
-              <span className="flex items-center gap-3">{tab.icon}{tab.label}</span>
-              {tab.badge && tab.badge > 0 ? <span className="w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">{tab.badge}</span> : null}
-            </button>
-          ))}
-        </nav>
-        <div className="p-4 border-t" style={{ borderColor: 'rgba(194,160,110,0.18)' }}>
-          <button onClick={fetchAdminData}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all"
-            style={{ background: 'rgba(194,160,110,0.1)', color: 'var(--accent)' }}>
-            <RefreshCw className="w-4 h-4" /> রিফ্রেশ করুন
+          <button onClick={fetchAdminData} className="p-2 rounded-xl" style={{ background: 'rgba(194,160,110,0.1)', color: 'var(--accent)' }}>
+            <RefreshCw className="w-4 h-4" />
           </button>
         </div>
-      </aside>
+        <div className="overflow-x-auto pb-1 px-3">
+          <div className="flex gap-1 min-w-max pb-2">
+            {TABS.map(tab => (
+              <button key={tab.id} onClick={() => setActiveTab(tab.id as any)}
+                className="relative flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all"
+                style={{
+                  background: activeTab === tab.id ? 'linear-gradient(135deg,var(--accent),var(--accent-dk))' : 'rgba(255,255,255,0.06)',
+                  color: activeTab === tab.id ? 'var(--dark)' : 'rgba(255,255,255,0.7)',
+                }}>
+                {tab.icon}{tab.label}
+                {tab.badge && tab.badge > 0 ? (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">{tab.badge}</span>
+                ) : null}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
 
-      {/* Main */}
-      <main className="flex-1 overflow-auto">
-        <div className="px-8 py-5 flex items-center justify-between border-b"
-          style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--text)' }}>
+      <div className="flex">
+        {/* ── Desktop Sidebar ── */}
+        <aside className="hidden lg:flex w-64 text-white shrink-0 flex-col fixed top-16 bottom-0 overflow-y-auto z-20" style={{ background: 'var(--dark)' }}>
+          <div className="p-5 border-b" style={{ borderColor: 'rgba(194,160,110,0.18)' }}>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dk))' }}>
+                <ShieldCheck className="w-5 h-5" style={{ color: 'var(--dark)' }} />
+              </div>
+              <div>
+                <p className="font-bold text-sm" style={{ color: 'var(--bg)' }}>Admin Panel</p>
+                <p className="text-xs" style={{ color: 'var(--text3)' }}>শিল্পশপ</p>
+              </div>
+            </div>
+          </div>
+          <nav className="p-3 flex-1 space-y-1">
+            {TABS.map(tab => (
+              <button key={tab.id} onClick={() => setActiveTab(tab.id as any)}
+                className="w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all text-sm font-semibold"
+                style={{
+                  background: activeTab === tab.id ? 'linear-gradient(135deg, var(--accent), var(--accent-dk))' : 'transparent',
+                  color: activeTab === tab.id ? 'var(--dark)' : 'var(--text3)',
+                }}>
+                <span className="flex items-center gap-3">{tab.icon}{tab.label}</span>
+                {tab.badge && tab.badge > 0 ? <span className="w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">{tab.badge}</span> : null}
+              </button>
+            ))}
+          </nav>
+          <div className="p-4 border-t" style={{ borderColor: 'rgba(194,160,110,0.18)' }}>
+            <button onClick={fetchAdminData}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all"
+              style={{ background: 'rgba(194,160,110,0.1)', color: 'var(--accent)' }}>
+              <RefreshCw className="w-4 h-4" /> রিফ্রেশ করুন
+            </button>
+          </div>
+        </aside>
+
+        {/* ── Main content ── */}
+        <main className="flex-1 lg:ml-64 overflow-auto min-w-0">
+          <div className="hidden lg:flex px-6 py-4 items-center justify-between border-b"
+            style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
+            <h1 className="text-xl font-bold" style={{ color: 'var(--text)' }}>
             {activeTab === 'stats' && 'ড্যাশবোর্ড'}
             {activeTab === 'artworks' && `শিল্পকর্ম ব্যবস্থাপনা${stats.pendingArtworks > 0 ? ` (${stats.pendingArtworks}টি অপেক্ষমাণ)` : ''}`}
             {activeTab === 'artists' && 'শিল্পী ব্যবস্থাপনা'}
             {activeTab === 'orders' && 'অর্ডার ব্যবস্থাপনা'}
             {activeTab === 'nid' && `NID যাচাই${stats.pendingNid > 0 ? ` (${stats.pendingNid}টি অপেক্ষমাণ)` : ''}`}
             {activeTab === 'messages' && `বার্তাসমূহ (${contactMessages.length})`}
-            {activeTab === 'moderators' && `মডারেটর ব্যবস্থাপনা`}
-          </h1>
-        </div>
+              {activeTab === 'moderators' && `মডারেটর ব্যবস্থাপনা`}
+            </h1>
+          </div>
 
-        <div className="p-8">
+        <div className="p-4 sm:p-6 lg:p-8">
 
           {/* STATS */}
           {activeTab === 'stats' && (
@@ -251,9 +287,9 @@ export default function AdminDashboard() {
                   {filteredArtworks.map(art => (
                     <div key={art.id} className="rounded-2xl border overflow-hidden transition-all hover:shadow-md"
                       style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
-                      <div className="flex gap-0 items-stretch">
+                      <div className="flex gap-0 items-stretch min-w-0">
                         {/* Clickable image */}
-                        <div className="relative shrink-0 cursor-zoom-in group w-36 sm:w-44"
+                        <div className="relative shrink-0 cursor-zoom-in group w-28 sm:w-36 md:w-44"
                           onClick={() => setLightboxImg(art.image_url)}>
                           <img src={art.image_url} alt={art.title}
                             className="w-full h-full object-cover"
@@ -416,7 +452,7 @@ export default function AdminDashboard() {
                 <div className="grid gap-4">
                   {pendingNid.map(artist => (
                     <div key={artist.id} className="rounded-2xl border p-6" style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
-                      <div className="flex items-start gap-5 flex-wrap">
+                      <div className="flex flex-col sm:flex-row items-start gap-4 flex-wrap">
                         <img src={artist.profile_image_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${artist.full_name}`}
                           alt={artist.full_name} className="w-16 h-16 rounded-xl object-cover shrink-0" style={{ background: 'var(--bg)' }} />
                         <div className="flex-1 min-w-0">
@@ -631,7 +667,8 @@ export default function AdminDashboard() {
           )}
 
         </div>
-      </main>
+        </main>
+      </div>{/* end flex */}
       {/* ── LIGHTBOX ── */}
       <AnimatePresence>
         {lightboxImg && (

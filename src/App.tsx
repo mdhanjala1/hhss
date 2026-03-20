@@ -107,7 +107,8 @@ function Navbar() {
     if (!email || email.trim().toLowerCase() === adminEmail) { setIsModerator(false); return; }
     // DB থেকে check
     supabase.from('moderators').select('email').eq('email', email.trim().toLowerCase()).eq('is_active', true).maybeSingle()
-      .then(({ data }) => setIsModerator(!!data));
+      .then(({ data }) => setIsModerator(!!data))
+      .catch(() => setIsModerator(false));
   }, [session]);
 
   const logout = async () => { await supabase.auth.signOut(); navigate('/'); setIsOpen(false); };

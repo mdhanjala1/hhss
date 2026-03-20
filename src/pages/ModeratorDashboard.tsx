@@ -18,13 +18,15 @@ export async function isModeratorEmail(email: string): Promise<boolean> {
   const e = email.trim().toLowerCase();
   if (e === _ADMIN_EMAIL) return false; // admin is not moderator
   // DB থেকে check করো
-  const { data } = await supabase
-    .from('moderators')
-    .select('email')
-    .eq('email', e)
-    .eq('is_active', true)
-    .maybeSingle();
-  return !!data;
+  try {
+    const { data } = await supabase
+      .from('moderators')
+      .select('email')
+      .eq('email', e)
+      .eq('is_active', true)
+      .maybeSingle();
+    return !!data;
+  } catch { return false; }
 }
 
 export default function ModeratorDashboard() {
@@ -140,63 +142,98 @@ export default function ModeratorDashboard() {
   ] as const;
 
   return (
-    <div className="min-h-screen flex" style={{ background: 'var(--bg)' }}>
+    <div className="min-h-screen" style={{ background: 'var(--bg)' }}>
 
-      {/* Sidebar */}
-      <aside className="w-64 text-white shrink-0 flex flex-col" style={{ background: 'var(--dark)' }}>
-        <div className="p-5 border-b" style={{ borderColor: 'rgba(194,160,110,0.18)' }}>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-              style={{ background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)' }}>
-              <Eye className="w-5 h-5 text-white" />
+      {/* ── Mobile top nav ── */}
+      <div className="lg:hidden sticky top-16 z-30 border-b" style={{ background: 'var(--dark)', borderColor: 'rgba(194,160,110,0.18)' }}>
+        <div className="px-4 py-2.5 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg,#3b82f6,#1d4ed8)' }}>
+              <Eye className="w-4 h-4 text-white" />
             </div>
             <div>
-              <p className="font-bold text-sm" style={{ color: 'var(--bg)' }}>নিয়ন্ত্রণ প্যানেল</p>
-              <p className="text-xs" style={{ color: 'var(--text3)' }}>শিল্পশপ · Moderator</p>
+              <p className="font-bold text-xs text-white">নিয়ন্ত্রণ প্যানেল</p>
+              <p className="text-[10px]" style={{ color: 'var(--text3)' }}>শিল্পশপ · Moderator</p>
             </div>
           </div>
-          {/* মডারেটর সীমাবদ্ধতা নোট */}
-          <div className="mt-3 px-3 py-2 rounded-xl text-xs" style={{ background: 'rgba(59,130,246,0.15)', color: '#93c5fd' }}>
-            📋 শুধু অনুমোদন ও যাচাইয়ের অধিকার আছে
-          </div>
-        </div>
-        <nav className="p-3 flex-1 space-y-1">
-          {TABS.map(tab => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id as any)}
-              className="w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all text-sm font-semibold"
-              style={{
-                background: activeTab === tab.id ? 'linear-gradient(135deg, var(--accent), var(--accent-dk))' : 'transparent',
-                color: activeTab === tab.id ? 'var(--dark)' : 'var(--text3)',
-              }}>
-              <span className="flex items-center gap-3">{tab.icon}{tab.label}</span>
-              {tab.badge && tab.badge > 0 ? <span className="w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">{tab.badge}</span> : null}
-            </button>
-          ))}
-        </nav>
-        <div className="p-4 border-t" style={{ borderColor: 'rgba(194,160,110,0.18)' }}>
-          <button onClick={fetchData}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all"
-            style={{ background: 'rgba(194,160,110,0.1)', color: 'var(--accent)' }}>
-            <RefreshCw className="w-4 h-4" /> রিফ্রেশ করুন
+          <button onClick={fetchData} className="p-2 rounded-xl" style={{ background: 'rgba(194,160,110,0.1)', color: 'var(--accent)' }}>
+            <RefreshCw className="w-4 h-4" />
           </button>
         </div>
-      </aside>
-
-      {/* Main */}
-      <main className="flex-1 overflow-auto">
-        <div className="px-8 py-5 flex items-center justify-between border-b"
-          style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--text)' }}>
-            {activeTab === 'stats' && 'মডারেটর ড্যাশবোর্ড'}
-            {activeTab === 'artworks' && `শিল্পকর্ম ব্যবস্থাপনা${stats.pendingArtworks > 0 ? ` (${stats.pendingArtworks}টি অপেক্ষমাণ)` : ''}`}
-            {activeTab === 'artists' && 'শিল্পী ব্যবস্থাপনা'}
-            {activeTab === 'orders' && 'অর্ডার দেখুন'}
-            {activeTab === 'nid' && `NID যাচাই${stats.pendingNid > 0 ? ` (${stats.pendingNid}টি অপেক্ষমাণ)` : ''}`}
-            {activeTab === 'messages' && `বার্তাসমূহ (${contactMessages.length})`}
-          </h1>
+        <div className="overflow-x-auto pb-1 px-3">
+          <div className="flex gap-1 min-w-max pb-2">
+            {TABS.map(tab => (
+              <button key={tab.id} onClick={() => setActiveTab(tab.id as any)}
+                className="relative flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all"
+                style={{
+                  background: activeTab === tab.id ? 'linear-gradient(135deg,var(--accent),var(--accent-dk))' : 'rgba(255,255,255,0.06)',
+                  color: activeTab === tab.id ? 'var(--dark)' : 'rgba(255,255,255,0.7)',
+                }}>
+                {tab.icon}{tab.label}
+                {tab.badge && tab.badge > 0 ? (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">{tab.badge}</span>
+                ) : null}
+              </button>
+            ))}
+          </div>
         </div>
+      </div>
 
-        <div className="p-8">
+      <div className="flex">
+        {/* ── Desktop Sidebar ── */}
+        <aside className="hidden lg:flex w-64 text-white shrink-0 flex-col fixed top-16 bottom-0 overflow-y-auto z-20" style={{ background: 'var(--dark)' }}>
+          <div className="p-5 border-b" style={{ borderColor: 'rgba(194,160,110,0.18)' }}>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)' }}>
+                <Eye className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p className="font-bold text-sm" style={{ color: 'var(--bg)' }}>নিয়ন্ত্রণ প্যানেল</p>
+                <p className="text-xs" style={{ color: 'var(--text3)' }}>শিল্পশপ · Moderator</p>
+              </div>
+            </div>
+            <div className="mt-3 px-3 py-2 rounded-xl text-xs" style={{ background: 'rgba(59,130,246,0.15)', color: '#93c5fd' }}>
+              📋 শুধু অনুমোদন ও যাচাইয়ের অধিকার আছে
+            </div>
+          </div>
+          <nav className="p-3 flex-1 space-y-1">
+            {TABS.map(tab => (
+              <button key={tab.id} onClick={() => setActiveTab(tab.id as any)}
+                className="w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all text-sm font-semibold"
+                style={{
+                  background: activeTab === tab.id ? 'linear-gradient(135deg, var(--accent), var(--accent-dk))' : 'transparent',
+                  color: activeTab === tab.id ? 'var(--dark)' : 'var(--text3)',
+                }}>
+                <span className="flex items-center gap-3">{tab.icon}{tab.label}</span>
+                {tab.badge && tab.badge > 0 ? <span className="w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">{tab.badge}</span> : null}
+              </button>
+            ))}
+          </nav>
+          <div className="p-4 border-t" style={{ borderColor: 'rgba(194,160,110,0.18)' }}>
+            <button onClick={fetchData}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all"
+              style={{ background: 'rgba(194,160,110,0.1)', color: 'var(--accent)' }}>
+              <RefreshCw className="w-4 h-4" /> রিফ্রেশ করুন
+            </button>
+          </div>
+        </aside>
+
+        {/* ── Main content ── */}
+        <main className="flex-1 lg:ml-64 overflow-auto min-w-0">
+          {/* Desktop header */}
+          <div className="hidden lg:flex px-6 py-4 items-center justify-between border-b"
+            style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
+            <h1 className="text-xl font-bold" style={{ color: 'var(--text)' }}>
+              {activeTab === 'stats' && 'মডারেটর ড্যাশবোর্ড'}
+              {activeTab === 'artworks' && `শিল্পকর্ম ব্যবস্থাপনা${stats.pendingArtworks > 0 ? ` (${stats.pendingArtworks}টি অপেক্ষমাণ)` : ''}`}
+              {activeTab === 'artists' && 'শিল্পী ব্যবস্থাপনা'}
+              {activeTab === 'orders' && 'অর্ডার দেখুন'}
+              {activeTab === 'nid' && `NID যাচাই${stats.pendingNid > 0 ? ` (${stats.pendingNid}টি অপেক্ষমাণ)` : ''}`}
+              {activeTab === 'messages' && `বার্তাসমূহ (${contactMessages.length})`}
+            </h1>
+          </div>
+
+        <div className="p-4 sm:p-6 lg:p-8">
 
           {/* STATS */}
           {activeTab === 'stats' && (
@@ -271,7 +308,7 @@ export default function ModeratorDashboard() {
                     <div key={art.id} className="rounded-2xl border overflow-hidden transition-all hover:shadow-md"
                       style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
                       <div className="flex gap-0 items-stretch">
-                        <div className="relative shrink-0 cursor-zoom-in group w-36 sm:w-44"
+                        <div className="relative shrink-0 cursor-zoom-in group w-28 sm:w-36 md:w-44"
                           onClick={() => setLightboxImg(art.image_url)}>
                           <img src={art.image_url} alt={art.title}
                             className="w-full h-full object-cover"
@@ -419,7 +456,7 @@ export default function ModeratorDashboard() {
                 <div className="grid gap-4">
                   {pendingNid.map(artist => (
                     <div key={artist.id} className="rounded-2xl border p-6" style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
-                      <div className="flex items-start gap-5 flex-wrap">
+                      <div className="flex flex-col sm:flex-row items-start gap-4 flex-wrap">
                         <img src={artist.profile_image_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${artist.full_name}`}
                           alt={artist.full_name} className="w-16 h-16 rounded-xl object-cover shrink-0" style={{ background: 'var(--bg)' }} />
                         <div className="flex-1 min-w-0">
@@ -512,7 +549,8 @@ export default function ModeratorDashboard() {
           )}
 
         </div>
-      </main>
+        </main>
+      </div>
 
       {/* LIGHTBOX */}
       <AnimatePresence>

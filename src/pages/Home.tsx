@@ -185,7 +185,7 @@ function ArtworkCard({ art, s }: { art: Artwork; s: typeof SECTIONS[0] }) {
       </Link>
       {/* Wishlist btn */}
       <button onClick={e => { e.preventDefault(); toggle(art); toast.success(wishlisted ? 'সরানো হয়েছে' : '❤️ উইশলিস্টে যোগ হয়েছে'); }}
-        className={`absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center shadow-md z-10 transition-all ${wishlisted ? 'bg-red-500 text-white' : 'bg-white/90 backdrop-blur-sm text-[var(--text3)] hover:text-red-400'}`}>
+        className={`absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center shadow-md z-10 transition-all ${wishlisted ? 'bg-red-500 text-white' : 'bg-white/90 backdrop-blur-sm text-stone-400 hover:text-red-400'}`}>
         <Heart className={`w-4 h-4 ${wishlisted ? 'fill-current' : ''}`} />
       </button>
       {/* Info */}
@@ -351,7 +351,7 @@ export default function Home() {
               {/* Decorative underline */}
               <div className="w-20 h-1 rounded-full mb-6" style={{ background: `linear-gradient(to right, ${W}, transparent)` }} />
 
-              <p className="text-[var(--text3)] text-lg leading-relaxed mb-10 max-w-lg">{cur.sub}</p>
+              <p className="text-stone-300 text-lg leading-relaxed mb-10 max-w-lg">{cur.sub}</p>
 
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 mb-14">
@@ -418,7 +418,7 @@ export default function Home() {
               { icon: <MessageCircle className="w-4 h-4" />, text: '২৪/৭ সাপোর্ট', c: '#a0b0e0' },
             ].map((f, i) => (
               <div key={i} className="flex items-center gap-2" style={{ color: f.c }}>
-                {f.icon}<span className="text-[var(--text3)]">{f.text}</span>
+                {f.icon}<span className="text-stone-300">{f.text}</span>
               </div>
             ))}
           </div>
@@ -517,7 +517,7 @@ export default function Home() {
           <div className="text-center mb-12">
             <p className="text-xs font-bold uppercase tracking-[0.2em] mb-3" style={{ color: W }}>গাইড</p>
             <h2 className="text-2xl sm:text-4xl font-bold text-white mb-3">কীভাবে ব্যবহার করবেন?</h2>
-            <p className="text-[var(--text3)]">মাত্র কয়েকটি ধাপে কেনাকাটা বা বিক্রি শুরু করুন</p>
+            <p className="text-stone-400">মাত্র কয়েকটি ধাপে কেনাকাটা বা বিক্রি শুরু করুন</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
             {[
@@ -535,7 +535,7 @@ export default function Home() {
                 </div>
                 <p className="text-xs font-bold mb-1" style={{ color: W, opacity: 0.6 }}>{s.step}</p>
                 <h3 className="font-bold text-white text-base mb-1">{s.title}</h3>
-                <p className="text-[var(--text3)] text-sm leading-relaxed">{s.desc}</p>
+                <p className="text-stone-400 text-sm leading-relaxed">{s.desc}</p>
               </motion.div>
             ))}
           </div>

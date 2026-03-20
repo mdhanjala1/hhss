@@ -209,7 +209,7 @@ export default function Cart() {
           {/* Order Summary + Customer Info */}
           <div className="space-y-5">
             {/* Summary */}
-            <div className="rounded-3xl p-6 border sticky top-24"
+            <div className="rounded-3xl p-6 border lg:sticky lg:top-24"
               style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
               <h3 className="text-lg font-bold mb-5" style={{ color: 'var(--text)' }}>অর্ডার সারসংক্ষেপ</h3>
               <div className="space-y-3 mb-4">
