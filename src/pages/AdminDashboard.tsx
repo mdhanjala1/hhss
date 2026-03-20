@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   ShieldCheck, Users, ImageIcon, ShoppingBag, DollarSign,
   CheckCircle, XCircle, Clock, Search, Eye, AlertCircle,
-  TrendingUp, RefreshCw, Package, Bell, ZoomIn, RotateCcw, Star
+  TrendingUp, RefreshCw, Package, Bell, ZoomIn, RotateCcw, Star, Plus, Trash2
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { format } from 'date-fns';
@@ -13,7 +13,7 @@ import { Artist, Artwork, Order } from '../types';
 
 export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'stats' | 'artworks' | 'artists' | 'orders' | 'nid' | 'messages'>('stats');
+  const [activeTab, setActiveTab] = useState<'stats' | 'artworks' | 'artists' | 'orders' | 'nid' | 'messages' | 'moderators'>('stats');
   const [contactMessages, setContactMessages] = useState<any[]>([]);
   const [pendingNid, setPendingNid] = useState<Artist[]>([]);
   const [pendingArt, setPendingArt] = useState<Artwork[]>([]);
@@ -25,6 +25,9 @@ export default function AdminDashboard() {
   const [searchArt, setSearchArt] = useState('');
   const [searchArtist, setSearchArtist] = useState('');
   const [artFilter, setArtFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
+  const [moderators, setModerators] = useState<any[]>([]);
+  const [newModEmail, setNewModEmail] = useState('');
+  const [newModName, setNewModName] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => { initAdmin(); }, []);
@@ -65,6 +68,9 @@ export default function AdminDashboard() {
       setArtists(allArtists || []); setOrders(allOrders || []); setPendingNid(nidArtists || []);
       const { data: msgs } = await supabase.from('contact_messages').select('*').order('created_at', { ascending: false });
       setContactMessages(msgs || []);
+      // Moderators
+      const { data: mods } = await supabase.from('moderators').select('*').order('created_at', { ascending: false });
+      setModerators(mods || []);
       setStats({ artists: (allArtists || []).length, artworks: arts.length, pendingArtworks: pending.length, pendingNid: (nidArtists || []).length, totalRevenue: revenue, orders: (allOrders || []).length });
     } catch (e: any) { toast.error('ডেটা লোড হয়নি: ' + e.message); }
     finally { setLoading(false); }
@@ -114,6 +120,7 @@ export default function AdminDashboard() {
     { id: 'orders', label: 'অর্ডার', icon: <ShoppingBag className="w-4 h-4" /> },
     { id: 'nid', label: 'NID যাচাই', icon: <ShieldCheck className="w-4 h-4" />, badge: stats.pendingNid },
     { id: 'messages', label: 'বার্তা', icon: <Bell className="w-4 h-4" />, badge: contactMessages.filter(m => !m.is_read).length },
+    { id: 'moderators', label: 'মডারেটর', icon: <Eye className="w-4 h-4" /> },
   ] as const;
 
   return (
@@ -166,6 +173,7 @@ export default function AdminDashboard() {
             {activeTab === 'orders' && 'অর্ডার ব্যবস্থাপনা'}
             {activeTab === 'nid' && `NID যাচাই${stats.pendingNid > 0 ? ` (${stats.pendingNid}টি অপেক্ষমাণ)` : ''}`}
             {activeTab === 'messages' && `বার্তাসমূহ (${contactMessages.length})`}
+            {activeTab === 'moderators' && `মডারেটর ব্যবস্থাপনা`}
           </h1>
         </div>
 
@@ -498,6 +506,127 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* ── MODERATORS ── */}
+          {activeTab === 'moderators' && (
+            <div className="space-y-5">
+              <div className="rounded-2xl border p-5" style={{ background: 'rgba(59,130,246,0.05)', borderColor: 'rgba(59,130,246,0.2)' }}>
+                <p className="text-sm font-medium flex items-center gap-2" style={{ color: 'var(--text2)' }}>
+                  <Eye className="w-4 h-4 text-blue-400" />
+                  মডারেটররা শিল্পকর্ম Approve, শিল্পী Verify করতে পারবেন। Delete বা Reject করতে পারবেন না।
+                </p>
+              </div>
+
+              {/* Add new moderator */}
+              <div className="rounded-2xl border p-6" style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
+                <h3 className="font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text)' }}>
+                  <Plus className="w-4 h-4" style={{ color: 'var(--accent)' }} /> নতুন মডারেটর যোগ করুন
+                </h3>
+                <div className="flex flex-wrap gap-3">
+                  <input type="email" placeholder="ইমেইল ঠিকানা *" value={newModEmail}
+                    onChange={e => setNewModEmail(e.target.value)}
+                    className="flex-1 min-w-[200px] px-4 py-2.5 rounded-xl border outline-none text-sm"
+                    style={{ background: 'var(--bg)', borderColor: 'var(--border)', color: 'var(--text)' }} />
+                  <input type="text" placeholder="নাম (ঐচ্ছিক)" value={newModName}
+                    onChange={e => setNewModName(e.target.value)}
+                    className="flex-1 min-w-[150px] px-4 py-2.5 rounded-xl border outline-none text-sm"
+                    style={{ background: 'var(--bg)', borderColor: 'var(--border)', color: 'var(--text)' }} />
+                  <button
+                    onClick={async () => {
+                      if (!newModEmail.trim()) { toast.error('ইমেইল দিন'); return; }
+                      const emailVal = newModEmail.trim().toLowerCase();
+                      // প্রথমে check করো exist করে কিনা
+                      const { data: existing } = await supabase.from('moderators').select('id').eq('email', emailVal).maybeSingle();
+                      if (existing) {
+                        // আছে — update করো
+                        const { error } = await supabase.from('moderators').update({ name: newModName.trim() || null, is_active: true }).eq('email', emailVal);
+                        if (error) { toast.error('আপডেট ব্যর্থ: ' + error.message); return; }
+                      } else {
+                        // নেই — insert করো
+                        const { error } = await supabase.from('moderators').insert({
+                          email: emailVal,
+                          name: newModName.trim() || null,
+                          is_active: true,
+                        });
+                        if (error) { toast.error('যোগ ব্যর্থ: ' + error.message); return; }
+                      }
+                      toast.success('✅ মডারেটর যোগ হয়েছে!');
+                      setNewModEmail(''); setNewModName('');
+                      fetchAdminData();
+                    }}
+                    className="px-5 py-2.5 rounded-xl font-bold text-sm transition-all hover:opacity-90"
+                    style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dk))', color: 'var(--dark)' }}>
+                    <Plus className="w-4 h-4 inline mr-1" />যোগ করুন
+                  </button>
+                </div>
+              </div>
+
+              {/* Moderators list */}
+              <div className="rounded-2xl border overflow-hidden" style={{ borderColor: 'var(--border)' }}>
+                <div className="p-4 border-b flex items-center justify-between" style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
+                  <h3 className="font-bold" style={{ color: 'var(--text)' }}>বর্তমান মডারেটরগণ ({moderators.length})</h3>
+                </div>
+                {moderators.length === 0 ? (
+                  <div className="py-12 text-center" style={{ background: 'var(--card)' }}>
+                    <Eye className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--border)' }} />
+                    <p style={{ color: 'var(--text3)' }}>কোনো মডারেটর নেই</p>
+                  </div>
+                ) : (
+                  <div className="divide-y" style={{ divideColor: 'var(--border)' }}>
+                    {moderators.map(mod => (
+                      <div key={mod.id} className="p-4 flex items-center justify-between gap-4"
+                        style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm"
+                            style={{ background: 'rgba(59,130,246,0.1)', color: '#60a5fa' }}>
+                            {(mod.name || mod.email)[0].toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="font-bold text-sm" style={{ color: 'var(--text)' }}>{mod.name || '—'}</p>
+                            <p className="text-xs" style={{ color: 'var(--text3)' }}>{mod.email}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold"
+                            style={mod.is_active
+                              ? { background: 'rgba(22,163,74,0.1)', color: '#16a34a' }
+                              : { background: 'rgba(239,68,68,0.1)', color: '#dc2626' }}>
+                            {mod.is_active ? '✓ সক্রিয়' : '✕ নিষ্ক্রিয়'}
+                          </span>
+                          <button
+                            onClick={async () => {
+                              const { error } = await supabase.from('moderators')
+                                .update({ is_active: !mod.is_active }).eq('id', mod.id);
+                              if (error) { toast.error(error.message); return; }
+                              toast.success(mod.is_active ? 'নিষ্ক্রিয় করা হয়েছে' : '✅ সক্রিয় করা হয়েছে');
+                              fetchAdminData();
+                            }}
+                            className="px-3 py-1.5 rounded-xl text-xs font-bold border transition-all"
+                            style={mod.is_active
+                              ? { background: 'rgba(239,68,68,0.06)', borderColor: 'rgba(239,68,68,0.3)', color: '#dc2626' }
+                              : { background: 'linear-gradient(135deg, var(--accent), var(--accent-dk))', borderColor: 'transparent', color: 'var(--dark)' }}>
+                            {mod.is_active ? 'নিষ্ক্রিয় করুন' : 'সক্রিয় করুন'}
+                          </button>
+                          <button
+                            onClick={async () => {
+                              if (!confirm(`"${mod.email}" মুছবেন?`)) return;
+                              const { error } = await supabase.from('moderators').delete().eq('id', mod.id);
+                              if (error) { toast.error(error.message); return; }
+                              toast.success('মুছে ফেলা হয়েছে');
+                              fetchAdminData();
+                            }}
+                            className="p-1.5 rounded-xl transition-all hover:bg-red-50"
+                            style={{ color: 'var(--text3)' }}>
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           )}
 

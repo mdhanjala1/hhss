@@ -11,15 +11,20 @@ import { format } from 'date-fns';
 import { supabase } from '../lib/supabase';
 import { Artist, Artwork, Order } from '../types';
 
-// মডারেটর ইমেইল তালিকা — .env থেকে পড়া হয়
+// মডারেটর check — Supabase DB থেকে (env-based নয়)
 const _ADMIN_EMAIL = (import.meta.env.VITE_ADMIN_EMAIL || '').trim().toLowerCase();
-const MODERATOR_EMAILS: string[] = (import.meta.env.VITE_MODERATOR_EMAILS || '')
-  .split(',')
-  .map((e: string) => e.trim().toLowerCase())
-  .filter(e => Boolean(e) && e !== _ADMIN_EMAIL); // admin email moderator list-এ থাকলে বাদ দাও
 
-export function isModeratorEmail(email: string): boolean {
-  return MODERATOR_EMAILS.includes(email.trim().toLowerCase());
+export async function isModeratorEmail(email: string): Promise<boolean> {
+  const e = email.trim().toLowerCase();
+  if (e === _ADMIN_EMAIL) return false; // admin is not moderator
+  // DB থেকে check করো
+  const { data } = await supabase
+    .from('moderators')
+    .select('email')
+    .eq('email', e)
+    .eq('is_active', true)
+    .maybeSingle();
+  return !!data;
 }
 
 export default function ModeratorDashboard() {
@@ -45,9 +50,15 @@ export default function ModeratorDashboard() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) { navigate('/login'); return; }
     const userEmail = (session.user.email || '').trim().toLowerCase();
-    const adminEmail = (import.meta.env.VITE_ADMIN_EMAIL || '').trim().toLowerCase();
-    if (userEmail !== adminEmail && !isModeratorEmail(userEmail)) {
-      toast.error(`অ্যাক্সেস নেই। (${userEmail})`);
+    const adminEmail = _ADMIN_EMAIL;
+
+    // Admin এর full access আছে, তাই admin-ও moderator dashboard দেখতে পারবে
+    if (userEmail === adminEmail) { fetchData(); return; }
+
+    // DB থেকে moderator check করো
+    const isMod = await isModeratorEmail(userEmail);
+    if (!isMod) {
+      toast.error(`মডারেটর অ্যাক্সেস নেই। (${userEmail})`);
       navigate('/');
       return;
     }
@@ -140,8 +151,8 @@ export default function ModeratorDashboard() {
               <Eye className="w-5 h-5 text-white" />
             </div>
             <div>
-              <p className="font-bold text-sm" style={{ color: 'var(--bg)' }}>Moderator Panel</p>
-              <p className="text-xs" style={{ color: 'var(--text3)' }}>শিল্পশপ</p>
+              <p className="font-bold text-sm" style={{ color: 'var(--bg)' }}>নিয়ন্ত্রণ প্যানেল</p>
+              <p className="text-xs" style={{ color: 'var(--text3)' }}>শিল্পশপ · Moderator</p>
             </div>
           </div>
           {/* মডারেটর সীমাবদ্ধতা নোট */}

@@ -515,10 +515,22 @@ export default function ArtistDashboard() {
   };
 
   const deleteArtwork = async (id: string) => {
-    if (!confirm('এই শিল্পকর্মটি মুছবেন?')) return;
-    const { error } = await supabase.from('artworks').delete().eq('id', id);
-    if (error) { toast.error(error.message); return; }
-    toast.success('মুছে ফেলা হয়েছে'); fetchData();
+    if (!confirm('এই শিল্পকর্মটি মুছবেন? এটি পুনরুদ্ধার করা যাবে না।')) return;
+    try {
+      // সব FK references আগে NULL করো
+      await Promise.all([
+        supabase.from('orders').update({ artwork_id: null }).eq('artwork_id', id),
+        supabase.from('reviews').update({ artwork_id: null }).eq('artwork_id', id),
+        supabase.from('notifications').update({ related_artwork_id: null }).eq('related_artwork_id', id),
+      ]);
+      // এখন safely delete
+      const { error } = await supabase.from('artworks').delete().eq('id', id);
+      if (error) throw error;
+      toast.success('✅ শিল্পকর্ম মুছে ফেলা হয়েছে');
+      fetchData();
+    } catch (err: any) {
+      toast.error('মুছতে সমস্যা: ' + (err.message || 'আবার চেষ্টা করুন'));
+    }
   };
 
   const openEdit = (art: Artwork) => {

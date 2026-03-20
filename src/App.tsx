@@ -14,7 +14,7 @@ import ArtworkDetail from './pages/ArtworkDetail';
 import ArtistProfile from './pages/ArtistProfile';
 import ArtistDashboard from './pages/ArtistDashboard';
 import AdminDashboard from './pages/AdminDashboard';
-import ModeratorDashboard, { isModeratorEmail } from './pages/ModeratorDashboard';
+import ModeratorDashboard from './pages/ModeratorDashboard';
 import Login from './pages/Login';
 import Cart from './pages/Cart';
 import Wishlist from './pages/Wishlist';
@@ -92,15 +92,26 @@ function Navbar() {
     return () => window.removeEventListener('scroll', fn);
   }, []);
 
+  const [isModerator, setIsModerator] = useState(false);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
     return () => subscription.unsubscribe();
   }, []);
 
+  // Session বদলালে moderator status চেক করো
+  useEffect(() => {
+    const email = session?.user?.email || '';
+    const adminEmail = (import.meta.env.VITE_ADMIN_EMAIL || 'blog.alfamito@gmail.com').trim().toLowerCase();
+    if (!email || email.trim().toLowerCase() === adminEmail) { setIsModerator(false); return; }
+    // DB থেকে check
+    supabase.from('moderators').select('email').eq('email', email.trim().toLowerCase()).eq('is_active', true).maybeSingle()
+      .then(({ data }) => setIsModerator(!!data));
+  }, [session]);
+
   const logout = async () => { await supabase.auth.signOut(); navigate('/'); setIsOpen(false); };
   const isAdmin = session?.user?.email?.trim().toLowerCase() === (import.meta.env.VITE_ADMIN_EMAIL || 'blog.alfamito@gmail.com').trim().toLowerCase();
-  const isModerator = !isAdmin && isModeratorEmail(session?.user?.email || '');
 
   const navBg = scrolled
     ? 'bg-[rgba(26,14,5,0.97)] shadow-lg shadow-black/30'
@@ -167,9 +178,10 @@ function Navbar() {
                   </Link>
                 )}
                 {isModerator && (
-                  <Link to="/moderator" className="flex items-center gap-1.5 px-3 py-2 rounded-xl transition-all text-sm font-semibold"
-                    style={{ color: '#93c5fd', background: 'rgba(59,130,246,0.1)' }}>
-                    <Eye className="w-4 h-4" />মডারেটর
+                  <Link to="/moderator"
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl transition-all text-sm font-bold border"
+                    style={{ color: '#93c5fd', background: 'rgba(59,130,246,0.15)', borderColor: 'rgba(59,130,246,0.3)' }}>
+                    <Eye className="w-4 h-4" />নিয়ন্ত্রণ প্যানেল
                   </Link>
                 )}
                 <Link to="/dashboard" className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-stone-300 hover:text-white hover:bg-white/8 transition-all text-sm font-semibold">
@@ -234,7 +246,13 @@ function Navbar() {
               {session ? (
                 <>
                   {isAdmin && <Link to="/admin" onClick={() => setIsOpen(false)} className="block px-4 py-3 text-stone-300 font-semibold rounded-xl hover:bg-white/8">এডমিন</Link>}
-                  {isModerator && <Link to="/moderator" onClick={() => setIsOpen(false)} className="block px-4 py-3 font-semibold rounded-xl" style={{ color: '#93c5fd', background: 'rgba(59,130,246,0.08)' }}>মডারেটর</Link>}
+                  {isModerator && (
+                    <Link to="/moderator" onClick={() => setIsOpen(false)}
+                      className="flex items-center gap-2 px-4 py-3 font-bold rounded-xl border"
+                      style={{ color: '#93c5fd', background: 'rgba(59,130,246,0.12)', borderColor: 'rgba(59,130,246,0.3)' }}>
+                      <Eye className="w-4 h-4" />নিয়ন্ত্রণ প্যানেল
+                    </Link>
+                  )}
                   <Link to="/dashboard" onClick={() => setIsOpen(false)} className="block px-4 py-3 text-stone-300 font-semibold rounded-xl hover:bg-white/8">ড্যাশবোর্ড</Link>
                   <button onClick={logout} className="w-full text-left px-4 py-3 text-red-400 font-semibold rounded-xl hover:bg-red-500/10">লগআউট</button>
                 </>
