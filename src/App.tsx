@@ -23,6 +23,7 @@ import Contact from './pages/Contact';
 import HowItWorks from './pages/HowItWorks';
 import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
+import ChatWidget from './components/ChatWidget';
 
 const WA = '8801340338401';
 
@@ -388,6 +389,7 @@ export default function App() {
               </main>
               <Footer />
               <WhatsAppButton />
+              <ChatWidget />
             </div>
           </BrowserRouter>
         </WishlistProvider>
