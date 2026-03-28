@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Palette, Eye, EyeOff, CheckCircle, ArrowRight, ArrowLeft, Camera, Upload, User } from 'lucide-react';
@@ -18,6 +18,14 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
 
+  // ── Password Recovery states ──
+  const [isRecovery, setIsRecovery] = useState(false);
+  const [recoveryPass, setRecoveryPass] = useState('');
+  const [recoveryConfirm, setRecoveryConfirm] = useState('');
+  const [recoveryDone, setRecoveryDone] = useState(false);
+  const [showRecoveryPass, setShowRecoveryPass] = useState(false);
+  const [showRecoveryConfirm, setShowRecoveryConfirm] = useState(false);
+
   const [form, setForm] = useState({
     email: '', password: '', fullName: '', phone: '', district: '', bio: ''
   });
@@ -25,6 +33,42 @@ export default function Login() {
   const [profilePreview, setProfilePreview] = useState<string | null>(null);
 
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
+
+  // ── Recovery লিংক detect করো ──
+  useEffect(() => {
+    // URL hash-এ type=recovery থাকলে recovery mode চালু করো
+    const hash = window.location.hash;
+    if (hash.includes('type=recovery')) {
+      setIsRecovery(true);
+    }
+
+    // Supabase auth event শোনো
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setIsRecovery(true);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // ── নতুন পাসওয়ার্ড সেট করো ──
+  const handleRecoverySubmit = async () => {
+    if (!recoveryPass || !recoveryConfirm) { toast.error('সব ঘর পূরণ করুন'); return; }
+    if (recoveryPass.length < 6) { toast.error('পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে'); return; }
+    if (recoveryPass !== recoveryConfirm) { toast.error('পাসওয়ার্ড দুটো মিলছে না'); return; }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: recoveryPass });
+      if (error) throw error;
+      setRecoveryDone(true);
+      toast.success('✅ পাসওয়ার্ড সফলভাবে পরিবর্তন হয়েছে!');
+      // ৩ সেকেন্ড পর হোমপেজে নিয়ে যাও
+      setTimeout(() => navigate('/'), 3000);
+    } catch (e: any) {
+      toast.error(e.message || 'সমস্যা হয়েছে, আবার চেষ্টা করুন');
+    } finally { setLoading(false); }
+  };
 
   // Handle file selection with camera/gallery option
   const handleFileSelect = (accept: string, callback: (file: File) => void) => {
@@ -73,7 +117,6 @@ export default function Login() {
     } finally { setLoading(false); }
   };
 
-  // ONLY called from final "অ্যাকাউন্ট তৈরি করুন" button on step 3
   const handleForgotPassword = async () => {
     if (!forgotEmail.trim()) { toast.error('ইমেইল দিন'); return; }
     setLoading(true);
@@ -144,6 +187,123 @@ export default function Login() {
       toast.error(msg);
     } finally { setLoading(false); }
   };
+
+  // ── PASSWORD RECOVERY UI ──
+  if (isRecovery) {
+    return (
+      <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center px-4 pt-16">
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0, y: 16 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          className="w-full max-w-md rounded-3xl overflow-hidden shadow-2xl"
+          style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
+        >
+          {/* Header */}
+          <div className="px-7 py-6 relative overflow-hidden"
+            style={{ background: 'linear-gradient(135deg, var(--dark), rgba(44,24,0,0.95))' }}>
+            <div className="absolute inset-0 opacity-[0.05]"
+              style={{ backgroundImage: 'radial-gradient(rgba(194,160,110,1) 1.5px, transparent 1.5px)', backgroundSize: '10px 10px' }} />
+            <div className="relative z-10">
+              <h3 className="text-xl font-bold" style={{ color: 'var(--bg)' }}>নতুন পাসওয়ার্ড সেট করুন</h3>
+              <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>একটি শক্তিশালী পাসওয়ার্ড দিন</p>
+            </div>
+          </div>
+
+          {/* Body */}
+          <div className="p-7">
+            {recoveryDone ? (
+              <div className="text-center py-4">
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                  style={{ background: 'rgba(194,160,110,0.12)' }}>
+                  <CheckCircle className="w-8 h-8" style={{ color: 'var(--accent)' }} />
+                </div>
+                <h4 className="text-lg font-bold mb-2" style={{ color: 'var(--text)' }}>
+                  পাসওয়ার্ড পরিবর্তন হয়েছে! ✅
+                </h4>
+                <p className="text-sm leading-relaxed mb-6" style={{ color: 'var(--text3)' }}>
+                  কিছুক্ষণের মধ্যে হোমপেজে নিয়ে যাওয়া হবে...
+                </p>
+                <button
+                  onClick={() => navigate('/')}
+                  className="w-full py-3.5 rounded-2xl font-bold text-sm transition-all hover:opacity-90"
+                  style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dk))', color: 'var(--dark)' }}>
+                  হোমপেজে যান
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-5">
+                {/* নতুন পাসওয়ার্ড */}
+                <div>
+                  <label className="block text-sm font-bold mb-2" style={{ color: 'var(--text)' }}>
+                    নতুন পাসওয়ার্ড
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showRecoveryPass ? 'text' : 'password'}
+                      placeholder="কমপক্ষে ৬ অক্ষর"
+                      value={recoveryPass}
+                      onChange={e => setRecoveryPass(e.target.value)}
+                      className="w-full px-4 py-3.5 pr-12 rounded-2xl border outline-none text-sm"
+                      style={{ background: 'var(--bg)', borderColor: 'var(--border)', color: 'var(--text)' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowRecoveryPass(v => !v)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2"
+                      style={{ color: 'var(--text3)' }}>
+                      {showRecoveryPass ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* পাসওয়ার্ড নিশ্চিত */}
+                <div>
+                  <label className="block text-sm font-bold mb-2" style={{ color: 'var(--text)' }}>
+                    পাসওয়ার্ড নিশ্চিত করুন
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showRecoveryConfirm ? 'text' : 'password'}
+                      placeholder="আবার টাইপ করুন"
+                      value={recoveryConfirm}
+                      onChange={e => setRecoveryConfirm(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && handleRecoverySubmit()}
+                      className="w-full px-4 py-3.5 pr-12 rounded-2xl border outline-none text-sm"
+                      style={{ background: 'var(--bg)', borderColor: 'var(--border)', color: 'var(--text)' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowRecoveryConfirm(v => !v)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2"
+                      style={{ color: 'var(--text3)' }}>
+                      {showRecoveryConfirm ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Match indicator */}
+                {recoveryConfirm.length > 0 && (
+                  <p className="text-xs font-medium" style={{ color: recoveryPass === recoveryConfirm ? '#22c55e' : '#ef4444' }}>
+                    {recoveryPass === recoveryConfirm ? '✓ পাসওয়ার্ড মিলেছে' : '✗ পাসওয়ার্ড মিলছে না'}
+                  </p>
+                )}
+
+                <button
+                  onClick={handleRecoverySubmit}
+                  disabled={loading}
+                  className="w-full py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all hover:opacity-90 disabled:opacity-60"
+                  style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dk))', color: 'var(--dark)' }}>
+                  {loading
+                    ? <div className="w-5 h-5 border-2 rounded-full animate-spin" style={{ borderColor: 'rgba(26,14,5,0.2)', borderTopColor: 'var(--dark)' }} />
+                    : <><CheckCircle className="w-5 h-5" /> পাসওয়ার্ড পরিবর্তন করুন</>}
+                </button>
+              </div>
+            )}
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   if (showSuccess) return (
     <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center px-4 pt-16">
