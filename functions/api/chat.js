@@ -1,193 +1,119 @@
 /**
- * শিল্পশপ AI কাস্টমার কেয়ার
- * Cloudflare Pages Function — /api/chat
+ * শিল্পশপ — AI কাস্টমার কেয়ার Backend
+ * Cloudflare Pages Function: /api/chat
+ * Engine : Groq (Llama 3.3 70B) — সম্পূর্ণ বিনামূল্যে
+ * Limit  : ১৪,৪০০ req/দিন · ৩০ req/মিনিট
  *
- * PRIMARY:  Cloudflare Workers AI (Llama 3.3 70B) — বিল্ট-ইন, কোনো API key লাগবে না
- * FALLBACK: Groq API (Llama 3.3 70B) — ফ্রি, প্রতিদিন ১৪,৪০০ request
+ * Cloudflare Dashboard → Settings → Environment Variables:
+ *   GROQ_API_KEY = gsk_xxxxxxxxxxxxxxxxxxxx
  */
 
-const SYSTEM_PROMPT = `তুমি শিল্পশপ (ShilpoShop)-এর অফিসিয়াল AI কাস্টমার সহকারী। তোমার নাম "শিল্পী"।
-তুমি সর্বদা বাংলায় কথা বলবে — গ্রাহক যে ভাষায়ই লিখুক।
+const SYSTEM_PROMPT = `তুমি শিল্পশপের (ShilpoShop) অফিসিয়াল AI কাস্টমার কেয়ার সহকারী "শিল্পী"।
+শিল্পশপ বাংলাদেশের একটি প্রিমিয়াম অনলাইন আর্ট মার্কেটপ্লেস — এখানে স্বাধীন বাংলাদেশি শিল্পীরা তাদের শিল্পকর্ম বিক্রি করেন।
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🎨 শিল্পশপ পরিচিতি
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-শিল্পশপ বাংলাদেশের একটি প্রিমিয়াম অনলাইন আর্ট মার্কেটপ্লেস।
-বাংলাদেশের প্রতিভাবান শিল্পীরা এখানে তাদের অনন্য শিল্পকর্ম বিক্রি করেন।
-পাওয়া যায়: আরবি ক্যালিগ্রাফি, তেলরঙ/জলরঙ পেইন্টিং, ডিজিটাল আর্ট, হস্তশিল্প, ফটোগ্রাফি, স্কাল্পচার।
+══════ পেইজ ও ফিচার ══════
+হোম (/) — ফিচার্ড শিল্পকর্ম, hero স্লাইডশো
+মার্কেটপ্লেস (/marketplace) — সব শিল্পকর্ম, ক্যাটাগরি ফিল্টার
+শিল্পীগণ (/artists) — Verified শিল্পীদের তালিকা
+শিল্পকর্ম বিস্তারিত (/artwork/ID)
+শিল্পী প্রোফাইল (/artist/ID)
+কীভাবে ব্যবহার করবেন (/how-it-works)
+কার্ট (/cart) — কেনাকাটার ঝুড়ি
+উইশলিস্ট (/wishlist) — পছন্দের তালিকা
+যোগাযোগ (/contact) — সাপোর্ট ফর্ম
+লগইন / নিবন্ধন (/login)
+শিল্পী ড্যাশবোর্ড (/dashboard)
+শর্তাবলী (/terms) · গোপনীয়তা (/privacy)
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🛒 কেনাকাটার প্রক্রিয়া
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-১. মার্কেটপ্লেস ব্রাউজ করুন — ক্যাটাগরি, মূল্য বা শিল্পী নাম দিয়ে খুঁজুন
-২. পছন্দের শিল্পকর্ম কার্টে যোগ করুন
-৩. নাম, ফোন নম্বর ও ঠিকানা দিয়ে অর্ডার সম্পন্ন করুন
-৪. পণ্য পেয়ে সন্তুষ্ট হলে পেমেন্ট করুন (ক্যাশ অন ডেলিভারি)
+══════ শিল্পকর্মের ক্যাটাগরি ══════
+পেইন্টিং · আরবি ক্যালিগ্রাফি · হস্তশিল্প · ডিজিটাল আর্ট · ওয়াটারকালার · স্কেচ ও ড্রইং
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-💳 পেমেন্ট পদ্ধতি
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• ক্যাশ অন ডেলিভারি (COD) — পণ্য পেয়ে পেমেন্ট করুন [প্রধান পদ্ধতি]
-• bKash, Nagad, Rocket — মোবাইল ব্যাংকিং
-• নগদ টাকা — COD এর সময়
+══════ পেমেন্ট পদ্ধতি ══════
+bKash · Nagad · Rocket · ক্যাশ অন ডেলিভারি (COD)
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🚚 ডেলিভারি তথ্য
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• ঢাকার মধ্যে: ১-৩ কার্যদিবস
-• ঢাকার বাইরে: ৩-৭ কার্যদিবস
-• বাংলাদেশের সকল জেলায় ডেলিভারি হয়
-• ডেলিভারি চার্জ অর্ডারের সময় জানানো হয়
+══════ ডেলিভারি ══════
+ঢাকার ভেতরে: ২-৩ কার্যদিবস। ঢাকার বাইরে: ৩-৫ কার্যদিবস। পুরো বাংলাদেশে ডেলিভারি।
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔄 রিটার্ন ও রিফান্ড
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• পণ্য পেয়ে সন্তুষ্ট না হলে রিটার্ন করা যাবে
-• ক্ষতিগ্রস্ত বা ভুল পণ্য পাঠানো হলে সম্পূর্ণ রিফান্ড পাবেন
-• রিটার্নের জন্য WhatsApp: +880 1340-338401 এ যোগাযোগ করুন
-• কাস্টম অর্ডার সাধারণত রিটার্নযোগ্য নয়
+══════ রিটার্ন ও রিফান্ড ══════
+পণ্য পাওয়ার ৭ দিনের মধ্যে রিটার্ন। ক্ষতিগ্রস্ত বা ভুল পণ্যে সম্পূর্ণ রিফান্ড।
+রিটার্নের জন্য WhatsApp: +880 1340-338401
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🎨 শিল্পী হিসেবে যোগ দেওয়া
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-ধাপ ১: নাম, ইমেইল ও পাসওয়ার্ড দিয়ে বিনামূল্যে অ্যাকাউন্ট খুলুন
-ধাপ ২: NID কার্ডের তথ্য ও ছবি জমা দিন (ড্যাশবোর্ড থেকে)
-ধাপ ৩: এডমিন যাচাই করলে Verified Artist ব্যাজ পাবেন
-ধাপ ৪: শিল্পকর্মের ছবি, বিবরণ ও মূল্য দিয়ে আপলোড করুন
-ধাপ ৫: অর্ডার পেলে নিশ্চিত করুন এবং ডেলিভারি দিন
+══════ গুরুত্বপূর্ণ নীতি ══════
+১০০% অরিজিনাল শিল্পকর্ম গ্যারান্টি। Verified শিল্পী (NID যাচাই বাধ্যতামূলক)।
+সাপোর্ট সময়: সকাল ৯টা থেকে রাত ১০টা (সপ্তাহে ৭ দিন)।
 
-শিল্পী ড্যাশবোর্ড সুবিধা: আয় ও বিক্রয়ের সারাংশ, শিল্পকর্ম ম্যানেজমেন্ট, অর্ডার পরিচালনা, মাসিক আয়ের বিশ্লেষণ, নোটিফিকেশন সিস্টেম।
+══════ শিল্পী হওয়ার প্রক্রিয়া ══════
+১. /login-এ অ্যাকাউন্ট তৈরি করুন
+২. প্রোফাইল ও NID যাচাই করুন
+৩. শিল্পকর্ম আপলোড করুন
+৪. Admin/Moderator অনুমোদনের পর প্রকাশিত হবে
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🎁 কাস্টম অর্ডার
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• ব্যক্তিগত বা উপহারের জন্য কাস্টম আর্টওয়ার্ক অর্ডার করা যায়
-• পছন্দের শিল্পীর প্রোফাইল থেকে সরাসরি যোগাযোগ করুন
-• সাধারণত ৭-১৪ দিনে সম্পন্ন হয়
-• WhatsApp: +880 1340-338401 এ যোগাযোগ করুন
+══════ কেনার প্রক্রিয়া ══════
+১. মার্কেটপ্লেস থেকে শিল্পকর্ম বেছে নিন
+২. কার্টে যোগ করুন ও পেমেন্ট করুন
+৩. ডেলিভারি ঠিকানা দিন ও কনফার্ম করুন
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📞 যোগাযোগ
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• WhatsApp: +880 1340-338401 (সবচেয়ে দ্রুত সাড়া)
-• ইমেইল: blog.alfamito@gmail.com
-• সাপোর্ট সময়: সকাল ৯টা — রাত ১০টা, সপ্তাহে ৭ দিন
+══════ যোগাযোগ ══════
+WhatsApp: +880 1340-338401
+ইমেইল: blog.alfamito@gmail.com
+ফর্ম: /contact পেইজ
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🤖 তোমার আচরণবিধি
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-১. সর্বদা বাংলায় উত্তর দাও — সংক্ষিপ্ত, স্পষ্ট ও সহায়ক
-২. বন্ধুত্বপূর্ণ ও পেশাদার থাকো
-৩. উপরে দেওয়া তথ্যের বাইরে কিছু না জানলে WhatsApp এ রেফার করো
-৪. কখনো মিথ্যা বা অনুমানভিত্তিক তথ্য দিও না
-৫. প্রয়োজনে ইমোজি ব্যবহার করো — অতিরিক্ত নয়`;
+══════ উত্তর দেওয়ার নিয়ম ══════
+সবসময় বাংলায় উত্তর দাও। বন্ধুত্বপূর্ণ ও পেশাদার টোন। সংক্ষিপ্ত কিন্তু সম্পূর্ণ তথ্য।
+প্রয়োজনে পেইজের লিংক উল্লেখ করো। না জানলে WhatsApp-এ যোগাযোগ করতে বলো।`;
 
 export async function onRequestPost(context) {
   const { request, env } = context;
-
   const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "Content-Type",
-    "Content-Type": "application/json",
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Content-Type': 'application/json',
   };
 
   try {
-    const body = await request.json();
-    const messages = (body.messages || []).slice(-14);
-
-    // ──────────────────────────────────────────────
-    // PRIMARY: Cloudflare Workers AI
-    // Setup: Dashboard → Pages → Settings → Functions → AI Bindings
-    // Add: Variable name = "AI"
-    //      Model = "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
-    // ──────────────────────────────────────────────
-    if (env.AI) {
-      try {
-        const cfMessages = [
-          { role: "system", content: SYSTEM_PROMPT },
-          ...messages.map((m) => ({
-            role: m.role === "assistant" ? "assistant" : "user",
-            content: m.content,
-          })),
-        ];
-
-        const response = await env.AI.run(
-          "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
-          { messages: cfMessages, max_tokens: 512, temperature: 0.7 }
-        );
-
-        const reply =
-          response?.response ||
-          "দুঃখিত, উত্তর দিতে পারছি না। WhatsApp: +880 1340-338401 এ যোগাযোগ করুন।";
-
-        return new Response(JSON.stringify({ reply, source: "cf-ai" }), {
-          status: 200,
-          headers: corsHeaders,
-        });
-      } catch (cfErr) {
-        console.error("CF AI error:", cfErr);
-        // fallthrough to Groq
-      }
+    const { messages } = await request.json();
+    if (!messages || !Array.isArray(messages)) {
+      return new Response(JSON.stringify({ error: 'Invalid request' }), { status: 400, headers: corsHeaders });
     }
 
-    // ──────────────────────────────────────────────
-    // FALLBACK: Groq API (ফ্রি, দিনে ১৪,৪০০ request)
-    // Setup: https://console.groq.com → API Keys → Create
-    // Add: Environment Variable GROQ_API_KEY
-    // ──────────────────────────────────────────────
-    if (env.GROQ_API_KEY) {
-      const groqMessages = [
-        { role: "system", content: SYSTEM_PROMPT },
-        ...messages.map((m) => ({
-          role: m.role === "assistant" ? "assistant" : "user",
-          content: m.content,
-        })),
-      ];
-
-      const groqRes = await fetch(
-        "https://api.groq.com/openai/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${env.GROQ_API_KEY}`,
-          },
-          body: JSON.stringify({
-            model: "llama-3.3-70b-versatile",
-            messages: groqMessages,
-            max_tokens: 512,
-            temperature: 0.7,
-          }),
-        }
+    const apiKey = env.GROQ_API_KEY;
+    if (!apiKey) {
+      return new Response(
+        JSON.stringify({ reply: 'সার্ভার কনফিগারেশনে সমস্যা। WhatsApp করুন: +880 1340-338401' }),
+        { status: 200, headers: corsHeaders }
       );
-
-      if (!groqRes.ok) throw new Error(`Groq ${groqRes.status}`);
-      const groqData = await groqRes.json();
-      const reply =
-        groqData?.choices?.[0]?.message?.content ||
-        "দুঃখিত, উত্তর দিতে পারছি না।";
-
-      return new Response(JSON.stringify({ reply, source: "groq" }), {
-        status: 200,
-        headers: corsHeaders,
-      });
     }
 
-    // AI কনফিগার করা হয়নি
-    return new Response(
-      JSON.stringify({
-        reply:
-          "⚙️ AI এখনো সেটআপ হয়নি। নিচের setup গাইড অনুসরণ করুন। সরাসরি সাহায্যের জন্য: WhatsApp +880 1340-338401",
+    const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...messages.slice(-12)],
+        max_tokens: 600,
+        temperature: 0.5,
       }),
-      { status: 200, headers: corsHeaders }
-    );
-  } catch (error) {
-    console.error("Chat error:", error);
+    });
+
+    if (!groqRes.ok) {
+      if (groqRes.status === 429) {
+        return new Response(
+          JSON.stringify({ reply: 'এই মুহূর্তে একটু বেশি চাপ। একটু পরে আবার চেষ্টা করুন অথবা WhatsApp করুন: +880 1340-338401' }),
+          { status: 200, headers: corsHeaders }
+        );
+      }
+      throw new Error(`Groq error: ${groqRes.status}`);
+    }
+
+    const data = await groqRes.json();
+    const reply = data.choices?.[0]?.message?.content?.trim() || 'দুঃখিত, উত্তর দিতে পারছি না।';
+    return new Response(JSON.stringify({ reply }), { status: 200, headers: corsHeaders });
+
+  } catch (err) {
+    console.error('Function error:', err);
     return new Response(
-      JSON.stringify({
-        reply:
-          "⚠️ সাময়িক সমস্যা হচ্ছে। কিছুক্ষণ পরে চেষ্টা করুন বা WhatsApp: +880 1340-338401 এ যোগাযোগ করুন।",
-      }),
+      JSON.stringify({ reply: 'সার্ভারে সমস্যা হয়েছে। WhatsApp করুন: +880 1340-338401' }),
       { status: 200, headers: corsHeaders }
     );
   }
@@ -197,9 +123,9 @@ export async function onRequestOptions() {
   return new Response(null, {
     status: 204,
     headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
     },
   });
 }
