@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { ShoppingBag, ArrowLeft, Plus, Minus, Trash2, CheckCircle, MapPin, Phone, User, MessageSquare, Package } from 'lucide-react';
+import { ShoppingBag, ArrowLeft, Plus, Minus, Trash2, CheckCircle, MapPin, Phone, User, MessageSquare, Package, Mail } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useCart } from '../context/CartContext';
 import { supabase } from '../lib/supabase';
@@ -12,7 +12,7 @@ export default function Cart() {
   const [ordering, setOrdering] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [orderNumbers, setOrderNumbers] = useState<string[]>([]);
-  const [customer, setCustomer] = useState({ name: '', phone: '', address: '', district: '', note: '' });
+  const [customer, setCustomer] = useState({ name: '', phone: '', address: '', district: '', note: '', email: '' });
   const set = (k: string, v: string) => setCustomer(c => ({ ...c, [k]: v }));
 
   // ঢাকার মধ্যে থাকা জেলাগুলো
@@ -66,13 +66,49 @@ export default function Cart() {
         });
         if (error) throw error;
         nums.push(orderNum);
-        // Notify artist
-        await supabase.from('notifications').insert({
-          artist_id: item.artwork.artist_id,
-          title: '🛒 নতুন অর্ডার!',
-          message: `"${item.artwork.title}" এর নতুন অর্ডার। ক্রেতা: ${customer.name} · মোট: ৳${totalWithDelivery.toLocaleString()}`,
-          is_read: false,
-        });
+        // Notify artist — in-app (fire and forget, never block order)
+        try {
+          await supabase.from('notifications').insert({
+            artist_id: item.artwork.artist_id,
+            title: '🛒 নতুন অর্ডার!',
+            message: `"${item.artwork.title}" এর নতুন অর্ডার। ক্রেতা: ${customer.name} · মোট: ৳${totalWithDelivery.toLocaleString()}`,
+            is_read: false,
+          });
+        } catch (_) { /* notification failure never blocks order */ }
+        // Email notification (fire and forget)
+        try {
+          await supabase.functions.invoke('send-order-notification', {
+            body: {
+              record: {
+                artist_id: item.artwork.artist_id,
+                artwork_title: item.artwork.title,
+                artwork_price: totalWithDelivery,
+                customer_name: customer.name,
+                customer_phone: customer.phone,
+                customer_address: customer.address,
+                payment_method: 'Cash on Delivery',
+              }
+            }
+          });
+        } catch (_) { /* email failure never blocks order */ }
+        // Buyer confirmation email
+        if (customer.email) {
+          try {
+            await supabase.functions.invoke('send-buyer-confirmation', {
+              body: {
+                record: {
+                  customer_name: customer.name,
+                  customer_email: customer.email,
+                  customer_district: customer.district,
+                  artwork_title: item.artwork.title,
+                  artwork_price: totalWithDelivery,
+                  order_number: orderNum,
+                  payment_method: 'Cash on Delivery',
+                }
+              }
+            });
+          } catch (_) { /* email failure never blocks order */ }
+        }
       }
       setOrderNumbers(nums);
       clearCart();
@@ -268,6 +304,17 @@ export default function Cart() {
                     <option value="">জেলা বেছে নিন</option>
                     {ALL_DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}
                   </select>
+                </div>
+                <div>
+                  <label className="text-xs font-bold mb-1 block" style={{ color: 'var(--text2)' }}>
+                    ইমেইল <span style={{ color: 'var(--text3)', fontWeight: 400 }}>(ঐচ্ছিক — অর্ডার confirmation পাবেন)</span>
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-2.5 w-4 h-4" style={{ color: 'var(--text3)' }} />
+                    <input type="email" placeholder="আপনার email ঠিকানা..." value={customer.email} onChange={e => set('email', e.target.value)}
+                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border outline-none text-sm"
+                      style={{ background: 'var(--bg)', borderColor: 'var(--border)', color: 'var(--text)' }} />
+                  </div>
                 </div>
                 <div>
                   <label className="text-xs font-bold mb-1 block" style={{ color: 'var(--text2)' }}>নোট (ঐচ্ছিক)</label>

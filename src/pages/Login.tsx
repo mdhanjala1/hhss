@@ -166,6 +166,18 @@ export default function Login() {
       });
       if (profileError) throw profileError;
 
+      // Welcome email — fire and forget, never block registration
+      try {
+        await supabase.functions.invoke('send-welcome-email', {
+          body: {
+            record: {
+              full_name: form.fullName.trim(),
+              email: form.email.trim(),
+            }
+          }
+        });
+      } catch (_) { /* email failure never blocks registration */ }
+
       setShowSuccess(true);
     } catch (e: any) {
       let msg = 'একটি সমস্যা হয়েছে। আবার চেষ্টা করুন।';
